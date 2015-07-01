@@ -1,0 +1,46 @@
+{
+  "name": "dolphin-js-polymer",
+  "version": "0.0.1",
+  "description": "Polymer Client of the Dolphin Platform",
+  "main": "dolphin-js-polymer.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git.canoo.com:dolphin-platform/dolphin-js-polymer.git"
+  },
+  "author": "Michael Heinrichs <michael.heinrichs@canoo.com>",
+  "license": "ALv2",
+  "devDependencies": {
+    "bower": "^1.4.1",
+    "browserify": "^10.2.4",
+    "chai": "^3.0.0",
+    "del": "^1.2.0",
+    "glob": "^5.0.10",
+    "gulp": "^3.9.0",
+    "gulp-jshint": "^1.11.0",
+    "gulp-karma": "0.0.4",
+    "gulp-mocha": "^2.1.2",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-uglify": "^1.2.0",
+    "gulp-util": "^3.0.6",
+    "jshint": "^2.8.0",
+    "karma": "^0.12.37",
+    "karma-browserify": "^4.2.1",
+    "karma-chrome-launcher": "^0.2.0",
+    "karma-mocha": "^0.1.10",
+    "karma-phantomjs-launcher": "^0.1.4",
+    "karma-sauce-launcher": "^0.2.11",
+    "karma-teamcity-reporter": "^0.1.2",
+    "lodash.assign": "^3.2.0",
+    "merge-stream": "^0.1.7",
+    "mocha": "^2.2.5",
+    "sinon": "^1.15.3",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.2.3",
+    "web-component-tester": "^3.2.0"
+  }
+}
