@@ -12,7 +12,7 @@ function onUpdatedHandler() {
 }
 
 
-Binder.prototype.bind = function (dolphin, element, rootPath, value) {
+Binder.prototype.bind = function (element, rootPath, value) {
     switch (typeof value) {
         case 'object':
             // TODO Implement deepBind object

@@ -89,7 +89,7 @@ gulp.task('build', function() {
 
 
 gulp.task('watch', function() {
-    gulp.watch(['src/**', 'test/**'], ['verify']);
+    gulp.watch(['src/**', 'test/**'], ['build-test']);
 
     var watchedMainBundler = watchify(mainBundler);
     watchedMainBundler.on('update', function() {rebundle(watchedMainBundler)});
@@ -98,7 +98,7 @@ gulp.task('watch', function() {
     watchedTestBundler.on('update', function() {rebundle(watchedTestBundler)});
 });
 
-gulp.task('default', ['verify', 'build', 'watch']);
+gulp.task('default', ['build-test', 'build', 'watch']);
 
 
 function createSauceLabsTestPipe(customLaunchers) {

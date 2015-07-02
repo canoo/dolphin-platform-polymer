@@ -33,7 +33,7 @@ module.exports = function (config) {
             { pattern: './bower_components/dolphin-js/dist/dolphin.min.js' },
             { pattern: './bower_components/polymer/polymer*.html', included: false, watched: false },
             { pattern: './test/build/test-bundle.js', included: false },
-            './test/runner.html'
+            'test/karma_runner.html'
         ],
 
 
