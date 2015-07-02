@@ -1,4 +1,5 @@
 /*jslint browserify: true */
+/* global Polymer */
 "use strict";
 
 var Binder = require('./deep-bind.js').Binder;
@@ -34,7 +35,7 @@ function createBaseBehavior(dolphin) {
                     var propertyName = path.match(/[^\.]+$/);
                     var oldValue = dolphin.setAttribute(bean, propertyName[0], newValue);
                     if (oldValue !== null) {
-                        binder.unbind(this, path, oldValue)
+                        binder.unbind(this, path, oldValue);
                     }
                     binder.bind(this, path, newValue);
                 }
