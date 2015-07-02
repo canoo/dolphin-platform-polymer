@@ -12,6 +12,7 @@ function createBaseBehavior(dolphin) {
         bind: function(propertyName, value) {
             this[propertyName] = value;
             var eventName = Polymer.CaseMap.camelToDashCase(propertyName) + '-changed';
+            this.unlisten(this, eventName, '_dolphinObserver');
             this.listen(this, eventName, '_dolphinObserver');
             binder.bind(this, propertyName, value);
         },
