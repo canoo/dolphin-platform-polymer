@@ -19,6 +19,7 @@
     "test-fixture": "PolymerElements/test-fixture#~1.0.0"
   },
   "dependencies": {
-    "dolphin-js": "~0.2.2"
+    "dolphin-js": "~0.2.2",
+    "core.js": "~0.9.18"
   }
 }

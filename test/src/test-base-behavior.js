@@ -6,17 +6,20 @@ var sinon = require('sinon');
 
 var createBaseBehavior = require('../../src/base-behavior.js').createBaseBehavior;
 
+var injectDataFromDolphin = null;
 
 var dolphin = {
     setAttribute: function() {},
-    onUpdated: function() {}
+    onUpdated: function(func) { injectDataFromDolphin = func; }
 };
 
 var CustomElement = Polymer({
     is: 'custom-element',
     behaviors: [createBaseBehavior(dolphin)],
-    observers: ['changeObserver(*)'],
-    changeObserver: function() {}
+    observers: ['beanChangeObserver(theBean.*)'],
+    beanChangeObserver: function(obj) {
+        console.log(obj)
+    }
 });
 
 
@@ -38,31 +41,37 @@ describe('Simple Binding of a Dolphin Bean', function() {
         var element = new CustomElement();
         var bean1 = { theProperty: 'VALUE_1' };
         var bean2 = { theProperty: 'VALUE_X' };
-        var callback = null;
-        dolphin.onUpdated = function(cb) { callback = cb; };
-        this.stub(element, 'changeObserver');
+        this.stub(element, 'beanChangeObserver');
 
         element.bind('theBean', bean1);
-        callback(bean1, 'theProperty', 'VALUE_2', 'VALUE_1');
-        sinon.assert.calledWith(element.changeObserver, {path: 'theBean.theProperty', value: 'VALUE_2', base: null});
+        element.beanChangeObserver.reset();
+
+        injectDataFromDolphin(bean1, 'theProperty', 'VALUE_2', 'VALUE_1');
+        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.theProperty', value: 'VALUE_2', base: bean1});
 
         element.bind('theBean', bean2);
-        callback(bean1, 'theProperty', 'VALUE_3', 'VALUE_2');
-        sinon.assert.notCalled(element.changeObserver);
+        element.beanChangeObserver.reset();
+
+        injectDataFromDolphin(bean1, 'theProperty', 'VALUE_3', 'VALUE_2');
+        sinon.assert.notCalled(element.beanChangeObserver);
     }));
 
     it('should synchronize changes coming from Polymer', sinon.test(function() {
         var element = new CustomElement();
         var bean1 = { theProperty: 'VALUE_1' };
         var bean2 = { theProperty: 'VALUE_X' };
-        this.spy(dolphin, 'setAttribute');
+        var setAttributeStub = this.stub(dolphin, 'setAttribute');
+        setAttributeStub.returns(bean1.theProperty);
 
         element.bind('theBean', bean1);
+
         element.set('theBean.theProperty', 'VALUE_2');
         sinon.assert.calledWithExactly(dolphin.setAttribute, bean1, 'theProperty', 'VALUE_2');
-        dolphin.setAttribute.reset();
 
         element.bind('theBean', bean2);
+        dolphin.setAttribute.reset();
+        setAttributeStub.returns(bean2.theProperty);
+
         element.set('theBean.theProperty', 'VALUE_3');
         sinon.assert.calledWithExactly(dolphin.setAttribute, bean2, 'theProperty', 'VALUE_3');
     }));
