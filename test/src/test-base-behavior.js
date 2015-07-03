@@ -17,9 +17,7 @@ var CustomElement = Polymer({
     is: 'custom-element',
     behaviors: [createBaseBehavior(dolphin)],
     observers: ['beanChangeObserver(theBean.*)'],
-    beanChangeObserver: function(obj) {
-        console.log(obj)
-    }
+    beanChangeObserver: function(obj) {}
 });
 
 
