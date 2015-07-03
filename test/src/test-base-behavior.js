@@ -39,37 +39,50 @@ describe('Simple Binding of a Dolphin Bean', function() {
 
     it('should synchronize changes coming from Dolphin', sinon.test(function() {
         var element = new CustomElement();
+        var bean = { theProperty: 'VALUE_1' };
+        this.stub(element, 'beanChangeObserver');
+
+        element.bind('theBean', bean);
+        element.beanChangeObserver.reset();
+
+        injectDataFromDolphin(bean, 'theProperty', 'VALUE_2', 'VALUE_1');
+        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.theProperty', value: 'VALUE_2', base: bean});
+    }));
+
+    it('should not synchronize changes coming from Dolphin from an unbound bean', sinon.test(function() {
+        var element = new CustomElement();
         var bean1 = { theProperty: 'VALUE_1' };
         var bean2 = { theProperty: 'VALUE_X' };
         this.stub(element, 'beanChangeObserver');
 
         element.bind('theBean', bean1);
-        element.beanChangeObserver.reset();
-
-        injectDataFromDolphin(bean1, 'theProperty', 'VALUE_2', 'VALUE_1');
-        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.theProperty', value: 'VALUE_2', base: bean1});
-
         element.bind('theBean', bean2);
         element.beanChangeObserver.reset();
 
-        injectDataFromDolphin(bean1, 'theProperty', 'VALUE_3', 'VALUE_2');
+        injectDataFromDolphin(bean1, 'theProperty', 'VALUE_2', 'VALUE_1');
         sinon.assert.notCalled(element.beanChangeObserver);
     }));
 
     it('should synchronize changes coming from Polymer', sinon.test(function() {
         var element = new CustomElement();
+        var bean = { theProperty: 'VALUE_1' };
+        var setAttributeStub = this.stub(dolphin, 'setAttribute');
+        setAttributeStub.returns('VALUE_1');
+
+        element.bind('theBean', bean);
+
+        element.set('theBean.theProperty', 'VALUE_2');
+        sinon.assert.calledWithExactly(dolphin.setAttribute, bean, 'theProperty', 'VALUE_2');
+    }));
+
+    it('should not synchronize changes coming from Polymer from an unbound bean', sinon.test(function() {
+        var element = new CustomElement();
         var bean1 = { theProperty: 'VALUE_1' };
         var bean2 = { theProperty: 'VALUE_X' };
         var setAttributeStub = this.stub(dolphin, 'setAttribute');
-        setAttributeStub.returns(bean1.theProperty);
 
         element.bind('theBean', bean1);
-
-        element.set('theBean.theProperty', 'VALUE_2');
-        sinon.assert.calledWithExactly(dolphin.setAttribute, bean1, 'theProperty', 'VALUE_2');
-
         element.bind('theBean', bean2);
-        dolphin.setAttribute.reset();
         setAttributeStub.returns(bean2.theProperty);
 
         element.set('theBean.theProperty', 'VALUE_3');
