@@ -46,7 +46,7 @@ describe('Simple Binding of a Dolphin Bean', function() {
     it('should synchronize changes coming from Dolphin', sinon.test(function() {
         var element = new CustomElement();
         var bean = { theProperty: 'VALUE_1' };
-        this.stub(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         element.bind('theBean', bean);
         element.beanChangeObserver.reset();
@@ -61,7 +61,7 @@ describe('Simple Binding of a Dolphin Bean', function() {
         var element = new CustomElement();
         var bean1 = { theProperty: 'VALUE_1' };
         var bean2 = { theProperty: 'VALUE_X' };
-        this.stub(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         element.bind('theBean', bean1);
         element.bind('theBean', bean2);
@@ -161,7 +161,7 @@ describe('Simple Binding of an Array', function() {
         var element = new CustomElement();
         var bean1 = { theArray: [1, 2, 3] };
         var bean2 = { theArray: [42] };
-        this.stub(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         element.bind('theBean', bean1);
         element.bind('theBean', bean2);
@@ -178,7 +178,7 @@ describe('Simple Binding of an Array', function() {
 
         var element = new CustomElement();
         var bean = { theArray: [1, 2, 3] };
-        var setAttributeStub = this.stub(dolphin, 'setAttribute');
+        var setAttributeStub = this.spy(dolphin, 'setAttribute');
         setAttributeStub.returns([1, 2, 3]);
 
         element.bind('theBean', bean);
@@ -195,7 +195,7 @@ describe('Simple Binding of an Array', function() {
         var element = new CustomElement();
         var bean1 = { theArray: [1, 2, 3] };
         var bean2 = { theArray: [42] };
-        var setAttributeStub = this.stub(dolphin, 'setAttribute');
+        var setAttributeStub = this.spy(dolphin, 'setAttribute');
 
         element.bind('theBean', bean1);
         element.bind('theBean', bean2);
@@ -235,7 +235,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_2' };
         var bean = { innerBean: innerBean1};
-        this.stub(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         element.bind('theBean', bean);
         element.beanChangeObserver.reset();
@@ -250,7 +250,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var element = new CustomElement();
         var innerBean = { theProperty: 'VALUE_1' };
         var bean = { innerBean: innerBean};
-        this.stub(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         element.bind('theBean', bean);
         element.beanChangeObserver.reset();
@@ -267,7 +267,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var bean1 = { innerBean: innerBean1};
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean2 = { innerBean: innerBean2};
-        this.stub(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         element.bind('theBean', bean1);
         element.bind('theBean', bean2);
@@ -284,7 +284,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        this.stub(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         element.bind('theBean', bean);
         injectUpdateFromDolphin(bean, 'innerBean', innerBean2, innerBean1);
@@ -301,7 +301,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        this.stub(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
         this.stub(dolphin, 'setAttribute').returns(innerBean1);
 
         element.bind('theBean', bean);
@@ -351,7 +351,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var bean1 = { innerBean: innerBean1};
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean2 = { innerBean: innerBean2};
-        this.stub(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         element.bind('theBean', bean1);
         element.bind('theBean', bean2);
