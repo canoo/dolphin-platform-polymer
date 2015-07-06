@@ -13,7 +13,8 @@ var injectArrayUpdateFromDolphin = null;
 var dolphin = {
     setAttribute: function() {},
     onUpdated: function(func) { injectUpdateFromDolphin = func; },
-    onArrayUpdate: function(func) { injectArrayUpdateFromDolphin = func; }
+    onArrayUpdate: function(func) { injectArrayUpdateFromDolphin = func;},
+    notifyArrayChange: function() {}
 };
 
 var CustomElement = Polymer({
@@ -216,8 +217,6 @@ describe('Simple Binding of an Array', function() {
 
 
     it('should not synchronize changes coming from Dolphin from an unbound bean', sinon.test(function() {
-        expect.fail(null, null, "Test not implemented yet");
-
         var element = new CustomElement();
         var bean1 = { theArray: [1, 2, 3] };
         var bean2 = { theArray: [42] };
@@ -227,42 +226,62 @@ describe('Simple Binding of an Array', function() {
         element.bind('theBean', bean2);
         element.beanChangeObserver.reset();
 
-        injectUpdateFromDolphin(bean1, 'theArray', [4, 5, 6], [1, 2, 3]);
+        injectArrayUpdateFromDolphin(bean1, 'theArray', 1, 0, 42);
         sinon.assert.notCalled(element.beanChangeObserver);
     }));
 
 
 
-    it('should synchronize changes coming from Polymer', sinon.test(function() {
-        expect.fail(null, null, "Test not implemented yet");
-
+    it('should synchronize new array element coming from Polymer', sinon.test(function() {
         var element = new CustomElement();
         var bean = { theArray: [1, 2, 3] };
-        var setAttributeStub = this.spy(dolphin, 'setAttribute');
-        setAttributeStub.returns([1, 2, 3]);
+        this.spy(dolphin, 'notifyArrayChange');
 
         element.bind('theBean', bean);
 
-        element.set('theBean.theArray', [4, 5, 6]);
-        sinon.assert.calledWithExactly(dolphin.setAttribute, bean, 'theArray', [4, 5, 6]);
+        element.splice('theBean.theArray', 1, 0, 42);
+        sinon.assert.calledWithExactly(dolphin.notifyArrayChange, bean, 'theArray', 1, 1, []);
+    }));
+
+
+
+    it('should synchronize new array element coming from Polymer', sinon.test(function() {
+        var element = new CustomElement();
+        var bean = { theArray: [1, 2, 3] };
+        this.spy(dolphin, 'notifyArrayChange');
+
+        element.bind('theBean', bean);
+
+        element.splice('theBean.theArray', 1, 1);
+        sinon.assert.calledWithExactly(dolphin.notifyArrayChange, bean, 'theArray', 1, 0, [2]);
+    }));
+
+
+
+    it('should synchronize element removal coming from Polymer', sinon.test(function() {
+        var element = new CustomElement();
+        var bean = { theArray: [1, 2, 3] };
+        this.spy(dolphin, 'notifyArrayChange');
+
+        element.bind('theBean', bean);
+
+        element.splice('theBean.theArray', 1, 1, 42);
+        sinon.assert.calledWithExactly(dolphin.notifyArrayChange, bean, 'theArray', 1, 1, [2]);
     }));
 
 
 
     it('should not synchronize changes coming from Polymer from an unbound bean', sinon.test(function() {
-        expect.fail(null, null, "Test not implemented yet");
-
         var element = new CustomElement();
         var bean1 = { theArray: [1, 2, 3] };
         var bean2 = { theArray: [42] };
-        var setAttributeStub = this.spy(dolphin, 'setAttribute');
+        this.spy(dolphin, 'notifyArrayChange');
 
         element.bind('theBean', bean1);
         element.bind('theBean', bean2);
-        setAttributeStub.returns([42]);
 
-        element.set('theBean.theArray', 'VALUE_3');
-        sinon.assert.calledWithExactly(dolphin.setAttribute, bean2, 'theArray', 'VALUE_3');
+        element.splice('theBean.theArray', 1, 0, 42);
+        sinon.assert.calledWithExactly(dolphin.notifyArrayChange, bean2, 'theArray', 1, 1, []);
     }));
 });
 

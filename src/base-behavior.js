@@ -24,9 +24,20 @@ function createBaseBehavior(dolphin) {
 
         _dolphinObserver: function(event) {
             var path = event.detail.path;
+            var bean, propertyName;
             var newValue = event.detail.value;
 
             if (exists(newValue.indexSplices)) {
+                path = path.substr(0, path.length - ".splices".length);
+                bean = navigateToBean(this, path);
+                if (bean !== null) {
+                    propertyName = path.match(/[^\.]+$/);
+                    var n = newValue.indexSplices.length;
+                    for (var i = 0; i < n; i++) {
+                        var change = newValue.indexSplices[i];
+                        dolphin.notifyArrayChange(bean, propertyName[0], change.index, change.addedCount, change.removed);
+                    }
+                }
                 //var listName = path.find(/\.([^\.]*)\.splices$/);
                 //dolphin.updateList(bean, listName, changeRecord.indexSplices);
                 // TODO: Unbind all removed elements
@@ -34,9 +45,9 @@ function createBaseBehavior(dolphin) {
                 //     deepUnbind(this, path
                 // TODO: Bind to all added elements
             } else {
-                var bean = navigateToBean(this, path);
+                bean = navigateToBean(this, path);
                 if (bean !== null) {
-                    var propertyName = path.match(/[^\.]+$/);
+                    propertyName = path.match(/[^\.]+$/);
                     var oldValue = dolphin.setAttribute(bean, propertyName[0], newValue);
                     if (oldValue !== null) {
                         binder.unbind(this, path, oldValue);
