@@ -7,6 +7,7 @@ function Binder(dolphin) {
     this.listeners = new Map();
 
     dolphin.onUpdated(bindScope(this, this.onUpdatedHandler));
+    dolphin.onArrayUpdate(bindScope(this, this.onArrayUpdateHandler));
 }
 
 function exists(object) {
@@ -28,8 +29,24 @@ Binder.prototype.onUpdatedHandler = function(bean, propertyName, newValue, oldVa
             var element = entry.element;
             var path = entry.rootPath + '.' + propertyName;
             this.unbind(element, path, oldValue);
-            element.notifyPath(path, newValue);
+            element.set(path, newValue);
             this.bind(element, path, newValue);
+        }
+    }
+};
+
+
+Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, count, newElements) {
+    var listenerList = this.listeners.get(bean);
+    if (exists(listenerList)) {
+        var n = listenerList.length;
+        for (var i = 0; i < n; i++) {
+            var entry = listenerList[i];
+            var element = entry.element;
+            var path = entry.rootPath + '.' + propertyName;
+            //this.unbind(element, path, oldValue);
+            element.splice(path, index, count, newElements);
+            //this.bind(element, path, newValue);
         }
     }
 };

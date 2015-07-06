@@ -26,14 +26,14 @@ function createBaseBehavior(dolphin) {
             var path = event.detail.path;
             var newValue = event.detail.value;
 
-            //if (exists(changeRecord.indexSplices)) {
+            if (exists(newValue.indexSplices)) {
                 //var listName = path.find(/\.([^\.]*)\.splices$/);
                 //dolphin.updateList(bean, listName, changeRecord.indexSplices);
                 // TODO: Unbind all removed elements
                 // for all removed elements
                 //     deepUnbind(this, path
                 // TODO: Bind to all added elements
-            //} else {
+            } else {
                 var bean = navigateToBean(this, path);
                 if (bean !== null) {
                     var propertyName = path.match(/[^\.]+$/);
@@ -43,7 +43,7 @@ function createBaseBehavior(dolphin) {
                     }
                     binder.bind(this, path, newValue);
                 }
-            //}
+            }
         }
     };
 }
