@@ -45,7 +45,11 @@ Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, coun
             var element = entry.element;
             var path = entry.rootPath + '.' + propertyName;
             //this.unbind(element, path, oldValue);
-            element.splice(path, index, count, newElements);
+            if (typeof newElements === 'undefined') {
+                element.splice(path, index, count);
+            } else {
+                element.splice(path, index, count, newElements);
+            }
             //this.bind(element, path, newValue);
         }
     }

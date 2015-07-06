@@ -3,6 +3,7 @@
 
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var _ = require('lodash');
 
 var createBaseBehavior = require('../../src/base-behavior.js').createBaseBehavior;
 
@@ -124,7 +125,7 @@ describe('Simple Binding of an Array', function() {
 
 
 
-    it('should synchronize changes coming from Dolphin', sinon.test(function() {
+    it('should synchronize new array element coming from Dolphin', sinon.test(function() {
         var element = new CustomElement();
         var bean = { theArray: [1, 2, 3] };
         this.spy(element, 'beanChangeObserver');
@@ -132,7 +133,6 @@ describe('Simple Binding of an Array', function() {
         element.bind('theBean', bean);
         element.beanChangeObserver.reset();
 
-        // sinon checks arguments at the time of assertion and not at the time of the call, thus we need to set the expectation upfront
         var argsMatcher = {
             path: 'theBean.theArray.splices',
             base: sinon.match(bean),
@@ -142,13 +142,73 @@ describe('Simple Binding of an Array', function() {
                 }
                 var indexSplices = value.indexSplices[0];
                 return indexSplices.index === 1
-                        && (typeof indexSplices.removed === 'undefined' || indexSplices.removed === null || (Array.isArray(indexSplices.removed) && indexSplices.removed.length === 0))
-                        && indexSplices.addedCount === 1;
+                    && _.isEmpty(indexSplices.removed)
+                    && indexSplices.addedCount === 1;
             })
         };
         var spyWithExpectation = element.beanChangeObserver.withArgs(sinon.match(argsMatcher));
 
         injectArrayUpdateFromDolphin(bean, 'theArray', 1, 0, 42);
+
+        sinon.assert.calledOnce(spyWithExpectation);
+    }));
+
+
+
+    it('should synchronize element removal coming from Dolphin', sinon.test(function() {
+        var element = new CustomElement();
+        var bean = { theArray: [1, 2, 3] };
+        this.spy(element, 'beanChangeObserver');
+
+        element.bind('theBean', bean);
+        element.beanChangeObserver.reset();
+
+        var argsMatcher = {
+            path: 'theBean.theArray.splices',
+            base: sinon.match(bean),
+            value: sinon.match(function(value) {
+                if (!Array.isArray(value.indexSplices) || value.indexSplices.length === 0) {
+                    return false;
+                }
+                var indexSplices = value.indexSplices[0];
+                return indexSplices.index === 1
+                    && _.isEqual(indexSplices.removed, [2])
+                    && indexSplices.addedCount === 0;
+            })
+        };
+        var spyWithExpectation = element.beanChangeObserver.withArgs(sinon.match(argsMatcher));
+
+        injectArrayUpdateFromDolphin(bean, 'theArray', 1, 1);
+
+        sinon.assert.calledOnce(spyWithExpectation);
+    }));
+
+
+
+    it('should synchronize replacing an element coming from Dolphin', sinon.test(function() {
+        var element = new CustomElement();
+        var bean = { theArray: [1, 2, 3] };
+        this.spy(element, 'beanChangeObserver');
+
+        element.bind('theBean', bean);
+        element.beanChangeObserver.reset();
+
+        var argsMatcher = {
+            path: 'theBean.theArray.splices',
+            base: sinon.match(bean),
+            value: sinon.match(function(value) {
+                if (!Array.isArray(value.indexSplices) || value.indexSplices.length === 0) {
+                    return false;
+                }
+                var indexSplices = value.indexSplices[0];
+                return indexSplices.index === 1
+                    && _.isEqual(indexSplices.removed, [2])
+                    && indexSplices.addedCount === 1;
+            })
+        };
+        var spyWithExpectation = element.beanChangeObserver.withArgs(sinon.match(argsMatcher));
+
+        injectArrayUpdateFromDolphin(bean, 'theArray', 1, 1, 42);
 
         sinon.assert.calledOnce(spyWithExpectation);
     }));
