@@ -116,12 +116,10 @@ describe('Simple Binding of an Array', function() {
         var bean2 = { theArray: [42] };
 
         element.bind('theBean', bean1);
-        expect(element.theBean).to.equal(bean1);
-        expect(element.theBean.theArray).to.deep.equal([1, 2, 3]);
+        expect(element.theBean).to.deep.equal(bean1);
 
         element.bind('theBean', bean2);
-        expect(element.theBean).to.equal(bean2);
-        expect(element.theBean.theArray).to.deep.equal([42]);
+        expect(element.theBean).to.deep.equal(bean2);
     });
 
 
@@ -299,12 +297,10 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var bean2 = { innerBean: innerBean2};
 
         element.bind('theBean', bean1);
-        expect(element.theBean).to.equal(bean1);
-        expect(element.theBean.innerBean).to.equal(innerBean1);
+        expect(element.theBean).to.deep.equal(bean1);
 
         element.bind('theBean', bean2);
-        expect(element.theBean).to.equal(bean2);
-        expect(element.theBean.innerBean).to.equal(innerBean2);
+        expect(element.theBean).to.deep.equal(bean2);
     });
 
 
@@ -340,7 +336,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
 
 
 
-    it('should not synchronize changes coming from Dolphin from an unbound root Bean', sinon.test(function() {
+    it('should synchronize changes of a property coming from Dolphin from a re-bound root Bean', sinon.test(function() {
         var element = new CustomElement();
         var innerBean1 = { theProperty: 'VALUE_1' };
         var bean1 = { innerBean: innerBean1};
@@ -354,11 +350,14 @@ describe('Deep Binding of a Bean within a Bean', function() {
 
         injectUpdateFromDolphin(innerBean1, 'theProperty', 'VALUE_2', 'VALUE_1');
         sinon.assert.notCalled(element.beanChangeObserver);
+
+        injectUpdateFromDolphin(innerBean2, 'theProperty', 'VALUE_Y', 'VALUE_X');
+        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.innerBean.theProperty', value: 'VALUE_Y', base: bean2});
     }));
 
 
 
-    it('should not synchronize changes coming from Dolphin from a nested Bean that was unbound through Dolphin', sinon.test(function() {
+    it('should synchronize changes of a property coming from Dolphin from a nested Bean that was re-bound through Dolphin', sinon.test(function() {
         var element = new CustomElement();
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
@@ -371,11 +370,14 @@ describe('Deep Binding of a Bean within a Bean', function() {
 
         injectUpdateFromDolphin(innerBean1, 'theProperty', 'VALUE_2', 'VALUE_1');
         sinon.assert.notCalled(element.beanChangeObserver);
+
+        injectUpdateFromDolphin(innerBean2, 'theProperty', 'VALUE_Y', 'VALUE_X');
+        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.innerBean.theProperty', value: 'VALUE_Y', base: bean});
     }));
 
 
 
-    it('should not synchronize changes coming from Dolphin from a nested Bean that was unbound through Polymer', sinon.test(function() {
+    it('should synchronize changes of a property coming from Dolphin from a nested Bean that was re-bound through Polymer', sinon.test(function() {
         var element = new CustomElement();
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
@@ -389,6 +391,9 @@ describe('Deep Binding of a Bean within a Bean', function() {
 
         injectUpdateFromDolphin(innerBean1, 'theProperty', 'VALUE_2', 'VALUE_1');
         sinon.assert.notCalled(element.beanChangeObserver);
+
+        injectUpdateFromDolphin(innerBean2, 'theProperty', 'VALUE_Y', 'VALUE_X');
+        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.innerBean.theProperty', value: 'VALUE_Y', base: bean});
     }));
 
 
@@ -424,25 +429,26 @@ describe('Deep Binding of a Bean within a Bean', function() {
 
 
 
-    it('should not synchronize changes coming from Dolphin from an unbound root Bean', sinon.test(function() {
+    it('should synchronize changes of a property coming from Polymer from a re-bound root Bean', sinon.test(function() {
         var element = new CustomElement();
         var innerBean1 = { theProperty: 'VALUE_1' };
         var bean1 = { innerBean: innerBean1};
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean2 = { innerBean: innerBean2};
-        this.spy(element, 'beanChangeObserver');
+        var setAttributeStub = this.stub(dolphin, 'setAttribute');
 
         element.bind('theBean', bean1);
         element.bind('theBean', bean2);
-        element.beanChangeObserver.reset();
+        setAttributeStub.reset();
+        setAttributeStub.returns('VALUE_X');
 
-        injectUpdateFromDolphin(innerBean1, 'theProperty', 'VALUE_2', 'VALUE_1');
-        sinon.assert.notCalled(element.beanChangeObserver);
+        element.set('theBean.innerBean.theProperty', 'VALUE_2');
+        sinon.assert.calledWithExactly(dolphin.setAttribute, innerBean2, 'theProperty', 'VALUE_2');
     }));
 
 
 
-    it('should not synchronize changes coming from Polymer from a nested bean that was unbound through Dolphin', sinon.test(function() {
+    it('should synchronize changes of a property coming from Polymer from a nested bean that was re-bound through Dolphin', sinon.test(function() {
         var element = new CustomElement();
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
@@ -460,7 +466,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
 
 
 
-    it('should not synchronize changes coming from Polymer from a nested bean that was unbound through Polymer', sinon.test(function() {
+    it('should synchronize changes of a property coming from Polymer from a nested bean that was re-bound through Polymer', sinon.test(function() {
         var element = new CustomElement();
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
@@ -482,29 +488,171 @@ describe('Deep Binding of a Bean within a Bean', function() {
 
 
 
-describe('Deep Binding of an Array within an Array', function() {
-
-    it('tests not defined yet', sinon.test(function() {
-        expect.fail(null, null, "Test not implemented yet");
-    }));
-});
-
-
-
-
-
-describe('Deep Binding of an Array within a Bean', function() {
-
-    it('tests not defined yet', sinon.test(function() {
-        expect.fail(null, null, "Test not implemented yet");
-    }));
-});
-
-
-
-
-
 describe('Deep Binding of a Bean within an Array', function() {
+
+    it('should set the initial value', function() {
+        var element = new CustomElement();
+        var innerBean1a = { theProperty: 'VALUE_1a' };
+        var innerBean1b = { theProperty: 'VALUE_1b' };
+        var array1 = [innerBean1a, innerBean1b];
+        var bean1 = { theArray: array1};
+        var innerBean2a = { theProperty: 'VALUE_2a' };
+        var innerBean2b = { theProperty: 'VALUE_2b' };
+        var array2 = [innerBean2a, innerBean2b];
+        var bean2 = { theArray: array2};
+
+        element.bind('theBean', bean1);
+        expect(element.theBean).to.deep.equal(bean1);
+
+        element.bind('theBean', bean2);
+        expect(element.theBean).to.deep.equal(bean2);
+    });
+
+
+
+    it('should synchronize changes of a property of the nested Bean coming from Dolphin', sinon.test(function() {
+        var element = new CustomElement();
+        var innerBean = { theProperty: 'VALUE_1' };
+        var array = [ innerBean ];
+        var bean = { theArray: array};
+        this.spy(element, 'beanChangeObserver');
+
+        element.bind('theBean', bean);
+        element.beanChangeObserver.reset();
+
+        injectUpdateFromDolphin(innerBean, 'theProperty', 'VALUE_2', 'VALUE_1');
+        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.theArray.0.theProperty', value: 'VALUE_2', base: bean});
+    }));
+
+
+
+    it('should synchronize changes of a property of the nested Bean coming from Polymer', sinon.test(function() {
+        var element = new CustomElement();
+        var innerBean = { theProperty: 'VALUE_1' };
+        var array = [ innerBean ];
+        var bean = { theArray: array};
+        var setAttributeStub = this.stub(dolphin, 'setAttribute');
+
+        element.bind('theBean', bean);
+        setAttributeStub.reset();
+        setAttributeStub.returns('VALUE_1');
+
+        element.set('theBean.theArray.0.theProperty', 'VALUE_2');
+        sinon.assert.calledWithExactly(dolphin.setAttribute, innerBean, 'theProperty', 'VALUE_2');
+    }));
+
+
+
+    it('should synchronize changes of a property of the nested Bean from Dolphin that was replaced trough Dolphin', sinon.test(function() {
+        var element = new CustomElement();
+        var innerBean1 = { theProperty: 'VALUE_1' };
+        var innerBean2 = { theProperty: 'VALUE_X' };
+        var array = [ innerBean1 ];
+        var bean = { theArray: array};
+        this.spy(element, 'beanChangeObserver');
+
+        element.bind('theBean', bean);
+        injectArrayUpdateFromDolphin(bean, 'theArray', 0, 1, innerBean2);
+        element.beanChangeObserver.reset();
+
+        injectUpdateFromDolphin(innerBean1, 'theProperty', 'VALUE_2', 'VALUE_1');
+        sinon.assert.notCalled(element.beanChangeObserver);
+
+        injectUpdateFromDolphin(innerBean2, 'theProperty', 'VALUE_Y', 'VALUE_X');
+        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.theArray.0.theProperty', value: 'VALUE_Y', base: bean});
+    }));
+
+
+
+    it('should synchronize changes of a property of the nested Bean from Dolphin that was replaced trough Polymer', sinon.test(function() {
+        var element = new CustomElement();
+        var innerBean1 = { theProperty: 'VALUE_1' };
+        var innerBean2 = { theProperty: 'VALUE_X' };
+        var array = [ innerBean1 ];
+        var bean = { theArray: array};
+        this.spy(element, 'beanChangeObserver');
+
+        element.bind('theBean', bean);
+        element.splice('theBean.theArray', 0, 1, innerBean2);
+        element.beanChangeObserver.reset();
+
+        injectUpdateFromDolphin(innerBean1, 'theProperty', 'VALUE_2', 'VALUE_1');
+        sinon.assert.notCalled(element.beanChangeObserver);
+
+        injectUpdateFromDolphin(innerBean2, 'theProperty', 'VALUE_Y', 'VALUE_X');
+        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.theArray.0.theProperty', value: 'VALUE_Y', base: bean});
+    }));
+
+
+
+    it('should synchronize changes of a property of the nested Bean from Polymer that was replaced trough Dolphin', sinon.test(function() {
+        var element = new CustomElement();
+        var innerBean1 = { theProperty: 'VALUE_1' };
+        var innerBean2 = { theProperty: 'VALUE_X' };
+        var array = [ innerBean1 ];
+        var bean = { theArray: array};
+        var setAttributeStub = this.stub(dolphin, 'setAttribute');
+        setAttributeStub.returns(innerBean1);
+
+        element.bind('theBean', bean);
+        injectArrayUpdateFromDolphin(bean, 'theArray', 0, 1, innerBean2);
+        setAttributeStub.reset();
+        setAttributeStub.returns('VALUE_X');
+
+        element.set('theBean.theArray.0.theProperty', 'VALUE_3');
+        sinon.assert.calledWithExactly(dolphin.setAttribute, innerBean2, 'theProperty', 'VALUE_3');
+    }));
+
+
+
+    it('should synchronize changes of a property of the nested Bean from Polymer that was replaced trough Polymer', sinon.test(function() {
+        var element = new CustomElement();
+        var innerBean1 = { theProperty: 'VALUE_1' };
+        var innerBean2 = { theProperty: 'VALUE_X' };
+        var array = [ innerBean1 ];
+        var bean = { theArray: array};
+        var setAttributeStub = this.stub(dolphin, 'setAttribute');
+        setAttributeStub.returns(innerBean1);
+
+        element.bind('theBean', bean);
+        element.splice('theBean.theArray', 0, 1, innerBean2);
+        setAttributeStub.reset();
+        setAttributeStub.returns('VALUE_X');
+
+        element.set('theBean.theArray.0.theProperty', 'VALUE_3');
+        sinon.assert.calledWithExactly(dolphin.setAttribute, innerBean2, 'theProperty', 'VALUE_3');
+    }));
+
+
+
+    it('should synchronize changes of a property of the nested Bean from Dolphin where the array was replaced trough Dolphin', sinon.test(function() {
+        expect.fail(null, null, "Test not implemented yet");
+    }));
+
+
+
+    it('should synchronize changes of a property of the nested Bean from Dolphin where the array was replaced trough Polymer', sinon.test(function() {
+        expect.fail(null, null, "Test not implemented yet");
+    }));
+
+
+
+    it('should synchronize changes of a property of the nested Bean from Polymer where the array was replaced trough Dolphin', sinon.test(function() {
+        expect.fail(null, null, "Test not implemented yet");
+    }));
+
+
+
+    it('should synchronize changes of a property of the nested Bean from Polymer where the array was replaced trough Polymer', sinon.test(function() {
+        expect.fail(null, null, "Test not implemented yet");
+    }));
+});
+
+
+
+
+
+describe('Deep Binding of an Array within an Array', function() {
 
     it('tests not defined yet', sinon.test(function() {
         expect.fail(null, null, "Test not implemented yet");

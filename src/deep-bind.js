@@ -44,13 +44,21 @@ Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, coun
             var entry = listenerList[i];
             var element = entry.element;
             var path = entry.rootPath + '.' + propertyName;
-            //this.unbind(element, path, oldValue);
+
+            var array = bean[propertyName];
+            for (var pos = index; pos < array.length; pos++) {
+                this.unbind(element, path + '.' + pos, array[pos]);
+            }
+
             if (typeof newElements === 'undefined') {
                 element.splice(path, index, count);
             } else {
                 element.splice(path, index, count, newElements);
             }
-            //this.bind(element, path, newValue);
+
+            for (pos = index; pos < array.length; pos++) {
+                this.bind(element, path + '.' + pos, array[pos]);
+            }
         }
     }
 };

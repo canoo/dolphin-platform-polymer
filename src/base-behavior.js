@@ -36,14 +36,21 @@ function createBaseBehavior(dolphin) {
                     for (var i = 0; i < n; i++) {
                         var change = newValue.indexSplices[i];
                         dolphin.notifyArrayChange(bean, propertyName[0], change.index, change.addedCount, change.removed);
+
+                        var j;
+                        var array = bean[propertyName[0]];
+                        for (j = 0; j < change.removed.length; j++) {
+                            binder.unbind(this, path + '.' + (change.index + j), change.removed[j]);
+                        }
+                        for (j = change.index + change.addedCount; j < array.length; j++) {
+                            var oldPos = j - change.addedCount + change.removed.length;
+                            binder.unbind(this, path + '.' + oldPos, array[j]);
+                        }
+                        for (j = change.index; j < array.length; j++) {
+                            binder.bind(this, path + '.' + j, array[j]);
+                        }
                     }
                 }
-                //var listName = path.find(/\.([^\.]*)\.splices$/);
-                //dolphin.updateList(bean, listName, changeRecord.indexSplices);
-                // TODO: Unbind all removed elements
-                // for all removed elements
-                //     deepUnbind(this, path
-                // TODO: Bind to all added elements
             } else {
                 bean = navigateToBean(this, path);
                 if (bean !== null) {
