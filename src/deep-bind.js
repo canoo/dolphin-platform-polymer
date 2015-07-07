@@ -65,44 +65,45 @@ Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, coun
 
 
 Binder.prototype.bind = function (element, rootPath, value) {
-    switch (typeof value) {
-        case 'object':
-            var listenerList = this.listeners.get(value);
-            if (! exists(listenerList)) {
-                listenerList = [];
-                this.listeners.set(value, listenerList);
-            }
-            listenerList.push({element: element, rootPath: rootPath});
+    var listenerList = this.listeners.get(value);
+    if (!exists(listenerList)) {
+        listenerList = [];
+        this.listeners.set(value, listenerList);
+    }
+    listenerList.push({element: element, rootPath: rootPath});
 
-            for (var propertyName in value) {
-                this.bind(element, rootPath + '.' + propertyName, value[propertyName]);
-            }
-            break;
-        case 'array' :
-            break;
+    if (Array.isArray(value)) {
+        for (var i = 0; i < value.length; i++) {
+            this.bind(element, rootPath + '.' + i, value[i]);
+        }
+    } else if (typeof value === 'object') {
+        for (var propertyName in value) {
+            this.bind(element, rootPath + '.' + propertyName, value[propertyName]);
+        }
     }
 };
 
 Binder.prototype.unbind = function (element, rootPath, value) {
-    switch (typeof value) {
-        case 'object':
-            var listenerList = this.listeners.get(value);
-            if (exists(listenerList)) {
-                var n = listenerList.length;
-                for (var i = 0; i < n; i++) {
-                    var entry = listenerList[i];
-                    if (entry.element === element && entry.rootPath === rootPath) {
-                        listenerList.splice(i, 1);
-                        for (var propertyName in value) {
-                            this.unbind(element, rootPath + '.' + propertyName, value[propertyName]);
-                        }
-                        return;
+    var listenerList = this.listeners.get(value);
+    if (exists(listenerList)) {
+        var n = listenerList.length;
+        for (var i = 0; i < n; i++) {
+            var entry = listenerList[i];
+            if (entry.element === element && entry.rootPath === rootPath) {
+                listenerList.splice(i, 1);
+
+                if (Array.isArray(value)) {
+                    for (var j = 0; j < value.length; j++) {
+                        this.unbind(element, rootPath + '.' + j, value[j]);
+                    }
+                } else if (typeof value === 'object') {
+                    for (var propertyName in value) {
+                        this.unbind(element, rootPath + '.' + propertyName, value[propertyName]);
                     }
                 }
+                return;
             }
-            break;
-        case 'array' :
-            break;
+        }
     }
 };
 
