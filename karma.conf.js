@@ -29,8 +29,8 @@ module.exports = function (config) {
 
         // list of files / patterns to load in the browser
         files: [
-            { pattern: './node_modules/mocha/mocha.css', watched: false },
             { pattern: './bower_components/dolphin-js/dist/dolphin.min.js' },
+            { pattern: './bower_components/webcomponentsjs/webcomponents.min.js', watched: false },
             { pattern: './bower_components/polymer/polymer*.html', included: false, watched: false },
             { pattern: './test/build/test-bundle.js', included: false },
             'test/karma_runner.html'
