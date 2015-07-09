@@ -9,17 +9,20 @@
   "license": "ALv2",
   "ignore": [
     "**/.*",
-    "node_modules",
-    "bower_components",
-    "test"
+    "lib",
+    "src",
+    "test",
+    "gulpfile.js",
+    "karma.conf.js",
+    "package.json",
+    "sauce.launchers.js",
+    "sauce-template.json"
   ],
   "devDependencies": {
-    "polymer": "~1.0.4",
-    "web-component-tester": "~3.2.0",
-    "test-fixture": "PolymerElements/test-fixture#~1.0.0"
+    "core.js": "~0.9.18"
   },
   "dependencies": {
-    "dolphin-js": "~0.2.2",
-    "core.js": "~0.9.18"
+    "polymer": "~1.0.4",
+    "dolphin-js": "~0.2.2"
   }
 }

@@ -55,7 +55,7 @@ function createBaseBehavior(dolphin) {
                 bean = navigateToBean(this, path);
                 if (bean !== null) {
                     propertyName = path.match(/[^\.]+$/);
-                    var oldValue = dolphin.notifyAttributeChange(bean, propertyName[0], newValue);
+                    var oldValue = dolphin.notifyBeanChange(bean, propertyName[0], newValue);
                     if (oldValue !== null) {
                         binder.unbind(this, path, oldValue);
                     }

@@ -11,7 +11,7 @@ var injectUpdateFromDolphin = null;
 var injectArrayUpdateFromDolphin = null;
 
 var dolphin = {
-    notifyAttributeChange: function() {},
+    notifyBeanChange: function() {},
     onUpdated: function(func) { injectUpdateFromDolphin = func; },
     onArrayUpdate: function(func) { injectArrayUpdateFromDolphin = func;},
     notifyArrayChange: function() {}
@@ -76,13 +76,13 @@ describe('Simple Binding of a Dolphin Bean', function() {
     it('should synchronize changes coming from Polymer', sinon.test(function() {
         var element = new CustomElement();
         var bean = { theProperty: 'VALUE_1' };
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
-        notifyAttributeChangeStub.returns('VALUE_1');
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
+        notifyBeanChangeStub.returns('VALUE_1');
 
         element.bind('theBean', bean);
 
         element.set('theBean.theProperty', 'VALUE_2');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, bean, 'theProperty', 'VALUE_2');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, bean, 'theProperty', 'VALUE_2');
     }));
 
 
@@ -91,14 +91,14 @@ describe('Simple Binding of a Dolphin Bean', function() {
         var element = new CustomElement();
         var bean1 = { theProperty: 'VALUE_1' };
         var bean2 = { theProperty: 'VALUE_X' };
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
 
         element.bind('theBean', bean1);
         element.bind('theBean', bean2);
-        notifyAttributeChangeStub.returns('VALUE_X');
+        notifyBeanChangeStub.returns('VALUE_X');
 
         element.set('theBean.theProperty', 'VALUE_3');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, bean2, 'theProperty', 'VALUE_3');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, bean2, 'theProperty', 'VALUE_3');
     }));
 });
 
@@ -175,7 +175,7 @@ describe('Simple Binding of an Array', function() {
         };
         var spyWithExpectation = element.beanChangeObserver.withArgs(sinon.match(argsMatcher));
 
-        injectArrayUpdateFromDolphin(bean, 'theArray', 1, 1);
+        injectArrayUpdateFromDolphin(bean, 'theArray', 1, 1, undefined);
 
         sinon.assert.calledOnce(spyWithExpectation);
     }));
@@ -381,7 +381,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
         this.spy(element, 'beanChangeObserver');
-        this.stub(dolphin, 'notifyAttributeChange').returns(innerBean1);
+        this.stub(dolphin, 'notifyBeanChange').returns(innerBean1);
 
         element.bind('theBean', bean);
         element.set('theBean.innerBean', innerBean2);
@@ -401,13 +401,13 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_2' };
         var bean = { innerBean: innerBean1};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
-        notifyAttributeChangeStub.returns(innerBean1);
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
+        notifyBeanChangeStub.returns(innerBean1);
 
         element.bind('theBean', bean);
 
         element.set('theBean.innerBean', innerBean2);
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, bean, 'innerBean', innerBean2);
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, bean, 'innerBean', innerBean2);
     }));
 
 
@@ -416,13 +416,13 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var element = new CustomElement();
         var innerBean = { theProperty: 'VALUE_1' };
         var bean = { innerBean: innerBean};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
-        notifyAttributeChangeStub.returns('VALUE_1');
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
+        notifyBeanChangeStub.returns('VALUE_1');
 
         element.bind('theBean', bean);
 
         element.set('theBean.innerBean.theProperty', 'VALUE_2');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean, 'theProperty', 'VALUE_2');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean, 'theProperty', 'VALUE_2');
     }));
 
 
@@ -433,15 +433,15 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var bean1 = { innerBean: innerBean1};
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean2 = { innerBean: innerBean2};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
 
         element.bind('theBean', bean1);
         element.bind('theBean', bean2);
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_X');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_X');
 
         element.set('theBean.innerBean.theProperty', 'VALUE_2');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean2, 'theProperty', 'VALUE_2');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_2');
     }));
 
 
@@ -451,15 +451,15 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
 
         element.bind('theBean', bean);
         injectUpdateFromDolphin(bean, 'innerBean', innerBean2, innerBean1);
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_X');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_X');
 
         element.set('theBean.innerBean.theProperty', 'VALUE_2');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean2, 'theProperty', 'VALUE_2');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_2');
     }));
 
 
@@ -469,16 +469,16 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
-        notifyAttributeChangeStub.returns(innerBean1);
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
+        notifyBeanChangeStub.returns(innerBean1);
 
         element.bind('theBean', bean);
         element.set('theBean.innerBean', innerBean2);
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_X');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_X');
 
         element.set('theBean.innerBean.theProperty', 'VALUE_3');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean2, 'theProperty', 'VALUE_3');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
     }));
 });
 
@@ -529,14 +529,14 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean = { theProperty: 'VALUE_1' };
         var array = [ innerBean ];
         var bean = { theArray: array};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
 
         element.bind('theBean', bean);
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_1');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_1');
 
         element.set('theBean.theArray.0.theProperty', 'VALUE_2');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean, 'theProperty', 'VALUE_2');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean, 'theProperty', 'VALUE_2');
     }));
 
 
@@ -598,22 +598,22 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
-        notifyAttributeChangeStub.returns(innerBean1);
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
+        notifyBeanChangeStub.returns(innerBean1);
 
         element.bind('theBean', bean);
         injectArrayUpdateFromDolphin(bean, 'theArray', 0, 1, innerBean2);
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_X');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_X');
 
         element.set('theBean.theArray.0.theProperty', 'VALUE_3');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean2, 'theProperty', 'VALUE_3');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
 
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_A');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_A');
 
         element.set('theBean.theArray.1.theProperty', 'VALUE_B');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean3, 'theProperty', 'VALUE_B');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean3, 'theProperty', 'VALUE_B');
     }));
 
 
@@ -625,22 +625,22 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
-        notifyAttributeChangeStub.returns(innerBean1);
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
+        notifyBeanChangeStub.returns(innerBean1);
 
         element.bind('theBean', bean);
         element.splice('theBean.theArray', 0, 1, innerBean2);
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_X');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_X');
 
         element.set('theBean.theArray.0.theProperty', 'VALUE_3');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean2, 'theProperty', 'VALUE_3');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
 
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_A');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_A');
 
         element.set('theBean.theArray.1.theProperty', 'VALUE_B');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean3, 'theProperty', 'VALUE_B');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean3, 'theProperty', 'VALUE_B');
     }));
 
 
@@ -675,8 +675,8 @@ describe('Deep Binding of a Bean within an Array', function() {
         var array2 = [ innerBean2 ];
         var bean = { theArray: array1};
         this.spy(element, 'beanChangeObserver');
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
-        notifyAttributeChangeStub.returns(array1);
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
+        notifyBeanChangeStub.returns(array1);
 
         element.bind('theBean', bean);
         element.set('theBean.theArray', array2);
@@ -698,15 +698,15 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean2 = { theProperty: 'VALUE_X' };
         var array2 = [ innerBean2 ];
         var bean = { theArray: array1};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
 
         element.bind('theBean', bean);
         injectUpdateFromDolphin(bean, 'theArray', array2, array1);
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_X');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_X');
 
         element.set('theBean.theArray.0.theProperty', 'VALUE_3');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean2, 'theProperty', 'VALUE_3');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
     }));
 
 
@@ -718,16 +718,16 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean2 = { theProperty: 'VALUE_X' };
         var array2 = [ innerBean2 ];
         var bean = { theArray: array1};
-        var notifyAttributeChangeStub = this.stub(dolphin, 'notifyAttributeChange');
-        notifyAttributeChangeStub.returns(array1);
+        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
+        notifyBeanChangeStub.returns(array1);
 
         element.bind('theBean', bean);
         element.set('theBean.theArray', array2);
-        notifyAttributeChangeStub.reset();
-        notifyAttributeChangeStub.returns('VALUE_X');
+        notifyBeanChangeStub.reset();
+        notifyBeanChangeStub.returns('VALUE_X');
 
         element.set('theBean.theArray.0.theProperty', 'VALUE_3');
-        sinon.assert.calledWithExactly(dolphin.notifyAttributeChange, innerBean2, 'theProperty', 'VALUE_3');
+        sinon.assert.calledWithExactly(dolphin.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
     }));
 });
 
