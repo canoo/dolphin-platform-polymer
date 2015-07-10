@@ -73,7 +73,7 @@ Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, coun
 
 
 Binder.prototype.bind = function (element, rootPath, value) {
-    if (typeof value !== 'object') {
+    if (!exists(value) || typeof value !== 'object') {
         return;
     }
     var listenerList = this.listeners.get(value);
@@ -95,7 +95,7 @@ Binder.prototype.bind = function (element, rootPath, value) {
 };
 
 Binder.prototype.unbind = function (element, rootPath, value) {
-    if (typeof value !== 'object') {
+    if (!exists(value) || typeof value !== 'object') {
         return;
     }
     var listenerList = this.listeners.get(value);
