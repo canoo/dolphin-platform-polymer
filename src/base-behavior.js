@@ -52,10 +52,7 @@ function createBaseBehavior(dolphin) {
                 }
             } else {
                 bean = navigateToBean(this, path);
-                if (bean !== null && !Array.isArray(bean)) {
-                    if (Array.isArray(newValue)) {
-                        throw new Error('Replacing arrays is currently not supported. Please use splice instead to replace all elements.');
-                    }
+                if (bean !== null && !Array.isArray(bean) && !Array.isArray(newValue)) {
                     propertyName = path.match(/[^\.]+$/);
                     var oldValue = dolphin.notifyBeanChange(bean, propertyName[0], newValue);
                     if (oldValue !== null) {
