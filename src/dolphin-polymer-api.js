@@ -1,7 +1,7 @@
 /*jslint browserify: true */
 "use strict";
 
-var connect = require('../bower_components/dolphin-js/dist/dolphin.min.js').connect;
+var connect = require('../bower_components/dolphin-js/dist/dolphin.js').connect2;
 var createBaseBehavior = require('./base-behavior.js').createBaseBehavior;
 
 var dolphin = null;

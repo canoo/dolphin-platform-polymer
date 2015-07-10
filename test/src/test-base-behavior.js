@@ -12,7 +12,7 @@ var injectArrayUpdateFromDolphin = null;
 
 var dolphin = {
     notifyBeanChange: function() {},
-    onUpdated: function(func) { injectUpdateFromDolphin = func; },
+    onBeanUpdate: function(func) { injectUpdateFromDolphin = func; },
     onArrayUpdate: function(func) { injectArrayUpdateFromDolphin = func;},
     notifyArrayChange: function() {}
 };
@@ -667,27 +667,28 @@ describe('Deep Binding of a Bean within an Array', function() {
 
 
 
-    it('should synchronize changes of a property of the nested Bean from Dolphin where the array was replaced trough Polymer', sinon.test(function() {
-        var element = new CustomElement();
-        var innerBean1 = { theProperty: 'VALUE_1' };
-        var array1 = [ innerBean1 ];
-        var innerBean2 = { theProperty: 'VALUE_X' };
-        var array2 = [ innerBean2 ];
-        var bean = { theArray: array1};
-        this.spy(element, 'beanChangeObserver');
-        var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
-        notifyBeanChangeStub.returns(array1);
-
-        element.bind('theBean', bean);
-        element.set('theBean.theArray', array2);
-        element.beanChangeObserver.reset();
-
-        injectUpdateFromDolphin(innerBean1, 'theProperty', 'VALUE_2', 'VALUE_1');
-        sinon.assert.notCalled(element.beanChangeObserver);
-
-        injectUpdateFromDolphin(innerBean2, 'theProperty', 'VALUE_Y', 'VALUE_X');
-        sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.theArray.0.theProperty', value: 'VALUE_Y', base: bean});
-    }));
+    // TODO: Enable this test once setting arrays is supported
+    //it('should synchronize changes of a property of the nested Bean from Dolphin where the array was replaced trough Polymer', sinon.test(function() {
+    //    var element = new CustomElement();
+    //    var innerBean1 = { theProperty: 'VALUE_1' };
+    //    var array1 = [ innerBean1 ];
+    //    var innerBean2 = { theProperty: 'VALUE_X' };
+    //    var array2 = [ innerBean2 ];
+    //    var bean = { theArray: array1};
+    //    this.spy(element, 'beanChangeObserver');
+    //    var notifyBeanChangeStub = this.stub(dolphin, 'notifyBeanChange');
+    //    notifyBeanChangeStub.returns(array1);
+    //
+    //    element.bind('theBean', bean);
+    //    element.set('theBean.theArray', array2);
+    //    element.beanChangeObserver.reset();
+    //
+    //    injectUpdateFromDolphin(innerBean1, 'theProperty', 'VALUE_2', 'VALUE_1');
+    //    sinon.assert.notCalled(element.beanChangeObserver);
+    //
+    //    injectUpdateFromDolphin(innerBean2, 'theProperty', 'VALUE_Y', 'VALUE_X');
+    //    sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'theBean.theArray.0.theProperty', value: 'VALUE_Y', base: bean});
+    //}));
 
 
 

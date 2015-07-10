@@ -1,6 +1,5 @@
 .idea
 node_modules/
 bower_components/
-dist/
 test/build/
 sauce.json

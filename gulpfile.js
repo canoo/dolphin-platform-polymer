@@ -4,6 +4,7 @@ var browserify = require('browserify');
 var del = require('del');
 var glob = require('glob');
 var gulp = require('gulp');
+var derequire = require('gulp-derequire');
 var jshint = require('gulp-jshint');
 var rename = require('gulp-rename');
 var sourcemaps = require('gulp-sourcemaps');
@@ -73,6 +74,7 @@ function rebundle(bundler) {
         .bundle()
         .on('error', gutil.log.bind(gutil, 'Browserify Error'))
         .pipe(source('dolphin-polymer.js'))
+        .pipe(derequire())
         .pipe(gulp.dest('./dist'))
         .pipe(buffer())
         .pipe(rename({extname: '.min.js'}))

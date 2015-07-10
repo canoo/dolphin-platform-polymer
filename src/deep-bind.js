@@ -6,7 +6,7 @@ var Map  = require('../bower_components/core.js/library/fn/map');
 function Binder(dolphin) {
     this.listeners = new Map();
 
-    dolphin.onUpdated(bindScope(this, this.onUpdatedHandler));
+    dolphin.onBeanUpdate(bindScope(this, this.onBeanUpdateHandler));
     dolphin.onArrayUpdate(bindScope(this, this.onArrayUpdateHandler));
 }
 
@@ -20,7 +20,7 @@ function bindScope(scope, fn) {
     };
 }
 
-Binder.prototype.onUpdatedHandler = function(bean, propertyName, newValue, oldValue) {
+Binder.prototype.onBeanUpdateHandler = function(bean, propertyName, newValue, oldValue) {
     var listenerList = this.listeners.get(bean);
     if (exists(listenerList)) {
         var n = listenerList.length;
@@ -32,11 +32,14 @@ Binder.prototype.onUpdatedHandler = function(bean, propertyName, newValue, oldVa
             element.set(path, newValue);
             this.bind(element, path, newValue);
         }
+    } else {
+        bean[propertyName] = newValue;
     }
 };
 
 
 Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, count, newElements) {
+    var array = bean[propertyName];
     var listenerList = this.listeners.get(bean);
     if (exists(listenerList)) {
         var n = listenerList.length;
@@ -45,7 +48,6 @@ Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, coun
             var element = entry.element;
             var path = entry.rootPath + '.' + propertyName;
 
-            var array = bean[propertyName];
             for (var pos = index; pos < array.length; pos++) {
                 this.unbind(element, path + '.' + pos, array[pos]);
             }
@@ -60,11 +62,20 @@ Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, coun
                 this.bind(element, path + '.' + pos, array[pos]);
             }
         }
+    } else {
+        if (typeof newElements === 'undefined') {
+            array.splice(index, count);
+        } else {
+            array.splice(index, count, newElements);
+        }
     }
 };
 
 
 Binder.prototype.bind = function (element, rootPath, value) {
+    if (typeof value !== 'object') {
+        return;
+    }
     var listenerList = this.listeners.get(value);
     if (!exists(listenerList)) {
         listenerList = [];
@@ -84,6 +95,9 @@ Binder.prototype.bind = function (element, rootPath, value) {
 };
 
 Binder.prototype.unbind = function (element, rootPath, value) {
+    if (typeof value !== 'object') {
+        return;
+    }
     var listenerList = this.listeners.get(value);
     if (exists(listenerList)) {
         var n = listenerList.length;
