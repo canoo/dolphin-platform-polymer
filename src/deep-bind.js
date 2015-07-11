@@ -20,18 +20,35 @@ function bindScope(scope, fn) {
     };
 }
 
-Binder.prototype.onBeanUpdateHandler = function(bean, propertyName, newValue, oldValue) {
-    var listenerList = this.listeners.get(bean);
-    if (exists(listenerList)) {
-        var n = listenerList.length;
-        for (var i = 0; i < n; i++) {
-            var entry = listenerList[i];
-            var element = entry.element;
-            var path = entry.rootPath + '.' + propertyName;
-            this.unbind(element, path, oldValue);
-            element.set(path, newValue);
-            this.bind(element, path, newValue);
+function deepEqual(array1, array2) {
+    if (array1 === array2 || (!exists(array1) && !exists(array2))) {
+        return true;
+    }
+    if (exists(array1) !== exists(array2)) {
+        return false;
+    }
+    var n = array1.length;
+    if (array2.length !== n) {
+        return false;
+    }
+    for (var i = 0; i < n; i++) {
+        if (array1[i] !== array2[i]) {
+            return false;
         }
+    }
+    return true;
+}
+
+Binder.prototype.onBeanUpdateHandler = function(bean, propertyName, newValue, oldValue) {
+    if (oldValue === newValue) {
+        return;
+    }
+    var listenerList = this.listeners.get(bean);
+    if (exists(listenerList) && listenerList.length > 0) {
+        var entry = listenerList[0];
+        var element = entry.element;
+        var path = entry.rootPath + '.' + propertyName;
+        element.set(path, newValue);
     } else {
         bean[propertyName] = newValue;
     }
@@ -40,27 +57,19 @@ Binder.prototype.onBeanUpdateHandler = function(bean, propertyName, newValue, ol
 
 Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, count, newElements) {
     var array = bean[propertyName];
+    var oldElements = array.slice(index, index + count);
+    if (deepEqual(newElements, oldElements)) {
+        return;
+    }
     var listenerList = this.listeners.get(bean);
-    if (exists(listenerList)) {
-        var n = listenerList.length;
-        for (var i = 0; i < n; i++) {
-            var entry = listenerList[i];
-            var element = entry.element;
-            var path = entry.rootPath + '.' + propertyName;
-
-            for (var pos = index; pos < array.length; pos++) {
-                this.unbind(element, path + '.' + pos, array[pos]);
-            }
-
-            if (typeof newElements === 'undefined') {
-                element.splice(path, index, count);
-            } else {
-                element.splice(path, index, count, newElements);
-            }
-
-            for (pos = index; pos < array.length; pos++) {
-                this.bind(element, path + '.' + pos, array[pos]);
-            }
+    if (exists(listenerList) && listenerList.length > 0) {
+        var entry = listenerList[0];
+        var element = entry.element;
+        var path = entry.rootPath + '.' + propertyName;
+        if (typeof newElements === 'undefined') {
+            element.splice(path, index, count);
+        } else {
+            element.splice(path, index, count, newElements);
         }
     } else {
         if (typeof newElements === 'undefined') {
