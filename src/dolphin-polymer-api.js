@@ -7,9 +7,7 @@ var createBaseBehavior = require('./base-behavior.js').createBaseBehavior;
 var dolphin = null;
 
 exports.connect = function(url, config) {
-    return connect(url, config).then(
-        function(dolphin) {
-            dolphin.BaseBehavior = createBaseBehavior(dolphin);
-        }
-    );
+    var dolphin = connect(url, config);
+    dolphin.BaseBehavior = createBaseBehavior(dolphin);
+    return dolphin;
 };
