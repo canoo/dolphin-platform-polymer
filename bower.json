@@ -23,6 +23,6 @@
   },
   "dependencies": {
     "polymer": "~1.0.6",
-    "dolphin-js": "~0.4.2"
+    "dolphin-js": "git@git.canoo.com:dolphin-platform/dolphin-js.git#master"
   }
 }
