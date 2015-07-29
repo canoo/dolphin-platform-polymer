@@ -1,6 +1,6 @@
 {
   "name": "dolphin-js-polymer",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "authors": [
     "Michael Heinrichs <michael.heinrichs@canoo.com>"
   ],
@@ -20,7 +20,7 @@
   ],
   "devDependencies": {
     "core.js": "~1.0.0",
-    "dolphin-js": "git@git.canoo.com:dolphin-platform/dolphin-js.git#master"
+    "dolphin-js": "~0.4.3"
   },
   "dependencies": {
     "polymer": "~1.0.6"
