@@ -3,12 +3,7 @@
 
 var Map  = require('../bower_components/core.js/library/fn/map');
 
-function Binder(dolphin) {
-    this.listeners = new Map();
 
-    dolphin.onBeanUpdate(bindScope(this, this.onBeanUpdateHandler));
-    dolphin.onArrayUpdate(bindScope(this, this.onArrayUpdateHandler));
-}
 
 function exists(object) {
     return typeof object !== 'undefined' && object !== null;
@@ -38,6 +33,15 @@ function deepEqual(array1, array2) {
     }
     return true;
 }
+
+
+function Binder(beanManager) {
+    this.listeners = new Map();
+
+    beanManager.onBeanUpdate(bindScope(this, this.onBeanUpdateHandler));
+    beanManager.onArrayUpdate(bindScope(this, this.onArrayUpdateHandler));
+}
+
 
 Binder.prototype.onBeanUpdateHandler = function(bean, propertyName, newValue, oldValue) {
     if (oldValue === newValue) {

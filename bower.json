@@ -20,7 +20,7 @@
   ],
   "devDependencies": {
     "core.js": "~1.0.0",
-    "dolphin-js": "~0.4.4"
+    "dolphin-js": "git@git.canoo.com:dolphin-platform/dolphin-js.git#master"
   },
   "dependencies": {
     "polymer": "~1.0.6"
