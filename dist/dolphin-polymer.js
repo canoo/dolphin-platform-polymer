@@ -704,7 +704,7 @@ var exists = _dereq_('./utils.js').exists;
 var Connector = _dereq_('./connector.js').Connector;
 var BeanManager = _dereq_('./beanmanager.js').BeanManager;
 var ClassRepository = _dereq_('./classrepo.js').ClassRepository;
-var ControllerFactory = _dereq_('./controllerfactory.js').ControllerManager;
+var ControllerManager = _dereq_('./controllermanager.js').ControllerManager;
 var ClientContext = _dereq_('./clientcontext.js').ClientContext;
 
 
@@ -719,12 +719,12 @@ exports.connect = function(url, config) {
     var classRepository = new ClassRepository(dolphin);
     var beanManager = new BeanManager(classRepository);
     var connector = new Connector(url, dolphin, classRepository);
-    var controllerFactory = new ControllerFactory(beanManager, connector);
+    var controllerManager = new ControllerManager(beanManager, connector);
 
-    return new ClientContext(dolphin, beanManager, controllerFactory);
+    return new ClientContext(dolphin, beanManager, controllerManager);
 };
 
-},{"./beanmanager.js":26,"./classrepo.js":27,"./clientcontext.js":28,"./connector.js":29,"./controllerfactory.js":30,"./polyfills.js":32,"./utils.js":33}],2:[function(_dereq_,module,exports){
+},{"./beanmanager.js":26,"./classrepo.js":27,"./clientcontext.js":28,"./connector.js":29,"./controllermanager.js":30,"./polyfills.js":32,"./utils.js":33}],2:[function(_dereq_,module,exports){
 _dereq_('../modules/es6.string.iterator');
 _dereq_('../modules/web.dom.iterable');
 _dereq_('../modules/es6.map');
@@ -2326,15 +2326,15 @@ var exists = _dereq_('./utils.js').exists;
 
 
 
-function ClientContext(dolphin, beanManager, controllerFactory) {
+function ClientContext(dolphin, beanManager, controllerManager) {
     this.dolphin = dolphin;
     this.beanManager = beanManager;
-    this._controllerFactory = controllerFactory;
+    this._controllerManager = controllerManager;
 }
 
 
 ClientContext.prototype.createController = function(name) {
-    return this._controllerFactory.createController(name);
+    return this._controllerManager.createController(name);
 };
 
 
@@ -2516,17 +2516,17 @@ function ControllerManager(beanManager, connector) {
 
     var self = this;
     this.controllerRegistryBeanPromise = new Promise(function(resolve) {
-        self.beanManager.onBeanAdded(CONTROLLER_REGISTRY_BEAN_NAME, function(controllerRegistryBean) {
+        self.beanManager.onAdded(CONTROLLER_REGISTRY_BEAN_NAME, function(controllerRegistryBean) {
             resolve(controllerRegistryBean);
         });
     });
     this.controllerActionCallBeanPromise = new Promise(function(resolve) {
-        self.beanManager.onBeanAdded(CONTROLLER_ACTION_CALL_BEAN_NAME, function(controllerActionCallBean) {
+        self.beanManager.onAdded(CONTROLLER_ACTION_CALL_BEAN_NAME, function(controllerActionCallBean) {
             resolve(controllerActionCallBean);
         });
     });
     this.controllerDestroyBeanPromise = new Promise(function(resolve) {
-        self.beanManager.onBeanAdded(CONTROLLER_DESTROY_BEAN_NAME, function(controllerDestroyBean) {
+        self.beanManager.onAdded(CONTROLLER_DESTROY_BEAN_NAME, function(controllerDestroyBean) {
             resolve(controllerDestroyBean);
         });
     });
@@ -2539,10 +2539,10 @@ ControllerManager.prototype.createController = function(name) {
         self.controllerRegistryBeanPromise.then(function(controllerRegistryBean) {
                 self.beanManager.notifyBeanChange(controllerRegistryBean, 'controllerName', name);
                 self.connector.invoke(REGISTER_CONTROLLER_COMMAND_NAME).then(function() {
-                    resolve(new ControllerProxy(controllerRegistryBean.controllerId, controllerRegistryBean.model))
-                })
+                    resolve(new ControllerProxy(controllerRegistryBean.controllerId, controllerRegistryBean.model));
+                });
             }
-        )
+        );
     });
 };
 
@@ -2553,9 +2553,9 @@ ControllerManager.prototype.invokeAction = function(controllerId, actionName) {
         self.controllerActionCallBeanPromise.then(function(controllerActionCallBean) {
                 self.beanManager.notifyBeanChange(controllerActionCallBean, 'controllerId', controllerId);
                 self.beanManager.notifyBeanChange(controllerActionCallBean, 'actionName', actionName);
-                self.connector.invoke(CALL_CONTROLLER_ACTION_COMMAND_NAME).then(resolve)
+                self.connector.invoke(CALL_CONTROLLER_ACTION_COMMAND_NAME).then(resolve);
             }
-        )
+        );
     });
 };
 
@@ -2566,7 +2566,7 @@ ControllerManager.prototype.destroyController = function(controllerId) {
                 self.beanManager.notifyBeanChange(controllerDestroyBean, 'controllerId', controllerId);
                 self.connector.invoke(DESTROY_CONTROLLER_COMMAND_NAME).then(resolve);
             }
-        )
+        );
     });
 };
 
