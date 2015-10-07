@@ -45,9 +45,9 @@ function setupCreateBehavior(clientContext) {
                 });
             },
 
-            invoke: function(actionName) {
+            invoke: function(actionName, params) {
                 // TODO Call this after init has finished
-                this._controller.invoke(actionName);
+                this._controller.invoke(actionName, params);
             },
 
             //bind: function(propertyName, newValue) {
