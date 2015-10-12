@@ -23,6 +23,7 @@
     "dolphin-js": "~0.5.1"
   },
   "dependencies": {
-    "polymer": "~1.1.2"
+    "polymer": "~1.1.0",
+    "open-dolphin-js": "~0.0.2"
   }
 }
