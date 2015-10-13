@@ -828,3 +828,58 @@ describe('Deep Binding of a Bean within an Array', function() {
     });
 });
 
+
+
+
+
+describe('Dolphin Command', function() {
+
+    var sandbox;
+
+    beforeEach(function () {
+        sandbox = sinon.sandbox.create();
+    });
+
+    afterEach(function () {
+        sandbox.restore();
+    });
+
+
+
+    it('should invoke command without parameters', function(done) {
+        var controllerAction = sandbox.stub();
+        controllerAction.withArgs('myCommand').returns(Promise.resolve('myCommandResult'));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ invoke: controllerAction }));
+
+        var element = new CustomElement();
+
+        setTimeout(function() {
+            element.invoke('myCommand').then(function(result) {
+                expect(result).to.equal('myCommandResult');
+                sinon.assert.calledWith(controllerAction, 'myCommand');
+
+                done();
+            });
+        });
+    });
+
+
+
+    it('should send command with one named parameter', function(done) {
+        var controllerAction = sandbox.stub();
+        controllerAction.withArgs('myCommand', {x: 42}).returns(Promise.resolve('myCommandResult1'));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ invoke: controllerAction }));
+
+        var element = new CustomElement();
+
+        setTimeout(function() {
+            element.invoke('myCommand', {x: 42}).then(function(result) {
+                expect(result).to.equal('myCommandResult1');
+                sinon.assert.calledWithExactly(controllerAction, 'myCommand', {x: 42});
+
+                done();
+            });
+        });
+
+    });
+});

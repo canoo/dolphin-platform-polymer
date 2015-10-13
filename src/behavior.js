@@ -47,20 +47,8 @@ function setupCreateBehavior(clientContext) {
 
             invoke: function(actionName, params) {
                 // TODO Call this after init has finished
-                this._controller.invoke(actionName, params);
+                return this._controller.invoke(actionName, params);
             },
-
-            //bind: function(propertyName, newValue) {
-            //    var oldValue = this[propertyName];
-            //    this[propertyName] = newValue;
-            //    var eventName = Polymer.CaseMap.camelToDashCase(propertyName) + '-changed';
-            //    this.unlisten(this, eventName, '_dolphinObserver');
-            //    this.listen(this, eventName, '_dolphinObserver');
-            //    if (exists(oldValue)) {
-            //        binder.unbind(this, propertyName, oldValue);
-            //    }
-            //    binder.bind(this, propertyName, newValue);
-            //},
 
             _dolphinObserver: function(event) {
                 var path = event.path;
