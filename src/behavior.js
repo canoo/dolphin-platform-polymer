@@ -13,7 +13,7 @@ function exists(object) {
 
 function navigateToBean(element, path) {
     var navigation = path.match(/^(.*)\.[^\.]*$/);
-    if (navigation === null) {
+    if (! exists(navigation)) {
         return element;
     } else {
         return element.get(navigation[1], element);
@@ -58,7 +58,7 @@ function setupCreateBehavior(clientContext) {
                 if (exists(newValue) && exists(newValue.indexSplices)) {
                     path = path.substr(0, path.length - ".splices".length);
                     bean = navigateToBean(this, path);
-                    if (bean !== null) {
+                    if (exists(bean)) {
                         propertyName = path.match(/[^\.]+$/);
                         var n = newValue.indexSplices.length;
                         for (i = 0; i < n; i++) {
@@ -80,13 +80,13 @@ function setupCreateBehavior(clientContext) {
                     }
                 } else {
                     bean = navigateToBean(this, path);
-                    if (bean !== null && !Array.isArray(bean) && !Array.isArray(newValue)) {
+                    if (exists(bean) && !Array.isArray(bean) && !Array.isArray(newValue)) {
                         propertyName = path.match(/[^\.]+$/);
                         var oldValue = clientContext.beanManager.notifyBeanChange(bean, propertyName[0], newValue);
-                        if (oldValue !== null) {
+                        if (exists(oldValue)) {
                             binder.unbind(this, path, oldValue);
                         }
-                        if (newValue !== null) {
+                        if (exists(newValue)) {
                             binder.bind(this, path, newValue);
                         }
                     }
