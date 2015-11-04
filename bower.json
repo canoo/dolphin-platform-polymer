@@ -1,12 +1,21 @@
 {
-  "name": "dolphin-platform-polymer",
-  "version": "0.5.2",
+  "name": "dolphin-js-polymer",
+  "version": "0.5.3",
   "authors": [
     "Michael Heinrichs <michael.heinrichs@canoo.com>"
   ],
-  "description": "Polymer Client of the Dolphin Platform",
+  "homepage": "http://www.dolphin-platform.io",
+  "description": "The Dolphin Platform is a framework that implements the presentation model pattern and provides a modern way to create enterprise applications. The Platform provides several client implementations that all can be used in combination with a general sever API.",
+  "keywords": [
+    "Dolphin Platform"
+  ],
+  "licenses": [
+    {
+      "type": "Apache-2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
   "main": "dolphin-js-polymer.html",
-  "license": "ALv2",
   "ignore": [
     "**/.*",
     "lib",
@@ -20,7 +29,7 @@
   ],
   "devDependencies": {
     "core.js": "~1.2.1",
-    "dolphin-platform-js": "~0.5.2"
+    "dolphin-platform-js": "~0.5.3"
   },
   "dependencies": {
     "polymer": "~1.1.0",
