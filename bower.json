@@ -1,5 +1,5 @@
 {
-  "name": "dolphin-js-polymer",
+  "name": "dolphin-platform-polymer",
   "version": "0.5.2",
   "authors": [
     "Michael Heinrichs <michael.heinrichs@canoo.com>"
@@ -20,7 +20,7 @@
   ],
   "devDependencies": {
     "core.js": "~1.2.1",
-    "dolphin-js": "~0.5.2"
+    "dolphin-platform-js": "~0.5.2"
   },
   "dependencies": {
     "polymer": "~1.1.0",
