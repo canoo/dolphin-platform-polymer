@@ -1,5 +1,5 @@
 {
-  "name": "dolphin-js-polymer",
+  "name": "dolphin-polymer",
   "version": "0.5.4",
   "authors": [
     "Michael Heinrichs <michael.heinrichs@canoo.com>"
@@ -15,7 +15,7 @@
       "url": "http://www.apache.org/licenses/LICENSE-2.0"
     }
   ],
-  "main": "dolphin-js-polymer.html",
+  "main": "./dist/dolphin-polymer.min.js",
   "ignore": [
     "**/.*",
     "lib",
@@ -29,7 +29,7 @@
   ],
   "devDependencies": {
     "core.js": "~1.2.1",
-    "dolphin-platform-js": "~0.5.3"
+    "dolphin-js": "~0.5.3"
   },
   "dependencies": {
     "polymer": "~1.1.0",
