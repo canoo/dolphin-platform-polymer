@@ -26,12 +26,37 @@ function exists(object) {
 }
 
 
+function polymer1_1hack(element, path) {
+    // This is a temporary hack to deal with Polymer's API consistency concerning arrays and paths.
+    // An observer uses keys in an array, while the get() and set() methods expect the index.
+    // This is hopefully fixed in Polymer 1.2.
+    do {
+        var pathElements = path.match(/^([^\.]+)\.(.*)$/);
+        var key = pathElements !== null? pathElements[1] : path;
+        path = pathElements !== null? pathElements[2] : null;
+
+        if (Array.isArray(element)) {
+            var arrayKey = parseInt(key);
+            if (isNaN(arrayKey)) {
+                element = element[key];
+            } else {
+                var collection = Polymer.Collection.get(element);
+                element = collection.getItem(arrayKey);
+            }
+        } else {
+            element = element[key];
+        }
+    } while (path !== null && exists(element));
+
+    return element;
+}
 function navigateToBean(element, path) {
     var navigation = path.match(/^(.*)\.[^\.]*$/);
     if (! exists(navigation)) {
         return element;
     } else {
-        return element.get(navigation[1], element);
+        return polymer1_1hack(element, navigation[1]);
+        //return element.get(navigation[1], element);
     }
 }
 
