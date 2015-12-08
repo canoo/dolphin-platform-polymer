@@ -28,11 +28,11 @@
     "sauce-template.json"
   ],
   "devDependencies": {
-    "core.js": "~1.2.1",
-    "dolphin-js": "~0.5.3"
+    "core.js": "~1.2.6",
+    "dolphin-js": "~0.7.0"
   },
   "dependencies": {
-    "polymer": "~1.1.0",
+    "polymer": "~1.1.5",
     "open-dolphin-js": "~0.0.2"
   }
 }
