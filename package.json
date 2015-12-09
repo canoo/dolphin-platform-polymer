@@ -1,6 +1,6 @@
 {
   "name": "dolphin-polymer",
-  "version": "0.7.0",
+  "version": "0.7.0-SNAPSHOT",
   "description": "Polymer Client of the Dolphin Platform",
   "main": "./dist/dolphin-polymer.min.js",
   "scripts": {
@@ -22,6 +22,7 @@
     "gulp-derequire": "2.1.x",
     "gulp-jshint": "2.0.x",
     "gulp-karma": "0.0.x",
+    "gulp-load-plugins": "1.1.x",
     "gulp-mocha": "2.2.x",
     "gulp-rename": "1.2.x",
     "gulp-sourcemaps": "1.6.x",

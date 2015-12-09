@@ -1,15 +1,11 @@
 "use strict";
 
+var gulp = require('gulp');
+var $ = require('gulp-load-plugins')();
+
 var browserify = require('browserify');
 var del = require('del');
 var glob = require('glob');
-var gulp = require('gulp');
-var derequire = require('gulp-derequire');
-var jshint = require('gulp-jshint');
-var rename = require('gulp-rename');
-var sourcemaps = require('gulp-sourcemaps');
-var uglify = require('gulp-uglify');
-var gutil = require('gulp-util');
 var karma = require('gulp-karma');
 var assign = require('lodash.assign');
 var merge = require('merge-stream');
@@ -23,8 +19,8 @@ gulp.task('clean', function() {
 
 gulp.task('lint', function() {
     return gulp.src(['./src/**/*.js'])
-        .pipe(jshint())
-        .pipe(jshint.reporter('default'));
+        .pipe($.jshint())
+        .pipe($.jshint.reporter('default'));
 });
 
 
@@ -36,7 +32,7 @@ var testBundler = browserify(assign({}, watchify.args, {
 function rebundleTest(bundler) {
     return bundler
         .bundle()
-        .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+        .on('error', $.util.log.bind($.util, 'Browserify Error'))
         .pipe(source('test-bundle.js'))
         .pipe(gulp.dest('./test/build'))
 }
@@ -52,7 +48,7 @@ gulp.task('test', ['build-test'], function() {
             configFile: 'karma.conf.js'
         }))
         .on('error', function(err) {
-            gutil.log.bind(gutil, 'Karma Error', err);
+            $.util.log.bind($.util, 'Karma Error', err);
         });
 });
 
@@ -72,15 +68,15 @@ function rebundle(bundler) {
             bundle.external('./polyfills.js');
         })
         .bundle()
-        .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+        .on('error', $.util.log.bind($.util, 'Browserify Error'))
         .pipe(source('dolphin-polymer.js'))
-        .pipe(derequire())
+        .pipe($.derequire())
         .pipe(gulp.dest('./dist'))
         .pipe(buffer())
-        .pipe(rename({extname: '.min.js'}))
-        .pipe(sourcemaps.init({loadMaps: true}))
-        .pipe(uglify())
-        .pipe(sourcemaps.write('./'))
+        .pipe($.rename({extname: '.min.js'}))
+        .pipe($.sourcemaps.init({loadMaps: true}))
+        .pipe($.uglify())
+        .pipe($.sourcemaps.write('./'))
         .pipe(gulp.dest('./dist'));
 }
 
@@ -125,10 +121,10 @@ function createSauceLabsTestPipe(customLaunchers) {
 
     return merge(
         gulp.src(['./src/**/*.js', '!./src/polyfills.js'])
-            .pipe(jshint())
-            .pipe(jshint.reporter('jshint-teamcity')),
+            .pipe($.jshint())
+            .pipe($.jshint.reporter('jshint-teamcity')),
         testPipe.on('error', function(err) {
-            gutil.log.bind(gutil, 'Karma Error', err);
+            $.util.log.bind($.util, 'Karma Error', err);
         })
     );
 }
