@@ -1,6 +1,6 @@
 {
   "name": "dolphin-polymer",
-  "version": "0.7.0-SNAPSHOT",
+  "version": "0.7.1",
   "authors": [
     "Michael Heinrichs <michael.heinrichs@canoo.com>"
   ],
@@ -29,10 +29,10 @@
   ],
   "devDependencies": {
     "core.js": "~1.2.6",
-    "dolphin-js": "~0.7.0"
+    "dolphin-js": "0.7.1"
   },
   "dependencies": {
-    "polymer": "~1.1.5",
+    "polymer": ">=1.0.3 <=1.1.5",
     "open-dolphin-js": "~0.0.2"
   }
 }
