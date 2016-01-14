@@ -32,7 +32,6 @@
     "dolphin-js": "0.7.1"
   },
   "dependencies": {
-    "polymer": ">=1.0.3 <=1.1.5",
-    "open-dolphin-js": "~0.0.2"
+    "polymer": ">=1.0.3 <=1.1.5"
   }
 }
