@@ -6,6 +6,17 @@ var sinon = require('sinon');
 var _ = require('lodash');
 var Promise = require('../../bower_components/core.js/library/fn/promise');
 
+function check( done, func ) {
+    setTimeout(function() {
+        try {
+            func();
+            done();
+        } catch(e) {
+            done(e);
+        }
+    });
+}
+
 var setupCreateBehavior = require('../../src/behavior.js').setupCreateBehavior;
 
 
@@ -57,11 +68,9 @@ describe('Simple Binding of a Dolphin Bean', function() {
         clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
         var element = new CustomElement();
 
-        setTimeout(function () {
+        check(done, function () {
             expect(element.model).to.equal(bean);
             expect(element.model.theProperty).to.equal('VALUE_1');
-
-            done();
         });
     });
 
@@ -73,13 +82,11 @@ describe('Simple Binding of a Dolphin Bean', function() {
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
-        setTimeout(function () {
+        check(done, function () {
             element.beanChangeObserver.reset();
 
             injectUpdateFromDolphin(bean, 'theProperty', 'VALUE_2', 'VALUE_1');
             sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'model.theProperty', value: 'VALUE_2', base: bean});
-
-            done();
         });
     });
 
@@ -92,11 +99,9 @@ describe('Simple Binding of a Dolphin Bean', function() {
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns('VALUE_1');
 
-        setTimeout(function() {
+        check(done, function () {
             element.set('model.theProperty', 'VALUE_2');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, bean, 'theProperty', 'VALUE_2');
-
-            done();
         });
     });
 });
@@ -124,10 +129,8 @@ describe('Simple Binding of an Array', function() {
         clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
         var element = new CustomElement();
 
-        setTimeout(function() {
+        check(done, function () {
             expect(element.model).to.deep.equal(bean);
-
-            done();
         });
     });
 
@@ -139,7 +142,7 @@ describe('Simple Binding of an Array', function() {
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
-        setTimeout(function() {
+        check(done, function () {
             element.beanChangeObserver.reset();
 
             var argsMatcher = {
@@ -160,8 +163,6 @@ describe('Simple Binding of an Array', function() {
             injectArrayUpdateFromDolphin(bean, 'theArray', 1, 0, 42);
 
             sinon.assert.calledOnce(spyWithExpectation);
-
-            done();
         });
     });
 
@@ -173,7 +174,7 @@ describe('Simple Binding of an Array', function() {
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
-        setTimeout(function() {
+        check(done, function () {
             element.beanChangeObserver.reset();
 
             var argsMatcher = {
@@ -194,8 +195,6 @@ describe('Simple Binding of an Array', function() {
             injectArrayUpdateFromDolphin(bean, 'theArray', 1, 1, undefined);
 
             sinon.assert.calledOnce(spyWithExpectation);
-
-            done();
         });
     });
 
@@ -207,7 +206,7 @@ describe('Simple Binding of an Array', function() {
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
-        setTimeout(function() {
+        check(done, function () {
             element.beanChangeObserver.reset();
 
             var argsMatcher = {
@@ -228,8 +227,6 @@ describe('Simple Binding of an Array', function() {
             injectArrayUpdateFromDolphin(bean, 'theArray', 1, 1, 42);
 
             sinon.assert.calledOnce(spyWithExpectation);
-
-            done();
         });
     });
 
@@ -241,11 +238,9 @@ describe('Simple Binding of an Array', function() {
         var element = new CustomElement();
         sandbox.spy(clientContext.beanManager, 'notifyArrayChange');
 
-        setTimeout(function() {
+        check(done, function () {
             element.splice('model.theArray', 1, 0, 42);
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyArrayChange, bean, 'theArray', 1, 1, []);
-
-            done();
         });
     });
 
@@ -257,11 +252,9 @@ describe('Simple Binding of an Array', function() {
         var element = new CustomElement();
         sandbox.spy(clientContext.beanManager, 'notifyArrayChange');
 
-        setTimeout(function() {
+        check(done, function () {
             element.splice('model.theArray', 1, 1);
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyArrayChange, bean, 'theArray', 1, 0, [2]);
-
-            done();
         });
     });
 
@@ -273,11 +266,9 @@ describe('Simple Binding of an Array', function() {
         var element = new CustomElement();
         sandbox.spy(clientContext.beanManager, 'notifyArrayChange');
 
-        setTimeout(function() {
+        check(done, function () {
             element.splice('model.theArray', 1, 1, 42);
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyArrayChange, bean, 'theArray', 1, 1, [2]);
-
-            done();
         });
     });
 });
@@ -306,10 +297,8 @@ describe('Deep Binding of a Bean within a Bean', function() {
         clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
         var element = new CustomElement();
 
-        setTimeout(function() {
+        check(done, function () {
             expect(element.model).to.deep.equal(bean);
-
-            done();
         });
     });
 
@@ -323,7 +312,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
-        setTimeout(function() {
+        check(done, function () {
             element.beanChangeObserver.reset();
 
             injectUpdateFromDolphin(bean, 'innerBean', innerBean2, innerBean1);
@@ -332,8 +321,6 @@ describe('Deep Binding of a Bean within a Bean', function() {
                 value: innerBean2,
                 base: bean
             });
-            
-            done();
         });
     });
 
@@ -346,7 +333,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
-        setTimeout(function() {
+        check(done, function () {
             element.beanChangeObserver.reset();
 
             injectUpdateFromDolphin(innerBean, 'theProperty', 'VALUE_2', 'VALUE_1');
@@ -355,8 +342,6 @@ describe('Deep Binding of a Bean within a Bean', function() {
                 value: 'VALUE_2',
                 base: bean
             });
-
-            done();
         });
     });
 
@@ -371,7 +356,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         sandbox.spy(element, 'beanChangeObserver');
         sandbox.stub(clientContext.beanManager, 'notifyBeanChange').returns(innerBean1);
 
-        setTimeout(function() {
+        check(done, function () {
             injectUpdateFromDolphin(bean, 'innerBean', innerBean2, innerBean1);
             element.beanChangeObserver.reset();
 
@@ -384,8 +369,6 @@ describe('Deep Binding of a Bean within a Bean', function() {
                 value: 'VALUE_Y',
                 base: bean
             });
-
-            done();
         });
     });
 
@@ -400,7 +383,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         sandbox.spy(element, 'beanChangeObserver');
         sandbox.stub(clientContext.beanManager, 'notifyBeanChange').returns(innerBean1);
 
-        setTimeout(function() {
+        check(done, function () {
             element.set('model.innerBean', innerBean2);
             element.beanChangeObserver.reset();
 
@@ -413,8 +396,6 @@ describe('Deep Binding of a Bean within a Bean', function() {
                 value: 'VALUE_Y',
                 base: bean
             });
-
-            done();
         });
     });
 
@@ -429,11 +410,9 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
 
-        setTimeout(function() {
+        check(done, function () {
             element.set('model.innerBean', innerBean2);
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, bean, 'innerBean', innerBean2);
-
-            done();
         });
     });
 
@@ -447,11 +426,9 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns('VALUE_1');
 
-        setTimeout(function() {
+        check(done, function () {
             element.set('model.innerBean.theProperty', 'VALUE_2');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean, 'theProperty', 'VALUE_2');
-
-            done();
         });
     });
 
@@ -465,21 +442,19 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
 
-        setTimeout(function() {
+        check(done, function () {
             injectUpdateFromDolphin(bean, 'innerBean', innerBean2, innerBean1);
             notifyBeanChangeStub.reset();
             notifyBeanChangeStub.returns('VALUE_X');
 
             element.set('model.innerBean.theProperty', 'VALUE_2');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_2');
-
-            done();
         });
     });
 
 
 
-    it('should synchronize changes of a property coming from Polymer from a nested bean that was re-bound through Polymer', function() {
+    it('should synchronize changes of a property coming from Polymer from a nested bean that was re-bound through Polymer', function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
@@ -488,15 +463,13 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
 
-        setTimeout(function() {
+        check(done, function () {
             element.set('model.innerBean', innerBean2);
             notifyBeanChangeStub.reset();
             notifyBeanChangeStub.returns('VALUE_X');
 
             element.set('model.innerBean.theProperty', 'VALUE_3');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
-
-            done();
         });
     });
 });
@@ -527,10 +500,8 @@ describe('Deep Binding of a Bean within an Array', function() {
         clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
         var element = new CustomElement();
 
-        setTimeout(function() {
+        check(done, function () {
             expect(element.model).to.deep.equal(bean);
-
-            done();
         });
     });
 
@@ -544,7 +515,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
-        setTimeout(function() {
+        check(done, function () {
             element.beanChangeObserver.reset();
 
             injectUpdateFromDolphin(innerBean, 'theProperty', 'VALUE_2', 'VALUE_1');
@@ -553,8 +524,6 @@ describe('Deep Binding of a Bean within an Array', function() {
                 value: 'VALUE_2',
                 base: bean
             });
-
-            done();
         });
     });
 
@@ -568,14 +537,12 @@ describe('Deep Binding of a Bean within an Array', function() {
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
 
-        setTimeout(function() {
+        check(done, function () {
             notifyBeanChangeStub.reset();
             notifyBeanChangeStub.returns('VALUE_1');
 
             element.set('model.theArray.0.theProperty', 'VALUE_2');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean, 'theProperty', 'VALUE_2');
-
-            done();
         });
     });
 
@@ -591,7 +558,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
-        setTimeout(function() {
+        check(done, function () {
             injectArrayUpdateFromDolphin(bean, 'theArray', 0, 1, innerBean2);
             element.beanChangeObserver.reset();
 
@@ -611,8 +578,6 @@ describe('Deep Binding of a Bean within an Array', function() {
                 value: 'VALUE_B',
                 base: bean
             });
-
-            done();
         });
     });
 
@@ -628,7 +593,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
-        setTimeout(function() {
+        check(done, function () {
             element.splice('model.theArray', 0, 1, innerBean2);
             element.beanChangeObserver.reset();
 
@@ -648,8 +613,6 @@ describe('Deep Binding of a Bean within an Array', function() {
                 value: 'VALUE_B',
                 base: bean
             });
-
-            done();
         });
     });
 
@@ -666,7 +629,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
 
-        setTimeout(function() {
+        check(done, function () {
             injectArrayUpdateFromDolphin(bean, 'theArray', 0, 1, innerBean2);
             notifyBeanChangeStub.reset();
             notifyBeanChangeStub.returns('VALUE_X');
@@ -679,8 +642,6 @@ describe('Deep Binding of a Bean within an Array', function() {
 
             element.set('model.theArray.1.theProperty', 'VALUE_B');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean3, 'theProperty', 'VALUE_B');
-
-            done();
         })
     });
 
@@ -697,7 +658,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
 
-        setTimeout(function() {
+        check(done, function () {
             element.splice('model.theArray', 0, 1, innerBean2);
             notifyBeanChangeStub.reset();
             notifyBeanChangeStub.returns('VALUE_X');
@@ -710,8 +671,6 @@ describe('Deep Binding of a Bean within an Array', function() {
 
             element.set('model.theArray.1.theProperty', 'VALUE_B');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean3, 'theProperty', 'VALUE_B');
-
-            done();
         });
     });
 
@@ -728,7 +687,7 @@ describe('Deep Binding of a Bean within an Array', function() {
     //    var element = new CustomElement();
     //    sandbox.spy(element, 'beanChangeObserver');
     //
-    //    setTimeout(function() {
+    //    check(done, function () {
     //        injectUpdateFromDolphin(bean, 'theArray', array2, array1);
     //        element.beanChangeObserver.reset();
     //
@@ -741,8 +700,6 @@ describe('Deep Binding of a Bean within an Array', function() {
     //            value: 'VALUE_Y',
     //            base: bean
     //        });
-    //
-    //        done();
     //    });
     //});
 
@@ -760,7 +717,7 @@ describe('Deep Binding of a Bean within an Array', function() {
     //    var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
     //    notifyBeanChangeStub.returns(array1);
     //
-    //    setTimeout(function() {
+    //    check(done, function () {
     //        element.set('model.theArray', array2);
     //        element.beanChangeObserver.reset();
     //
@@ -773,8 +730,6 @@ describe('Deep Binding of a Bean within an Array', function() {
     //            value: 'VALUE_Y',
     //            base: bean
     //        });
-    //
-    //        done();
     //    });
     //});
 
@@ -790,15 +745,13 @@ describe('Deep Binding of a Bean within an Array', function() {
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
 
-        setTimeout(function() {
+        check(done, function () {
             injectUpdateFromDolphin(bean, 'theArray', array2, array1);
             notifyBeanChangeStub.reset();
             notifyBeanChangeStub.returns('VALUE_X');
 
             element.set('model.theArray.0.theProperty', 'VALUE_3');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
-
-            done();
         });
     });
 
@@ -815,15 +768,13 @@ describe('Deep Binding of a Bean within an Array', function() {
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(array1);
 
-        setTimeout(function() {
+        check(done, function () {
             element.set('model.theArray', array2);
             notifyBeanChangeStub.reset();
             notifyBeanChangeStub.returns('VALUE_X');
 
             element.set('model.theArray.0.theProperty', 'VALUE_3');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
-
-            done();
         });
     });
 });
@@ -853,12 +804,10 @@ describe('Dolphin Command', function() {
 
         var element = new CustomElement();
 
-        setTimeout(function() {
+        check(done, function () {
             element.invoke('myCommand').then(function(result) {
                 expect(result).to.equal('myCommandResult');
                 sinon.assert.calledWith(controllerAction, 'myCommand');
-
-                done();
             });
         });
     });
@@ -872,12 +821,10 @@ describe('Dolphin Command', function() {
 
         var element = new CustomElement();
 
-        setTimeout(function() {
+        check(done, function () {
             element.invoke('myCommand', {x: 42}).then(function(result) {
                 expect(result).to.equal('myCommandResult1');
                 sinon.assert.calledWithExactly(controllerAction, 'myCommand', {x: 42});
-
-                done();
             });
         });
 
