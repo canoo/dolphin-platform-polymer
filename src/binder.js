@@ -117,7 +117,9 @@ Binder.prototype.bind = function (element, rootPath, value) {
         }
     } else if (typeof value === 'object') {
         for (var propertyName in value) {
-            this.bind(element, rootPath + '.' + propertyName, value[propertyName]);
+            if (value.hasOwnProperty(propertyName)) {
+                this.bind(element, rootPath + '.' + propertyName, value[propertyName]);
+            }
         }
     }
 };
@@ -140,7 +142,9 @@ Binder.prototype.unbind = function (element, rootPath, value) {
                     }
                 } else if (typeof value === 'object') {
                     for (var propertyName in value) {
-                        this.unbind(element, rootPath + '.' + propertyName, value[propertyName]);
+                        if (value.hasOwnProperty(propertyName)) {
+                            this.unbind(element, rootPath + '.' + propertyName, value[propertyName]);
+                        }
                     }
                 }
                 return;
