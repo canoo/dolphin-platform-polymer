@@ -32,7 +32,7 @@ var clientContext = {
         notifyArrayChange: function() {}
     },
     createController: function() {
-        return Promise.resolve({ model: {} })
+        return Promise.resolve({ model: {}, onDestroyed: function() {} })
     }
 };
 
@@ -65,7 +65,7 @@ describe('Simple Binding of a Dolphin Bean', function() {
 
     it('should set the initial value', function(done) {
         var bean = { theProperty: 'VALUE_1' };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
 
         check(done, function () {
@@ -78,7 +78,7 @@ describe('Simple Binding of a Dolphin Bean', function() {
 
     it('should synchronize changes coming from Dolphin', function(done) {
         var bean = { theProperty: 'VALUE_1' };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
@@ -94,7 +94,7 @@ describe('Simple Binding of a Dolphin Bean', function() {
 
     it('should synchronize changes coming from Polymer', function(done) {
         var bean = { theProperty: 'VALUE_1' };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns('VALUE_1');
@@ -126,7 +126,7 @@ describe('Simple Binding of an Array', function() {
 
     it('should set the initial value', function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
 
         check(done, function () {
@@ -138,7 +138,7 @@ describe('Simple Binding of an Array', function() {
 
     it('should synchronize new array element coming from Dolphin', function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
@@ -170,7 +170,7 @@ describe('Simple Binding of an Array', function() {
 
     it('should synchronize element removal coming from Dolphin', function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
@@ -202,7 +202,7 @@ describe('Simple Binding of an Array', function() {
 
     it('should synchronize replacing an element coming from Dolphin', function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
@@ -234,7 +234,7 @@ describe('Simple Binding of an Array', function() {
 
     it('should synchronize new array element coming from Polymer', function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(clientContext.beanManager, 'notifyArrayChange');
 
@@ -248,7 +248,7 @@ describe('Simple Binding of an Array', function() {
 
     it('should synchronize element removal coming from Polymer', function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(clientContext.beanManager, 'notifyArrayChange');
 
@@ -262,7 +262,7 @@ describe('Simple Binding of an Array', function() {
 
     it('should synchronize replacing an element coming from Polymer', function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(clientContext.beanManager, 'notifyArrayChange');
 
@@ -294,7 +294,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
     it('should set the initial value', function(done) {
         var innerBean = { theProperty: 'VALUE_1' };
         var bean = { innerBean: innerBean};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
 
         check(done, function () {
@@ -308,7 +308,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_2' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
@@ -329,7 +329,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
     it('should synchronize changes of a property of the nested Bean coming from Dolphin', function(done) {
         var innerBean = { theProperty: 'VALUE_1' };
         var bean = { innerBean: innerBean};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
@@ -351,7 +351,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
         sandbox.stub(clientContext.beanManager, 'notifyBeanChange').returns(innerBean1);
@@ -378,7 +378,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
         sandbox.stub(clientContext.beanManager, 'notifyBeanChange').returns(innerBean1);
@@ -405,7 +405,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_2' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
@@ -421,7 +421,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
     it('should synchronize changes of a property of the nested Bean coming from Polymer', function(done) {
         var innerBean = { theProperty: 'VALUE_1' };
         var bean = { innerBean: innerBean};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns('VALUE_1');
@@ -438,7 +438,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
 
@@ -458,7 +458,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
@@ -497,7 +497,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean2 = { theProperty: 'VALUE_2' };
         var array = [innerBean1, innerBean2];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
 
         check(done, function () {
@@ -511,7 +511,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean = { theProperty: 'VALUE_1' };
         var array = [ innerBean ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
@@ -533,7 +533,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean = { theProperty: 'VALUE_1' };
         var array = [ innerBean ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
 
@@ -554,7 +554,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
@@ -589,7 +589,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         sandbox.spy(element, 'beanChangeObserver');
 
@@ -624,7 +624,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
@@ -653,7 +653,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
@@ -741,7 +741,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean2 = { theProperty: 'VALUE_X' };
         var array2 = [ innerBean2 ];
         var bean = { theArray: array1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
 
@@ -763,7 +763,7 @@ describe('Deep Binding of a Bean within an Array', function() {
         var innerBean2 = { theProperty: 'VALUE_X' };
         var array2 = [ innerBean2 ];
         var bean = { theArray: array1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
         var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(array1);
@@ -800,7 +800,7 @@ describe('Dolphin Command', function() {
     it('should invoke command without parameters', function(done) {
         var controllerAction = sandbox.stub();
         controllerAction.withArgs('myCommand').returns(Promise.resolve('myCommandResult'));
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ invoke: controllerAction }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ invoke: controllerAction, onDestroyed: function() {} }));
 
         var element = new CustomElement();
 
@@ -817,7 +817,7 @@ describe('Dolphin Command', function() {
     it('should send command with one named parameter', function(done) {
         var controllerAction = sandbox.stub();
         controllerAction.withArgs('myCommand', {x: 42}).returns(Promise.resolve('myCommandResult1'));
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ invoke: controllerAction }));
+        clientContext.createController = sandbox.stub().returns(Promise.resolve({ invoke: controllerAction, onDestroyed: function() {} }));
 
         var element = new CustomElement();
 
