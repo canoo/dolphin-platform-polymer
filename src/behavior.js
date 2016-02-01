@@ -14,7 +14,7 @@
  */
 
 /*jslint browserify: true */
-/* global Polymer */
+/* global Polymer, console */
 "use strict";
 
 var Binder = require('./binder.js').Binder;
@@ -66,6 +66,7 @@ function setupCreateBehavior(clientContext) {
     var binder = new Binder(clientContext.beanManager);
 
     return function(controllerName) {
+        var state = 'INITIALIZING';
         return {
 
             properties: {
@@ -81,16 +82,28 @@ function setupCreateBehavior(clientContext) {
                 var self = this;
                 clientContext.createController(controllerName).then(function(controller) {
                     self._controller = controller;
+                    state = 'READY';
                     self.set('model', controller.model);
+                    controller.onDestroyed(function() {
+                        state = 'DESTROYED';
+                        self.set('model', null);
+                    });
                 });
             },
 
             invoke: function(actionName, params) {
                 // TODO Call this after init has finished
+                if (state !== 'READY') {
+                    console.warn('Controller.invoke() called before init() finished');
+                    return;
+                }
                 return this._controller.invoke(actionName, params);
             },
 
             _dolphinObserver: function(event) {
+                if (state !== 'READY') {
+                    return;
+                }
                 var path = event.path;
                 var bean, propertyName, i, j;
                 var newValue = event.value;
