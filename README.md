@@ -19,3 +19,6 @@ For more information visit [our website](http://www.dolphin-platform.io).
 The Server sources of the Dolphin Platform can be found [here](https://github.com/canoo/dolphin-platform). 
 
 A complete "Getting started" documentation can be found [here](http://www.dolphin-platform.io/documentation/getting-started.html).
+
+## Issue Tracking
+Please use the issue tracking system of the [Dolphin Platform](https://github.com/canoo/dolphin-platform) to report any bug or feature request.
