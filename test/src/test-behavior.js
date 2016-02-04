@@ -45,6 +45,7 @@ var CustomElement = Polymer({
     beanChangeObserver: function(obj) {}
 });
 
+var arrayKeyBug = typeof Polymer.version !== 'string' || Polymer.version.match(/^1\.[01]\./);
 
 
 
@@ -520,7 +521,7 @@ describe('Deep Binding of a Bean within an Array', function() {
 
             injectUpdateFromDolphin(innerBean, 'theProperty', 'VALUE_2', 'VALUE_1');
             sinon.assert.calledWithExactly(element.beanChangeObserver, {
-                path: 'model.theArray.0.theProperty',
+                path: arrayKeyBug? 'model.theArray.0.theProperty' : 'model.theArray.#0.theProperty',
                 value: 'VALUE_2',
                 base: bean
             });
@@ -567,14 +568,14 @@ describe('Deep Binding of a Bean within an Array', function() {
 
             injectUpdateFromDolphin(innerBean2, 'theProperty', 'VALUE_Y', 'VALUE_X');
             sinon.assert.calledWithExactly(element.beanChangeObserver, {
-                path: 'model.theArray.0.theProperty',
+                path: arrayKeyBug? 'model.theArray.0.theProperty' : 'model.theArray.#0.theProperty',
                 value: 'VALUE_Y',
                 base: bean
             });
 
             injectUpdateFromDolphin(innerBean3, 'theProperty', 'VALUE_B', 'VALUE_A');
             sinon.assert.calledWithExactly(element.beanChangeObserver, {
-                path: 'model.theArray.1.theProperty',
+                path: arrayKeyBug? 'model.theArray.1.theProperty' : 'model.theArray.#1.theProperty',
                 value: 'VALUE_B',
                 base: bean
             });
@@ -602,14 +603,14 @@ describe('Deep Binding of a Bean within an Array', function() {
 
             injectUpdateFromDolphin(innerBean2, 'theProperty', 'VALUE_Y', 'VALUE_X');
             sinon.assert.calledWithExactly(element.beanChangeObserver, {
-                path: 'model.theArray.0.theProperty',
+                path: arrayKeyBug? 'model.theArray.0.theProperty' : 'model.theArray.#0.theProperty',
                 value: 'VALUE_Y',
                 base: bean
             });
 
             injectUpdateFromDolphin(innerBean3, 'theProperty', 'VALUE_B', 'VALUE_A');
             sinon.assert.calledWithExactly(element.beanChangeObserver, {
-                path: 'model.theArray.1.theProperty',
+                path: arrayKeyBug? 'model.theArray.1.theProperty' : 'model.theArray.#1.theProperty',
                 value: 'VALUE_B',
                 base: bean
             });

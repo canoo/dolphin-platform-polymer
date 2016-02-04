@@ -20,6 +20,7 @@
 var Binder = require('./binder.js').Binder;
 
 
+var arrayKeyBug = typeof Polymer.version !== 'string' || Polymer.version.match(/^1\.[01]\./);
 
 function exists(object) {
     return typeof object !== 'undefined' && object !== null;
@@ -55,8 +56,7 @@ function navigateToBean(element, path) {
     if (! exists(navigation)) {
         return element;
     } else {
-        return polymer1_1hack(element, navigation[1]);
-        //return element.get(navigation[1], element);
+        return arrayKeyBug? polymer1_1hack(element, navigation[1]) : element.get(navigation[1], element);
     }
 }
 
