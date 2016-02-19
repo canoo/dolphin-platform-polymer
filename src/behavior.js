@@ -20,13 +20,12 @@
 var Binder = require('./binder.js').Binder;
 
 
-var arrayKeyBug = typeof Polymer.version !== 'string' || Polymer.version.match(/^1\.[01]\./);
-
 function exists(object) {
     return typeof object !== 'undefined' && object !== null;
 }
 
 
+var arrayKeyBug;
 function polymer1_1hack(element, path) {
     // This is a temporary hack to deal with Polymer's API consistency concerning arrays and paths.
     // An observer uses keys in an array, while the get() and set() methods expect the index.
@@ -56,6 +55,9 @@ function navigateToBean(element, path) {
     if (! exists(navigation)) {
         return element;
     } else {
+        if (!exists(arrayKeyBug)) {
+            arrayKeyBug = typeof Polymer.version !== 'string' || (Polymer.version.match(/^1\.[01]\./) !== null);
+        }
         return arrayKeyBug? polymer1_1hack(element, navigation[1]) : element.get(navigation[1], element);
     }
 }

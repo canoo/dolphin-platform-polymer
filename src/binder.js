@@ -88,13 +88,13 @@ Binder.prototype.onArrayUpdateHandler = function(bean, propertyName, index, coun
         if (typeof newElements === 'undefined') {
             element.splice(path, index, count);
         } else {
-            element.splice(path, index, count, newElements);
+            element.splice.apply(element, [path, index, count].concat(newElements));
         }
     } else {
         if (typeof newElements === 'undefined') {
             array.splice(index, count);
         } else {
-            array.splice(index, count, newElements);
+            array.splice.apply(array, [index, count].concat(newElements));
         }
     }
 };
