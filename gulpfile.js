@@ -24,13 +24,15 @@ gulp.task('clean', function() {
 gulp.task('lint', function() {
     return gulp.src(['./src/**/*.js'])
         .pipe($.jshint())
-        .pipe($.jshint.reporter('default'));
+        .pipe($.jshint.reporter('default'))
+        .pipe($.jshint.reporter('fail'));
 });
 
 gulp.task('lint-tc', function() {
     return gulp.src(['./src/**/*.js', '!./src/polyfills.js'])
         .pipe($.jshint())
         .pipe($.jshint.reporter('jshint-teamcity'))
+        .pipe($.jshint.reporter('fail'));
 });
 
 
