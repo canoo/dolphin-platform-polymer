@@ -33,8 +33,7 @@ gulp.task('lint', function() {
 gulp.task('lint-tc', function() {
     return gulp.src(['./src/**/*.js', '!./src/polyfills.js'])
         .pipe($.jshint())
-        .pipe($.jshint.reporter('jshint-teamcity'))
-        .pipe($.jshint.reporter('fail'));
+        .pipe($.jshint.reporter('jshint-teamcity'));
 });
 
 
@@ -108,19 +107,7 @@ gulp.task('default', ['verify', 'build']);
 
 gulp.task('ci-common', ['build', 'build-test', 'lint-tc']);
 
-//gulp.task('ci', ['ci-common'], function(done) {
-//    new Server({
-//        configFile: __dirname + '/karma.conf.js',
-//        reporters: ['teamcity', 'coverage'],
-//        coverageReporter: {
-//            reporters: [
-//                {type: 'lcovonly', subdir: '.'},
-//                {type: 'teamcity', subdir: '.'}
-//            ]
-//        },
-//        singleRun: true
-//    }, done).start();
-//});
+gulp.task('ci', ['ci-common', 'test:local']);
 
 
 
