@@ -11,7 +11,9 @@ var buffer = require('vinyl-buffer');
 var source = require('vinyl-source-stream');
 var watchify = require('watchify');
 
-var Server = require('karma').Server;
+// Load tasks for web-component-tester
+// Adds tasks for `gulp test:local` and `gulp test:remote`
+require('web-component-tester').gulp.init(gulp, ['build-test']);
 
 
 
@@ -54,12 +56,7 @@ gulp.task('build-test', function() {
     return rebundleTest(testBundler);
 });
 
-gulp.task('test', ['build-test'], function(done) {
-    new Server({
-        configFile: __dirname + '/karma.conf.js',
-        singleRun: true
-    }, done).start();
-});
+gulp.task('test', ['test:local']);
 
 gulp.task('verify', ['lint', 'test']);
 
@@ -111,19 +108,19 @@ gulp.task('default', ['verify', 'build']);
 
 gulp.task('ci-common', ['build', 'build-test', 'lint-tc']);
 
-gulp.task('ci', ['ci-common'], function(done) {
-    new Server({
-        configFile: __dirname + '/karma.conf.js',
-        reporters: ['teamcity', 'coverage'],
-        coverageReporter: {
-            reporters: [
-                {type: 'lcovonly', subdir: '.'},
-                {type: 'teamcity', subdir: '.'}
-            ]
-        },
-        singleRun: true
-    }, done).start();
-});
+//gulp.task('ci', ['ci-common'], function(done) {
+//    new Server({
+//        configFile: __dirname + '/karma.conf.js',
+//        reporters: ['teamcity', 'coverage'],
+//        coverageReporter: {
+//            reporters: [
+//                {type: 'lcovonly', subdir: '.'},
+//                {type: 'teamcity', subdir: '.'}
+//            ]
+//        },
+//        singleRun: true
+//    }, done).start();
+//});
 
 
 

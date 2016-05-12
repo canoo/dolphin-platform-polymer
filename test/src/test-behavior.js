@@ -1,10 +1,15 @@
 /* global dolphin */
 "use strict";
 
-var expect = require('chai').expect;
-var sinon = require('sinon');
 var _ = require('lodash');
 var Promise = require('../../bower_components/core.js/library/fn/promise');
+
+
+mocha.checkLeaks();
+sinon.config = {
+    useFakeTimers: false
+};
+
 
 function check( done, func ) {
     setTimeout(function() {
@@ -38,50 +43,40 @@ var clientContext = {
 
 var createBehavior = setupCreateBehavior(clientContext);
 
-var CustomElement = Polymer({
-    is: 'custom-element',
-    behaviors: [createBehavior('ControllerName')],
-    observers: ['beanChangeObserver(model.*)'],
-    beanChangeObserver: function(obj) {}
-});
-
-var arrayKeyBug = typeof Polymer.version !== 'string' || Polymer.version.match(/^1\.[01]\./);
-
 
 
 
 describe('Simple Binding of a Dolphin Bean', function() {
 
-    var sandbox;
+    var CustomElement;
 
-    beforeEach(function () {
-        sandbox = sinon.sandbox.create();
+    before(function() {
+        CustomElement = Polymer({
+            is: 'custom-element-simple-binding-bean',
+            behaviors: [createBehavior('ControllerName')],
+            observers: ['beanChangeObserver(model.*)'],
+            beanChangeObserver: function(obj) {}
+        });
     });
 
-    afterEach(function () {
-        sandbox.restore();
-    });
-
-
-
-    it('should set the initial value', function(done) {
+    it('should set the initial value', sinon.test(function(done) {
         var bean = { theProperty: 'VALUE_1' };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
 
         check(done, function () {
             expect(element.model).to.equal(bean);
             expect(element.model.theProperty).to.equal('VALUE_1');
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes coming from Dolphin', function(done) {
+    it('should synchronize changes coming from Dolphin', sinon.test(function(done) {
         var bean = { theProperty: 'VALUE_1' };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         check(done, function () {
             element.beanChangeObserver.reset();
@@ -89,22 +84,22 @@ describe('Simple Binding of a Dolphin Bean', function() {
             injectUpdateFromDolphin(bean, 'theProperty', 'VALUE_2', 'VALUE_1');
             sinon.assert.calledWithExactly(element.beanChangeObserver, {path: 'model.theProperty', value: 'VALUE_2', base: bean});
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes coming from Polymer', function(done) {
+    it('should synchronize changes coming from Polymer', sinon.test(function(done) {
         var bean = { theProperty: 'VALUE_1' };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns('VALUE_1');
 
         check(done, function () {
             element.set('model.theProperty', 'VALUE_2');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, bean, 'theProperty', 'VALUE_2');
         });
-    });
+    }));
 });
 
 
@@ -113,35 +108,34 @@ describe('Simple Binding of a Dolphin Bean', function() {
 
 describe('Simple Binding of an Array', function() {
 
-    var sandbox;
+    var CustomElement;
 
-    beforeEach(function () {
-        sandbox = sinon.sandbox.create();
+    before(function() {
+        CustomElement = Polymer({
+            is: 'custom-element-simple-binding-array',
+            behaviors: [createBehavior('ControllerName')],
+            observers: ['beanChangeObserver(model.*)'],
+            beanChangeObserver: function(obj) {}
+        });
     });
 
-    afterEach(function () {
-        sandbox.restore();
-    });
-
-
-
-    it('should set the initial value', function(done) {
+    it('should set the initial value', sinon.test(function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
 
         check(done, function () {
             expect(element.model).to.deep.equal(bean);
         });
-    });
+    }));
 
 
 
-    it('should synchronize new array element coming from Dolphin', function(done) {
+    it('should synchronize new array element coming from Dolphin', sinon.test(function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         check(done, function () {
             element.beanChangeObserver.reset();
@@ -165,15 +159,15 @@ describe('Simple Binding of an Array', function() {
 
             sinon.assert.calledOnce(spyWithExpectation);
         });
-    });
+    }));
 
 
 
-    it('should synchronize element removal coming from Dolphin', function(done) {
+    it('should synchronize element removal coming from Dolphin', sinon.test(function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         check(done, function () {
             element.beanChangeObserver.reset();
@@ -197,15 +191,15 @@ describe('Simple Binding of an Array', function() {
 
             sinon.assert.calledOnce(spyWithExpectation);
         });
-    });
+    }));
 
 
 
-    it('should synchronize replacing an element coming from Dolphin', function(done) {
+    it('should synchronize replacing an element coming from Dolphin', sinon.test(function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         check(done, function () {
             element.beanChangeObserver.reset();
@@ -229,49 +223,49 @@ describe('Simple Binding of an Array', function() {
 
             sinon.assert.calledOnce(spyWithExpectation);
         });
-    });
+    }));
 
 
 
-    it('should synchronize new array element coming from Polymer', function(done) {
+    it('should synchronize new array element coming from Polymer', sinon.test(function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(clientContext.beanManager, 'notifyArrayChange');
+        this.spy(clientContext.beanManager, 'notifyArrayChange');
 
         check(done, function () {
             element.splice('model.theArray', 1, 0, 42);
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyArrayChange, bean, 'theArray', 1, 1, []);
         });
-    });
+    }));
 
 
 
-    it('should synchronize element removal coming from Polymer', function(done) {
+    it('should synchronize element removal coming from Polymer', sinon.test(function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(clientContext.beanManager, 'notifyArrayChange');
+        this.spy(clientContext.beanManager, 'notifyArrayChange');
 
         check(done, function () {
             element.splice('model.theArray', 1, 1);
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyArrayChange, bean, 'theArray', 1, 0, [2]);
         });
-    });
+    }));
 
 
 
-    it('should synchronize replacing an element coming from Polymer', function(done) {
+    it('should synchronize replacing an element coming from Polymer', sinon.test(function(done) {
         var bean = { theArray: [1, 2, 3] };
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(clientContext.beanManager, 'notifyArrayChange');
+        this.spy(clientContext.beanManager, 'notifyArrayChange');
 
         check(done, function () {
             element.splice('model.theArray', 1, 1, 42);
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyArrayChange, bean, 'theArray', 1, 1, [2]);
         });
-    });
+    }));
 });
 
 
@@ -280,38 +274,37 @@ describe('Simple Binding of an Array', function() {
 
 describe('Deep Binding of a Bean within a Bean', function() {
 
-    var sandbox;
+    var CustomElement;
 
-    beforeEach(function () {
-        sandbox = sinon.sandbox.create();
+    before(function() {
+        CustomElement = Polymer({
+            is: 'custom-element-deep-binding-bean',
+            behaviors: [createBehavior('ControllerName')],
+            observers: ['beanChangeObserver(model.*)'],
+            beanChangeObserver: function(obj) {}
+        });
     });
 
-    afterEach(function () {
-        sandbox.restore();
-    });
-
-
-
-    it('should set the initial value', function(done) {
+    it('should set the initial value', sinon.test(function(done) {
         var innerBean = { theProperty: 'VALUE_1' };
         var bean = { innerBean: innerBean};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
 
         check(done, function () {
             expect(element.model).to.deep.equal(bean);
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of the nested Bean coming from Dolphin', function(done) {
+    it('should synchronize changes of the nested Bean coming from Dolphin', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_2' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         check(done, function () {
             element.beanChangeObserver.reset();
@@ -323,16 +316,16 @@ describe('Deep Binding of a Bean within a Bean', function() {
                 base: bean
             });
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property of the nested Bean coming from Dolphin', function(done) {
+    it('should synchronize changes of a property of the nested Bean coming from Dolphin', sinon.test(function(done) {
         var innerBean = { theProperty: 'VALUE_1' };
         var bean = { innerBean: innerBean};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         check(done, function () {
             element.beanChangeObserver.reset();
@@ -344,18 +337,18 @@ describe('Deep Binding of a Bean within a Bean', function() {
                 base: bean
             });
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property coming from Dolphin from a nested Bean that was re-bound through Dolphin', function(done) {
+    it('should synchronize changes of a property coming from Dolphin from a nested Bean that was re-bound through Dolphin', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
-        sandbox.stub(clientContext.beanManager, 'notifyBeanChange').returns(innerBean1);
+        this.spy(element, 'beanChangeObserver');
+        this.stub(clientContext.beanManager, 'notifyBeanChange').returns(innerBean1);
 
         check(done, function () {
             injectUpdateFromDolphin(bean, 'innerBean', innerBean2, innerBean1);
@@ -371,18 +364,18 @@ describe('Deep Binding of a Bean within a Bean', function() {
                 base: bean
             });
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property coming from Dolphin from a nested Bean that was re-bound through Polymer', function(done) {
+    it('should synchronize changes of a property coming from Dolphin from a nested Bean that was re-bound through Polymer', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
-        sandbox.stub(clientContext.beanManager, 'notifyBeanChange').returns(innerBean1);
+        this.spy(element, 'beanChangeObserver');
+        this.stub(clientContext.beanManager, 'notifyBeanChange').returns(innerBean1);
 
         check(done, function () {
             element.set('model.innerBean', innerBean2);
@@ -398,50 +391,50 @@ describe('Deep Binding of a Bean within a Bean', function() {
                 base: bean
             });
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of the nested Bean coming from Polymer', function(done) {
+    it('should synchronize changes of the nested Bean coming from Polymer', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_2' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
 
         check(done, function () {
             element.set('model.innerBean', innerBean2);
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, bean, 'innerBean', innerBean2);
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property of the nested Bean coming from Polymer', function(done) {
+    it('should synchronize changes of a property of the nested Bean coming from Polymer', sinon.test(function(done) {
         var innerBean = { theProperty: 'VALUE_1' };
         var bean = { innerBean: innerBean};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns('VALUE_1');
 
         check(done, function () {
             element.set('model.innerBean.theProperty', 'VALUE_2');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean, 'theProperty', 'VALUE_2');
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property coming from Polymer from a nested bean that was re-bound through Dolphin', function(done) {
+    it('should synchronize changes of a property coming from Polymer from a nested bean that was re-bound through Dolphin', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
 
         check(done, function () {
             injectUpdateFromDolphin(bean, 'innerBean', innerBean2, innerBean1);
@@ -451,17 +444,17 @@ describe('Deep Binding of a Bean within a Bean', function() {
             element.set('model.innerBean.theProperty', 'VALUE_2');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_2');
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property coming from Polymer from a nested bean that was re-bound through Polymer', function(done) {
+    it('should synchronize changes of a property coming from Polymer from a nested bean that was re-bound through Polymer', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var bean = { innerBean: innerBean1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
 
         check(done, function () {
@@ -472,7 +465,7 @@ describe('Deep Binding of a Bean within a Bean', function() {
             element.set('model.innerBean.theProperty', 'VALUE_3');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
         });
-    });
+    }));
 });
 
 
@@ -481,40 +474,42 @@ describe('Deep Binding of a Bean within a Bean', function() {
 
 describe('Deep Binding of a Bean within an Array', function() {
 
-    var sandbox;
+    var CustomElement, arrayKeyBug;
 
-    beforeEach(function () {
-        sandbox = sinon.sandbox.create();
+    before(function() {
+        CustomElement = Polymer({
+            is: 'custom-element-deep-binding-array',
+            behaviors: [createBehavior('ControllerName')],
+            observers: ['beanChangeObserver(model.*)'],
+            beanChangeObserver: function(obj) {}
+        });
+
+        arrayKeyBug = typeof Polymer.version !== 'string' || Polymer.version.match(/^1\.[01]\./);
     });
 
-    afterEach(function () {
-        sandbox.restore();
-    });
 
-
-
-    it('should set the initial value', function(done) {
+    it('should set the initial value', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_2' };
         var array = [innerBean1, innerBean2];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
 
         check(done, function () {
             expect(element.model).to.deep.equal(bean);
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property of the nested Bean coming from Dolphin', function(done) {
+    it('should synchronize changes of a property of the nested Bean coming from Dolphin', sinon.test(function(done) {
         var innerBean = { theProperty: 'VALUE_1' };
         var array = [ innerBean ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         check(done, function () {
             element.beanChangeObserver.reset();
@@ -526,17 +521,17 @@ describe('Deep Binding of a Bean within an Array', function() {
                 base: bean
             });
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property of the nested Bean coming from Polymer', function(done) {
+    it('should synchronize changes of a property of the nested Bean coming from Polymer', sinon.test(function(done) {
         var innerBean = { theProperty: 'VALUE_1' };
         var array = [ innerBean ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
 
         check(done, function () {
             notifyBeanChangeStub.reset();
@@ -545,19 +540,19 @@ describe('Deep Binding of a Bean within an Array', function() {
             element.set('model.theArray.0.theProperty', 'VALUE_2');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean, 'theProperty', 'VALUE_2');
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property of the nested Bean from Dolphin that was replaced through Dolphin', function(done) {
+    it('should synchronize changes of a property of the nested Bean from Dolphin that was replaced through Dolphin', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         check(done, function () {
             injectArrayUpdateFromDolphin(bean, 'theArray', 0, 1, innerBean2);
@@ -580,19 +575,19 @@ describe('Deep Binding of a Bean within an Array', function() {
                 base: bean
             });
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property of the nested Bean from Dolphin that was replaced through Polymer', function(done) {
+    it('should synchronize changes of a property of the nested Bean from Dolphin that was replaced through Polymer', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        sandbox.spy(element, 'beanChangeObserver');
+        this.spy(element, 'beanChangeObserver');
 
         check(done, function () {
             element.splice('model.theArray', 0, 1, innerBean2);
@@ -615,19 +610,19 @@ describe('Deep Binding of a Bean within an Array', function() {
                 base: bean
             });
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property of the nested Bean from Polymer that was replaced trough Dolphin', function(done) {
+    it('should synchronize changes of a property of the nested Bean from Polymer that was replaced trough Dolphin', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
 
         check(done, function () {
@@ -644,19 +639,19 @@ describe('Deep Binding of a Bean within an Array', function() {
             element.set('model.theArray.1.theProperty', 'VALUE_B');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean3, 'theProperty', 'VALUE_B');
         })
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property of the nested Bean from Polymer that was replaced trough Polymer', function(done) {
+    it('should synchronize changes of a property of the nested Bean from Polymer that was replaced trough Polymer', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var innerBean2 = { theProperty: 'VALUE_X' };
         var innerBean3 = { theProperty: 'VALUE_A' };
         var array = [ innerBean1, innerBean3 ];
         var bean = { theArray: array};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(innerBean1);
 
         check(done, function () {
@@ -673,20 +668,20 @@ describe('Deep Binding of a Bean within an Array', function() {
             element.set('model.theArray.1.theProperty', 'VALUE_B');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean3, 'theProperty', 'VALUE_B');
         });
-    });
+    }));
 
 
 
     // TODO: Enable these tests once setting arrays is supported
-    //it('should synchronize changes of a property of the nested Bean from Dolphin where the array was replaced trough Dolphin', function(done) {
+    //it('should synchronize changes of a property of the nested Bean from Dolphin where the array was replaced trough Dolphin', sinon.test(function(done) {
     //    var innerBean1 = { theProperty: 'VALUE_1' };
     //    var array1 = [ innerBean1 ];
     //    var innerBean2 = { theProperty: 'VALUE_X' };
     //    var array2 = [ innerBean2 ];
     //    var bean = { theArray: array1};
-    //    clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+    //    clientContext.createController = this.stub().returns(Promise.resolve({ model: bean }));
     //    var element = new CustomElement();
-    //    sandbox.spy(element, 'beanChangeObserver');
+    //    this.spy(element, 'beanChangeObserver');
     //
     //    check(done, function () {
     //        injectUpdateFromDolphin(bean, 'theArray', array2, array1);
@@ -702,20 +697,20 @@ describe('Deep Binding of a Bean within an Array', function() {
     //            base: bean
     //        });
     //    });
-    //});
+    //}));
 
 
 
-    //it('should synchronize changes of a property of the nested Bean from Dolphin where the array was replaced trough Polymer', function(done) {
+    //it('should synchronize changes of a property of the nested Bean from Dolphin where the array was replaced trough Polymer', sinon.test(function(done) {
     //    var innerBean1 = { theProperty: 'VALUE_1' };
     //    var array1 = [ innerBean1 ];
     //    var innerBean2 = { theProperty: 'VALUE_X' };
     //    var array2 = [ innerBean2 ];
     //    var bean = { theArray: array1};
-    //    clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean }));
+    //    clientContext.createController = this.stub().returns(Promise.resolve({ model: bean }));
     //    var element = new CustomElement();
-    //    sandbox.spy(element, 'beanChangeObserver');
-    //    var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+    //    this.spy(element, 'beanChangeObserver');
+    //    var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
     //    notifyBeanChangeStub.returns(array1);
     //
     //    check(done, function () {
@@ -732,19 +727,19 @@ describe('Deep Binding of a Bean within an Array', function() {
     //            base: bean
     //        });
     //    });
-    //});
+    //}));
 
 
 
-    it('should synchronize changes of a property of the nested Bean from Polymer where the array was replaced trough Dolphin', function(done) {
+    it('should synchronize changes of a property of the nested Bean from Polymer where the array was replaced trough Dolphin', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var array1 = [ innerBean1 ];
         var innerBean2 = { theProperty: 'VALUE_X' };
         var array2 = [ innerBean2 ];
         var bean = { theArray: array1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
 
         check(done, function () {
             injectUpdateFromDolphin(bean, 'theArray', array2, array1);
@@ -754,19 +749,19 @@ describe('Deep Binding of a Bean within an Array', function() {
             element.set('model.theArray.0.theProperty', 'VALUE_3');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
         });
-    });
+    }));
 
 
 
-    it('should synchronize changes of a property of the nested Bean from Polymer where the array was replaced trough Polymer', function(done) {
+    it('should synchronize changes of a property of the nested Bean from Polymer where the array was replaced trough Polymer', sinon.test(function(done) {
         var innerBean1 = { theProperty: 'VALUE_1' };
         var array1 = [ innerBean1 ];
         var innerBean2 = { theProperty: 'VALUE_X' };
         var array2 = [ innerBean2 ];
         var bean = { theArray: array1};
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ model: bean, onDestroyed: function() {} }));
         var element = new CustomElement();
-        var notifyBeanChangeStub = sandbox.stub(clientContext.beanManager, 'notifyBeanChange');
+        var notifyBeanChangeStub = this.stub(clientContext.beanManager, 'notifyBeanChange');
         notifyBeanChangeStub.returns(array1);
 
         check(done, function () {
@@ -777,7 +772,7 @@ describe('Deep Binding of a Bean within an Array', function() {
             element.set('model.theArray.0.theProperty', 'VALUE_3');
             sinon.assert.calledWithExactly(clientContext.beanManager.notifyBeanChange, innerBean2, 'theProperty', 'VALUE_3');
         });
-    });
+    }));
 });
 
 
@@ -786,22 +781,21 @@ describe('Deep Binding of a Bean within an Array', function() {
 
 describe('Dolphin Command', function() {
 
-    var sandbox;
+    var CustomElement;
 
-    beforeEach(function () {
-        sandbox = sinon.sandbox.create();
+    before(function() {
+        CustomElement = Polymer({
+            is: 'custom-element-commands',
+            behaviors: [createBehavior('ControllerName')],
+            observers: ['beanChangeObserver(model.*)'],
+            beanChangeObserver: function(obj) {}
+        });
     });
 
-    afterEach(function () {
-        sandbox.restore();
-    });
-
-
-
-    it('should invoke command without parameters', function(done) {
-        var controllerAction = sandbox.stub();
+    it('should invoke command without parameters', sinon.test(function(done) {
+        var controllerAction = this.stub();
         controllerAction.withArgs('myCommand').returns(Promise.resolve('myCommandResult'));
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ invoke: controllerAction, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ invoke: controllerAction, onDestroyed: function() {} }));
 
         var element = new CustomElement();
 
@@ -811,14 +805,14 @@ describe('Dolphin Command', function() {
                 sinon.assert.calledWith(controllerAction, 'myCommand');
             });
         });
-    });
+    }));
 
 
 
-    it('should send command with one named parameter', function(done) {
-        var controllerAction = sandbox.stub();
+    it('should send command with one named parameter', sinon.test(function(done) {
+        var controllerAction = this.stub();
         controllerAction.withArgs('myCommand', {x: 42}).returns(Promise.resolve('myCommandResult1'));
-        clientContext.createController = sandbox.stub().returns(Promise.resolve({ invoke: controllerAction, onDestroyed: function() {} }));
+        clientContext.createController = this.stub().returns(Promise.resolve({ invoke: controllerAction, onDestroyed: function() {} }));
 
         var element = new CustomElement();
 
@@ -829,5 +823,5 @@ describe('Dolphin Command', function() {
             });
         });
 
-    });
+    }));
 });
