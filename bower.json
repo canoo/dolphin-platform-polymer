@@ -1,6 +1,6 @@
 {
   "name": "dolphin-polymer",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "authors": [
     "Michael Heinrichs <michael.heinrichs@canoo.com>"
   ],
@@ -25,11 +25,12 @@
     "karma.conf.js",
     "package.json",
     "sauce.launchers.js",
-    "sauce-template.json"
+    "sauce-template.json",
+    "wct.conf.js"
   ],
   "devDependencies": {
     "core.js": "2.4.0",
-    "dolphin-js": "0.8.5"
+    "dolphin-js": "0.8.6"
   },
   "dependencies": {
     "polymer": ">=1.0.4 <=1.4.0"
