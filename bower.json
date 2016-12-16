@@ -1,6 +1,6 @@
 {
   "name": "dolphin-polymer",
-  "version": "0.8.8",
+  "version": "0.8.9",
   "authors": [
     "Michael Heinrichs <michael.heinrichs@canoo.com>"
   ],
@@ -30,7 +30,7 @@
   ],
   "devDependencies": {
     "core.js": "2.4.0",
-    "dolphin-js": "0.8.8"
+    "dolphin-js": "0.8.9"
   },
   "dependencies": {
     "polymer": ">=1.0.4 <=1.4.0"
