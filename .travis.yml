@@ -19,7 +19,6 @@ before_script:
   - bower install
   - npm update
   - bower update
-  - polylint
 
 script:
   - gulp clean verify build
