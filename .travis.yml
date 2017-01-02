@@ -1,6 +1,15 @@
 language: node_js
-node_js:
-    - "0.10"
+node_js: stable
+dist: trusty
+sudo: required
+
+addons:
+  firefox: latest
+  apt:
+    sources:
+    - google-chrome
+    packages:
+    - google-chrome-stable
 
 before_script:
   - npm install -g grunt-cli
@@ -10,14 +19,6 @@ before_script:
   - bower install
   - npm update
   - bower update
-
-addons:
-  firefox: latest
-  apt:
-    sources:
-    - google-chrome
-    packages:
-    - google-chrome-stable
 
 script:
   - gulp clean verify build
