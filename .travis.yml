@@ -2,9 +2,9 @@ language: node_js
 node_js: stable
 dist: trusty
 sudo: required
-
 addons:
   firefox: latest
+  sauce_connect: true
   apt:
     sources:
     - google-chrome
@@ -19,6 +19,7 @@ before_script:
   - bower install
   - npm update
   - bower update
+  - polylint
 
 script:
   - gulp clean verify build
