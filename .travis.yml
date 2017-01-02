@@ -11,6 +11,14 @@ before_script:
   - npm update
   - bower update
 
+addons:
+  firefox: latest
+  apt:
+    sources:
+    - google-chrome
+    packages:
+    - google-chrome-stable
+
 script:
   - gulp clean verify build
 
