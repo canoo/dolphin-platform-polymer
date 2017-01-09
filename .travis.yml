@@ -6,9 +6,9 @@ addons:
   sonarqube:
       token:
         secure: 81d352154f4bc4b710ed661bb04d67fabc19b0e6
-  branches:
-      - master
-      - CreateSonarReportsForDolphinPolymer
+      branches:
+        - master
+        - CreateSonarReportsForDolphinPolymer
   firefox: latest
   sauce_connect: true
   apt:
