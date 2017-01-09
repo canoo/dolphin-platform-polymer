@@ -1,8 +1,8 @@
 {
-  "name": "dolphin-polymer",
+  "name": "dolphin-platform-polymer",
   "version": "0.8.9",
   "description": "Polymer Client of the Dolphin Platform",
-  "main": "./dist/dolphin-polymer.js",
+  "main": "./dist/dolphin-platform-polymer.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/canoo/dolphin-platform-polymer.git"
