@@ -27,8 +27,8 @@ before_script:
 
 script:
   - gulp clean verify build
+after_success:
   - sonar-scanner
-
 cache:
   directories:
     - '$HOME/.sonar/cache'
