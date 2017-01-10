@@ -74,7 +74,7 @@ function rebundle(bundler) {
         })
         .bundle()
         .on('error', $.util.log.bind($.util, 'Browserify Error'))
-        .pipe(source('dolphin-polymer.js'))
+        .pipe(source('dolphin-platform-polymer.js'))
         .pipe($.derequire())
         .pipe(gulp.dest('./dist'))
         .pipe(buffer())
