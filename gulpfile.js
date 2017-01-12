@@ -64,7 +64,6 @@ gulp.task('verify', ['lint']);
 
 var mainBundler = browserify(assign({}, watchify.args, {
     entries: './src/dolphin-polymer-api.js',
-    standalone: 'dolphin',
     debug: true
 }));
 
