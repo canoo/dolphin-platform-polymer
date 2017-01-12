@@ -28,7 +28,8 @@
     "package.json",
     "sauce.launchers.js",
     "sauce-template.json",
-    "wct.conf.js"
+    "wct.conf.js",
+    "sonar-project.properties"
   ],
   "devDependencies": {
     "core.js": "2.4.0",
