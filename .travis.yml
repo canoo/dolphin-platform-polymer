@@ -9,7 +9,7 @@ addons:
       branches:
         - master
   firefox: latest
-  sauce_connect: true
+#  sauce_connect: true
   apt:
     sources:
     - google-chrome
