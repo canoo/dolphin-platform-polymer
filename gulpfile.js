@@ -58,7 +58,7 @@ gulp.task('build-test', function() {
 gulp.task('test', ['test:local']);
 
 //add 'test' task when tests are fixed
-gulp.task('verify', ['lint']);
+gulp.task('verify', ['lint', 'test']);
 
 
 

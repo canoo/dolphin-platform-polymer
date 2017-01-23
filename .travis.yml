@@ -9,7 +9,7 @@ addons:
       branches:
         - master
   firefox: latest
-#  sauce_connect: true
+  sauce_connect: true
   apt:
     sources:
     - google-chrome
@@ -18,7 +18,9 @@ addons:
 
 before_script:
   - npm install -g grunt-cli
+  - npm install -g bower polylint web-component-tester
   - npm install -g bower
+  - polylint
   - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
   - npm install
   - bower install
