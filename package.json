@@ -33,7 +33,6 @@
     "vinyl-buffer": "1.0.x",
     "vinyl-source-stream": "1.1.x",
     "watchify": "3.7.x",
-    "wct-teamcity-reporter": "git://github.com/netopyr/wct-teamcity-reporter.git#master",
-    "web-component-tester": "4.2.x"
+    "web-component-tester": "4.3.x"
   }
 }
