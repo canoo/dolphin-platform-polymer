@@ -29,7 +29,6 @@ script:
   - gulp clean verify build
   - xvfb-run wct
   - if [“${TRAVIS_PULL_REQUEST}” = “false” ]; then wct -s ‘default’; fi
-  - gulp saucelabs
 
 after_success:
   - sonar-scanner
