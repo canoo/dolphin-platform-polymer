@@ -1,6 +1,6 @@
 // Browsers to run on Sauce Labs
 
-var browsers = {
+exports.browsers = [{
     sl_winXP_chrome: {
         base: 'SauceLabs',
         browserName: 'chrome',
@@ -232,8 +232,4 @@ var browsers = {
     //     platformVersion: '4.4',
     //     flags: ['--disable-web-security']
     // }
-};
-
-
-
-exports.browsers = browsers;
+}];
