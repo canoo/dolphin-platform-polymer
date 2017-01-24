@@ -109,6 +109,10 @@ gulp.task('ci-common', ['build', 'build-test', 'lint-tc']);
 
 gulp.task('ci', ['ci-common', 'test:local']);
 
+gulp.task('testLocal', ['build-test'], function(done) {
+    test({plugins: {local: {}, sauce: false}}, done);
+});
+
 function createSauceLabsTestStep(browsers, done) {
     return function(passedError) {
         test(
@@ -121,28 +125,25 @@ function createSauceLabsTestStep(browsers, done) {
     }
 }
 
-function createSauceLabsTestPipe(allBrowsers, step) {
+function createSauceLabsTestPipe(customLaunchers, step) {
     // We cannot run too many instances at Sauce Labs in parallel, thus we need to run it several times
     // with only a few environments set
     var numSauceLabsVMs = 5;
+    var allBrowsers = Object.keys(customLaunchers);
 
     while (allBrowsers.length > 0) {
         var browsers = [];
-        for (var i=0; i<numSauceLabsVMs && allBrowsers.length > 0; i++) {
+        for (var i = 0; i < numSauceLabsVMs && allBrowsers.length > 0; i++) {
             browsers.push(allBrowsers.shift());
         }
 
-        step = createSauceLabsTestStep(browsers, step);
+        step = createSauceLabsTestStep(customLaunchers, browsers, step);
     }
 
     step();
 }
 
-gulp.task('testLocal', ['build-test'], function(done) {
-    test({plugins: {local: {}, sauce: false}}, done);
-});
-
-gulp.task('saucelabs', function(done) {
-    var browsers = require('./sauce.launchers.js').mustHave;
-    return createSauceLabsTestPipe(browsers, done);
+gulp.task('saucelabs', ['ci-common'], function (done) {
+    var customLaunchers = require('./sauce.launchers.js').browsers;
+    return createSauceLabsTestPipe(customLaunchers, done);
 });
