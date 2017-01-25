@@ -10,11 +10,9 @@ var assign = require('lodash.assign');
 var buffer = require('vinyl-buffer');
 var source = require('vinyl-source-stream');
 var watchify = require('watchify');
-
 // Load tasks for web-component-tester
 // Adds tasks for `gulp test:local` and `gulp test:remote`
-require('web-component-tester').gulp.init(gulp, ['build-test']);
-
+var test = require('web-component-tester').test;
 
 gulp.task('clean', function() {
     del(['dist', 'test/build']);
@@ -54,12 +52,14 @@ gulp.task('build-test', function() {
     return rebundleTest(testBundler);
 });
 
-// gulp.task('test', ['test:local']);
+gulp.task('test', ['test:local']);
 
 //add 'test' task when tests are fixed
-gulp.task('verify', ['lint']);
+gulp.task('verify', ['lint','test']);
 
-
+gulp.task('test:local', ['build-test'], function(done) {
+    test({}, done); //it will refer to wct.conf.js
+});
 
 var mainBundler = browserify(assign({}, watchify.args, {
     entries: './src/dolphin-polymer-api.js',
@@ -88,8 +88,6 @@ gulp.task('build', function() {
     return rebundle(mainBundler);
 });
 
-
-
 //gulp.task('watch', function() {
 //    gulp.watch(['src/**'], ['lint']);
 //
@@ -104,6 +102,3 @@ gulp.task('default', ['verify', 'build']);
 
 
 
-gulp.task('ci-common', ['build', 'build-test', 'lint-tc']);
-
-gulp.task('ci', ['ci-common', 'test:local']);

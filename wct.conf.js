@@ -1,11 +1,11 @@
 module.exports = {
-    "suites": ['test/wct_runner.html'],
-    "testTimeout": 5 * 60 * 1000,
-    "plugins": {
+    suites: ['test/wct_runner.html'],
+    testTimeout: 5 * 60 * 1000,
+    plugins: {
         "local": {
-            "browsers": ["chrome", "firefox"]
+            "browsers": ["chrome", "firefox"] //safari not working
         },
-        "sauce": {
+        sauce: {
             disabled: true,
             browsers: require('./sauce.launchers.js').browsers,
             testName: 'dolphin-platform-polymer Unit Tests',
@@ -13,6 +13,15 @@ module.exports = {
             recordScreenshots: true,
             recordVideo: false,
             startConnect: false
+        },
+        istanbul: {
+            dir: "./coverage",
+            reporters: ["text-summary", "lcovonly"],
+            include: [
+                "./test/**/*.html",
+                "./test/**/*.js"
+            ],
+            exclude: []
         }
     }
 };
