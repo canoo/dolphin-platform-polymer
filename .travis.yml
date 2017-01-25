@@ -28,7 +28,7 @@ before_script:
 script:
   - gulp clean verify build
   - wct --plugin sauce
-```
+
 after_success:
   - sonar-scanner
 cache:
