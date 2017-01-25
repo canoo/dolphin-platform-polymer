@@ -52,14 +52,14 @@ gulp.task('build-test', function() {
     return rebundleTest(testBundler);
 });
 
-gulp.task('test', ['test:local']);
-
 //add 'test' task when tests are fixed
 gulp.task('verify', ['lint','test']);
 
 gulp.task('test:local', ['build-test'], function(done) {
     test({}, done); //it will refer to wct.conf.js
 });
+
+gulp.task('test', ['test:local']);
 
 var mainBundler = browserify(assign({}, watchify.args, {
     entries: './src/dolphin-polymer-api.js',
@@ -99,6 +99,5 @@ gulp.task('build', function() {
 //});
 
 gulp.task('default', ['verify', 'build']);
-
 
 
