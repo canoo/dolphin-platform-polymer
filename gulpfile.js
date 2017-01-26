@@ -12,7 +12,7 @@ var source = require('vinyl-source-stream');
 var watchify = require('watchify');
 // Load tasks for web-component-tester
 // Adds tasks for `gulp test:local` and `gulp test:remote`
-var test = require('web-component-tester').test;
+require('web-component-tester').gulp.init(gulp, ['build-test']);
 
 gulp.task('clean', function() {
     del(['dist', 'test/build']);
@@ -54,10 +54,6 @@ gulp.task('build-test', function() {
 
 //add 'test' task when tests are fixed
 gulp.task('verify', ['lint','test']);
-
-gulp.task('test:local', ['build-test'], function(done) {
-    test({}, done); //it will refer to wct.conf.js
-});
 
 gulp.task('test', ['test:local']);
 

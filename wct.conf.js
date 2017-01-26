@@ -2,7 +2,7 @@ module.exports = {
     suites: ['test/wct_runner.html'],
     testTimeout: 5 * 60 * 1000,
     plugins: {
-        "local": {
+        local: {
             "browsers": ["chrome", "firefox"] //safari not working
         },
         sauce: {
