@@ -37,20 +37,20 @@ exports.browsers = [
         browserName: 'internet explorer',
         version: '11.0'
     },
-    {
-        platform: 'Windows 8.1',
-        browserName: 'chrome'
-    },
+    // {
+    //     platform: 'Windows 8.1',
+    //     browserName: 'chrome'
+    // },
     {
         platform: 'Windows 8.1',
         browserName: 'firefox'
-    },
-
-    {
-        platform: 'iOS',
-        version: '8.4',
-        device: 'iPad Simulator',
-        browserName: 'Safari',
-        deviceOrientation: 'landscape'
     }
+    // ,
+    // {
+    //     platform: 'iOS',
+    //     version: '8.4',
+    //     device: 'iPad Simulator',
+    //     browserName: 'Safari',
+    //     deviceOrientation: 'landscape'
+    // }
 ];

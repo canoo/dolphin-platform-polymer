@@ -18,7 +18,6 @@ module.exports = {
             dir: "./coverage",
             reporters: ["text-summary", "lcovonly"],
             include: [
-                "./test/**/*.html",
                 "./test/**/*.js"
             ],
             exclude: []
