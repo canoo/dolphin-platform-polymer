@@ -8,11 +8,7 @@ module.exports = {
         sauce: {
             disabled: true,
             browsers: require('./sauce.launchers.js').browsers,
-            testName: 'dolphin-platform-polymer Unit Tests',
-            tunnelIdentifier: process.env.TRAVIS_JOB_NUMBER,
-            recordScreenshots: true,
-            recordVideo: false,
-            startConnect: false
+            testName: 'dolphin-platform-polymer Unit Tests'
         },
         istanbul: {
             dir: "./coverage",
