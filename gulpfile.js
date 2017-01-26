@@ -53,7 +53,7 @@ gulp.task('build-test', function() {
 });
 
 //add 'test' task when tests are fixed
-gulp.task('verify', ['lint']);
+gulp.task('verify', ['lint','build-test']);
 
 gulp.task('test', ['test:local']);
 
@@ -80,7 +80,7 @@ function rebundle(bundler) {
         .pipe(gulp.dest('./dist'));
 }
 
-gulp.task('build',['build-test'], function() {
+gulp.task('build', function() {
     return rebundle(mainBundler);
 });
 
