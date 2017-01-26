@@ -24,11 +24,13 @@ before_script:
   - bower install
   - npm update
   - bower update
+  - export PATH=$PWD/node_modules/.bin:PATH
 
 script:
   - gulp clean verify build
-  - xvfb-run wct
-  - if [“${TRAVIS_PULL_REQUEST}” = “false” ]; then wct -s ‘default’; fi
+  - xvfb-run wct --skip-plugin sauce
+  - wct --plugin sauce
+ # - if [“${TRAVIS_PULL_REQUEST}” = “false” ]; then wct -s ‘default’; fi
 
 after_success:
   - sonar-scanner
