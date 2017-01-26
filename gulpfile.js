@@ -80,7 +80,7 @@ function rebundle(bundler) {
         .pipe(gulp.dest('./dist'));
 }
 
-gulp.task('build',[build-test], function() {
+gulp.task('build',['build-test'], function() {
     return rebundle(mainBundler);
 });
 
