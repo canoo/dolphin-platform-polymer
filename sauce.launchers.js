@@ -9,10 +9,10 @@ exports.browsers = [
         browserName: 'internet explorer',
         version: '11.0'
     },
-    // {
-    //     platform: 'Windows 7',
-    //     browserName: 'chrome'
-    // },
+    {
+        platform: 'Windows 7',
+        browserName: 'chrome'
+    },
     {
         platform: 'Windows 7',
         browserName: 'firefox'
@@ -37,10 +37,10 @@ exports.browsers = [
         browserName: 'internet explorer',
         version: '11.0'
     },
-    // {
-    //     platform: 'Windows 8.1',
-    //     browserName: 'chrome'
-    // },
+    {
+        platform: 'Windows 8.1',
+        browserName: 'chrome'
+    },
     {
         platform: 'Windows 8.1',
         browserName: 'firefox'
