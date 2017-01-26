@@ -11,20 +11,21 @@ exports.browsers = [
         platform: 'Windows XP',
         version: '42.0'
     }
+    ,
+    {
+        base: 'SauceLabs',
+        browserName: 'internet explorer',
+        platform: 'Windows 7',
+        version: '9.0'
+    },
+
+    {
+        base: 'SauceLabs',
+        browserName: 'internet explorer',
+        platform: 'Windows 7',
+        version: '10.0'
+    }
     // ,
-    // {
-    //     base: 'SauceLabs',
-    //     browserName: 'internet explorer',
-    //     platform: 'Windows 7',
-    //     version: '9.0'
-    // },
-    //
-    // {
-    //     base: 'SauceLabs',
-    //     browserName: 'internet explorer',
-    //     platform: 'Windows 7',
-    //     version: '10.0'
-    // },
     // {
     //     base: 'SauceLabs',
     //     browserName: 'internet explorer',
