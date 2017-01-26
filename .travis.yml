@@ -24,7 +24,6 @@ before_script:
   - bower install
   - npm update
   - bower update
-  - export PATH=$PWD/node_modules/.bin:PATH
 
 script:
   - gulp clean verify build
