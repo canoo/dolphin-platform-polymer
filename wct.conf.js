@@ -7,8 +7,6 @@ module.exports = {
         },
         sauce: {
             disabled: true,
-            commandTimeout: 600,
-            idleTimeout: 180,
             browsers: require('./sauce.launchers.js').browsers,
             testName: 'dolphin-platform-polymer Unit Tests',
             tunnelIdentifier: process.env.TRAVIS_JOB_NUMBER,
