@@ -17,8 +17,8 @@ addons:
     - google-chrome-stable
 
 before_script:
-#  - export DISPLAY=:99.0
-#  - sh -e /etc/init.d/xvfb start
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
   - sleep 3
   - npm install -g grunt-cli
   - npm install -g bower
@@ -30,7 +30,7 @@ before_script:
 
 script:
   - gulp clean verify build
-  - xvfb-run wct --skip-plugin local
+  - xvfb-run -a wct --skip-plugin local
  # - if [“${TRAVIS_PULL_REQUEST}” = “false” ]; then wct -s ‘default’; fi
 
 after_success:
