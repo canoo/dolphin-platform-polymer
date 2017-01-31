@@ -6,10 +6,10 @@ module.exports = {
             "browsers": ["chrome", "firefox"] //safari not working
         },
         sauce: {
-            disabled: true,
             browsers: require('./sauce.launchers.js').browsers,
             testName: 'dolphin-platform-polymer Unit Tests'
-        },
+        }
+        ,
         istanbul: {
             dir: "./coverage",
             reporters: ["text-summary", "lcovonly"],
