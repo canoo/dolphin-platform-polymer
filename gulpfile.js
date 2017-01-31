@@ -53,9 +53,9 @@ gulp.task('build-test', function() {
 });
 
 //add 'test' task when tests are fixed
-gulp.task('verify', ['lint','build-test']);
+gulp.task('verify', ['lint', 'test']);
 
-gulp.task('test', ['test:local']);
+gulp.task('test', ['build-test', 'test:local']);
 
 var mainBundler = browserify(assign({}, watchify.args, {
     entries: './src/dolphin-polymer-api.js',

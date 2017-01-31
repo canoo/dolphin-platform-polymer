@@ -30,7 +30,8 @@ before_script:
 
 script:
   - gulp clean verify build
-  - wct --plugin local
+#  - gulp build-test
+#  - wct --plugin local
   - wct --plugin sauce
  # - if [“${TRAVIS_PULL_REQUEST}” = “false” ]; then wct -s ‘default’; fi
 
