@@ -4,10 +4,10 @@ dist: trusty
 sudo: required
 addons:
   sonarqube:
-      token:
-        secure: ${SONAR_TOKEN}
-      branches:
-        - master
+    token:
+      secure: ${SONAR_TOKEN}
+    branches:
+    - master
   firefox: latest
   sauce_connect: true
   apt:
@@ -15,27 +15,25 @@ addons:
     - google-chrome
     packages:
     - google-chrome-stable
-
 before_script:
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
-  - sleep 3
-  - npm install -g grunt-cli
-  - npm install -g bower
-  - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-  - npm install
-  - bower install
-  - npm update
-  - bower update
-
+- export DISPLAY=:99.0
+- sh -e /etc/init.d/xvfb start
+- sleep 3
+- npm install -g bower
+- echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+- npm install
+- bower install
+- npm update
+- bower update
 script:
-  - gulp clean verify build
-  - xvfb-run -a wct --skip-plugin local
- # - if [“${TRAVIS_PULL_REQUEST}” = “false” ]; then wct -s ‘default’; fi
-
+- gulp clean verify build
+- wct --skip-plugin local
 after_success:
-  - sonar-scanner
+- sonar-scanner
 cache:
   directories:
-    - '$HOME/.sonar/cache'
-
+  - $HOME/.sonar/cache
+env:
+  global:
+  - secure: tWeSe3VbyXBC5LIGQ+lPlDpWek13hgVLd+81SGiSqh4JEtmBb32RW8WA8SW8dosjgN0e6uiKkDbakH8bJHcDgRJZtsXwba0kX5SRVlYyejNGuBhudsnSTzicRVhRLcWz6CnCHpEdNH07pcKtuRqGbI8+ULmH9v1H2UswwOo788BKEEY0qNj0YgjDQDTA//gyuvyI0+/m7bI0a/2ydHCaCP7HBaCVtTzx237Oldz1In0ElNI1g+hjQpifIFN9gQ30iFMsUXrOxnvDOLlMbDI5W1XAAixMAE4/DhDSWRDiJQCOOio15sJcjq5fgPq276D3ZtAtjDZnOTIOBsFIrW0WA1FF722LtZWeXv8bxk2bOtiu9GqtEOfRuIH2MumasLG4iVSr5OpuciMNLhhoTGedRvo3fhRfpxwccJ6sYTh/5wDMfQCdv8n+JX0Wanlcj1ooZsnXDsd2GNGvjCxlOfei2WkF/9Gu7NL8cBRa2ueCRor1fgwqfU0K5aMUz/5mg18BStmodK+MhdN5YmqpmKgtiEXRkHpKv2Soff6AfH/oYZW0pDMF7+bzkpqlF3YapnE1E0p3HAYUGj6BDXGMs7D+flWwsXbyNymDgqLO6zxBWXiRqkanvzLnoqCk8ckSEfZ4qCgLJe5nHbNriwFWzFxPXzQbHmXjSY0mqWSKRidHrDo=
+  - secure: a0wYcDHs6eLvcozb+6aUJuZKjW6uIzMn2ADcxqJUtBMtyOmLTO5NgGBoO989TIAcrpCkZEZ0KV6JmvMaZOX+MaDTfbfGqCXypEyTvNy03UmT7gDy6dZxbghr9gHZdUxu9/xXsnhS8k249f1CRyDiD5E7fqsaWCtKh3F5q9cB4PNufNQMp/hyaPZRQumO+PPqN4llrT2nMYxtNC0Z4BtoSBqkK8X1AuC8zBu2CNZea97qZdE2Pzbvb+Tb9TT8goG720a2MjtuFJUHbfYta1CmXU82qc/SQE6f06NRY78kvTzhFVsWLm4rOZNC0bZ57JbjpZvsBY4fSiLFtnIoMTj+fs9EYMdJADtlVST685h+6R2Crb3LX1FndK3LJVjIpVeXq/n3xnlHCYtyjDnntn66WEW/T3V2sKQWZ+vVsW2SIV/E5clyo36PrWGK66cGxOyfjRXn4GS04gdf0GLDUtAm9WvUXjLDN+DX/w5lIQd23Zbpe9iCQjnSdgJLzVmwu0u64sXeUVjR7ywSxxDH7RZbcLxsGB4SprM/hD2Vk1K9t+bt8XtC3CDqAdkPwfKrQI6iJc7uYB9IvitwxQ+CLpP2SFvV1aqRcxAQuwhkb/nwZwbHCdw5ijYCHJOKK7AcUwYkeFCzEkQpjUpTr4njosWGPoyf1t/7n/fMhp2Y8SPgfpQ=
