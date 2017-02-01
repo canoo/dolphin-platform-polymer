@@ -50,13 +50,13 @@ exports.browsers = [
         platform: "OS X 10.11",
         version: "9"
     },
-    {
-        platformName: 'iOS',
-        platformVersion: '8.4',
-        deviceName: 'iPad Simulator',
-        browserName: 'Safari',
-        deviceOrientation: 'landscape'
-    },
+    // {
+    //     platformName: 'iOS',
+    //     platformVersion: '8.4',
+    //     deviceName: 'iPad Simulator',
+    //     browserName: 'Safari',
+    //     deviceOrientation: 'landscape'
+    // },
     {
         platformName: 'iOS',
         platformVersion: '9.2',
