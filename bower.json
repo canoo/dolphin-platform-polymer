@@ -24,7 +24,6 @@
     "src",
     "test",
     "gulpfile.js",
-    "karma.conf.js",
     "package.json",
     "sauce.launchers.js",
     "sauce-template.json",
