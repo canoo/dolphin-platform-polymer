@@ -44,12 +44,13 @@ exports.browsers = [
     {
         platform: 'Windows 8.1',
         browserName: 'firefox'
-    },
-    {
-        browserName: "safari",
-        platform: "OS X 10.11",
-        version: "9"
-    },
+    }
+    ,
+    // {
+    //     browserName: "safari",
+    //     platform: "OS X 10.11",
+    //     version: "9"
+    // },
     // {
     //     platformName: 'iOS',
     //     platformVersion: '8.4',
@@ -57,20 +58,20 @@ exports.browsers = [
     //     browserName: 'Safari',
     //     deviceOrientation: 'landscape'
     // },
-    {
-        platformName: 'iOS',
-        platformVersion: '9.2',
-        deviceName: 'iPad Simulator',
-        browserName: 'Safari',
-        deviceOrientation: 'landscape'
-    },
-    {
-        platformName: 'iOS',
-        platformVersion: '9.3',
-        deviceName: 'iPad Simulator',
-        browserName: 'Safari',
-        deviceOrientation: 'landscape'
-    },
+    // {
+    //     platformName: 'iOS',
+    //     platformVersion: '9.2',
+    //     deviceName: 'iPad Simulator',
+    //     browserName: 'Safari',
+    //     deviceOrientation: 'landscape'
+    // },
+    // {
+    //     platformName: 'iOS',
+    //     platformVersion: '9.3',
+    //     deviceName: 'iPad Simulator',
+    //     browserName: 'Safari',
+    //     deviceOrientation: 'landscape'
+    // },
 
     {
         platform: 'Linux',
@@ -88,11 +89,12 @@ exports.browsers = [
     {
         platform: 'OS X 10.10',
         browserName: 'firefox'
-    },
-    {
-        platform: 'OS X 10.10',
-        browserName: 'safari'
-    },
+    }
+    ,
+    // {
+    //     platform: 'OS X 10.10',
+    //     browserName: 'safari'
+    // },
 
     {
         platform: 'OS X 10.11',
@@ -102,10 +104,10 @@ exports.browsers = [
         platform: 'OS X 10.11',
         browserName: 'firefox'
     },
-    {
-        platform: 'OS X 10.11',
-        browserName: 'safari'
-    },
+    // {
+    //     platform: 'OS X 10.11',
+    //     browserName: 'safari'
+    // },
 
     {
         platform: 'Windows 7',
