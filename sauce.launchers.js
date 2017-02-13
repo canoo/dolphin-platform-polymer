@@ -89,11 +89,12 @@ exports.browsers = [
     {
         platform: 'OS X 10.10',
         browserName: 'firefox'
-    },
-    {
-        platform: 'OS X 10.10',
-        browserName: 'safari'
-    },
+    }
+    ,
+    // {
+    //     platform: 'OS X 10.10',
+    //     browserName: 'safari'
+    // },
 
     {
         platform: 'OS X 10.11',
@@ -103,10 +104,10 @@ exports.browsers = [
         platform: 'OS X 10.11',
         browserName: 'firefox'
     },
-    {
-        platform: 'OS X 10.11',
-        browserName: 'safari'
-    },
+    // {
+    //     platform: 'OS X 10.11',
+    //     browserName: 'safari'
+    // },
 
     {
         platform: 'Windows 7',
