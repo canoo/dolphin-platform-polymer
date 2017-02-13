@@ -3,7 +3,7 @@ module.exports = {
     testTimeout: 5 * 60 * 1000,
     plugins: {
         local: {
-            "browsers": ["chrome", "firefox"] //safari not working
+            "browsers": ["chrome", "firefox", "safari"] //safari not working
         },
         sauce: {
             browsers: require('./sauce.launchers.js').browsers,
@@ -12,11 +12,15 @@ module.exports = {
         ,
         istanbul: {
             dir: "./coverage",
-            reporters: ["text-summary", "lcovonly"],
+            reporters: ["text-summary", "lcov"],
             include: [
-                "./test/**/*.js"
+                '/**/*.js'
             ],
-            exclude: []
+            exclude: [
+                '/bower_components/**/*.js',
+                '/node-modules/**/*.js',
+                '/tests/**/*.js'
+            ]
         }
     }
 };
