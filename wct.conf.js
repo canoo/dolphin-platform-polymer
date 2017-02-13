@@ -1,6 +1,6 @@
 module.exports = {
     suites: ['test/wct_runner.html'],
-    testTimeout: 5 * 60 * 1000,
+    testTimeout: 6 * 60 * 1000,
     plugins: {
         local: {
             //Travis does not support safari - Safari currently requires manual steps to enable automation
