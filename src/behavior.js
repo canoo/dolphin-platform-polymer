@@ -102,6 +102,10 @@ function setupCreateBehavior(clientContext) {
                 return this._controller.invoke(actionName, params);
             },
 
+            destroy: function() {
+                this._controller.destroy();
+            },
+
             _dolphinObserver: function(event) {
                 if (state !== 'READY') {
                     return;
