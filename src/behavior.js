@@ -86,9 +86,13 @@ function setupCreateBehavior(clientContext) {
                     self._controller = controller;
                     state = 'READY';
                     self.set('model', controller.model);
+
+                    self.fire('controller-ready');
+
                     controller.onDestroyed(function() {
                         state = 'DESTROYED';
                         self.set('model', null);
+                        self.fire('controller-destroyed');
                     });
                 });
             },
