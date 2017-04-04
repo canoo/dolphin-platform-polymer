@@ -1,10 +1,11 @@
 {
   "name": "dolphin-platform-polymer",
-  "version": "0.8.14",
+  "version": "0.11.0",
   "authors": [
     "Michael Heinrichs <michael.heinrichs@canoo.com>",
     "Hendrik Ebbers <hendrik.ebbers@canoo.com>",
-    "Kunal Singh <kunal.singh@canoo.com>"
+    "Kunal Singh <kunal.singh@canoo.com>",
+    "Timo Brandstätter <timo.brandstaetter@canoo.com>"
   ],
   "homepage": "http://www.dolphin-platform.io",
   "description": "The Dolphin Platform framework implements the presentation model pattern and provides a modern way to create enterprise applications.",
@@ -32,7 +33,7 @@
   ],
   "devDependencies": {
     "core.js": "2.4.0",
-    "dolphin-platform-js": "0.8.14"
+    "dolphin-platform-js": "0.11.0"
   },
   "dependencies": {
     "polymer": ">=1.0.4 <=1.4.0"
