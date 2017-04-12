@@ -30,7 +30,8 @@ gulp.task('lint', function() {
 gulp.task('lint-tc', function() {
     return gulp.src(['./src/**/*.js', '!./src/polyfills.js'])
         .pipe($.jshint())
-        .pipe($.jshint.reporter('jshint-teamcity'));
+        .pipe($.jshint.reporter('default'))
+        .pipe($.jshint.reporter('fail'));
 });
 
 
@@ -85,16 +86,14 @@ gulp.task('build', function() {
     return rebundle(mainBundler);
 });
 
-//gulp.task('watch', function() {
-//    gulp.watch(['src/**'], ['lint']);
-//
-//    var watchedMainBundler = watchify(mainBundler);
-//    watchedMainBundler.on('update', function() {rebundle(watchedMainBundler)});
-//
-//    var watchedTestBundler = watchify(testBundler);
-//    watchedTestBundler.on('update', function() {rebundle(watchedTestBundler)});
-//});
+gulp.task('watch', function() {
+   gulp.watch(['src/**'], ['lint']);
+
+   var watchedMainBundler = watchify(mainBundler);
+   watchedMainBundler.on('update', function() {rebundle(watchedMainBundler)});
+
+   var watchedTestBundler = watchify(testBundler);
+   watchedTestBundler.on('update', function() {rebundle(watchedTestBundler)});
+});
 
 gulp.task('default', ['verify', 'build']);
-
-
