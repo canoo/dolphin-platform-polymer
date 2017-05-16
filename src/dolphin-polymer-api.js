@@ -16,12 +16,13 @@
 /*jslint browserify: true */
 "use strict";
 
-var connect = require('../bower_components/dolphin-platform-js/dist/dolphin-platform.js').connect;
+var dolphinClient = require('../bower_components/dolphin-platform-js/dist/dolphin-platform.js');
 var setupCreateBehavior = require('./behavior.js').setupCreateBehavior;
 
-
-exports.connect = function(url, config) {
-    var clientContext = connect(url, config);
+exports.clientContext = function(url, config){
+    var clientContextFactory = new dolphinClient.ClientContextFactory();
+    var clientContext = clientContextFactory.create(url, config);
     clientContext.createBehavior = setupCreateBehavior(clientContext);
     return clientContext;
 };
+
