@@ -1,6 +1,6 @@
 {
   "name": "dolphin-platform-polymer",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Polymer Client of the Dolphin Platform",
   "main": "./dist/dolphin-platform-polymer.js",
   "repository": {
@@ -24,7 +24,7 @@
     "gulp-sourcemaps": "1.6.x",
     "gulp-uglify": "1.5.x",
     "gulp-util": "3.0.x",
-    "jshint": "2.9.x",
+    "jshint": "^2.9.5",
     "lodash": "4.12.x",
     "lodash.assign": "4.0.x",
     "mocha": "2.4.x",
