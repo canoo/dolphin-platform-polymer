@@ -9,8 +9,11 @@
   },
   "author": "Michael Heinrichs <michael.heinrichs@canoo.com>",
   "license": "Apache-2.0",
+  "scripts": {
+    "test": "./node_modules/.bin/gulp verify"
+  },
   "devDependencies": {
-    "bower": "1.7.x",
+    "bower": "1.8.x",
     "browserify": "13.0.x",
     "chai": "3.5.x",
     "del": "2.2.x",
@@ -32,7 +35,7 @@
     "vinyl-buffer": "1.0.x",
     "vinyl-source-stream": "1.1.x",
     "watchify": "3.7.x",
-    "web-component-tester": "4.2.x",
+    "web-component-tester": "^6.1.5",
     "web-component-tester-istanbul": "^0.10.0"
   }
 }
