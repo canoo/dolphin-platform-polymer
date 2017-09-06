@@ -39,6 +39,6 @@
   },
   "dependencies": {
     "polymer": "^2.0.2",
-    "webcomponentsjs": "^1.0.10"
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.10"
   }
 }
