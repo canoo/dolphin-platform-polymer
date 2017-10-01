@@ -24,14 +24,14 @@
     "test",
     "package.json"
   ],
-  "devDependencies": {
-    "lodash": "3.10.1",
-    "web-component-tester": "6.2.0"
-  },
   "dependencies": {
     "core.js": "2.5.1",
     "dolphin-platform-js": "0.18.0",
-    "polymer": "2.1.1",
+    "polymer": "2.1.1"
+  },
+  "devDependencies": {
+    "lodash": "3.10.1",
+    "web-component-tester": "6.2.0",
     "webcomponentsjs": "webcomponents/webcomponentsjs#1.0.14"
   }
 }
