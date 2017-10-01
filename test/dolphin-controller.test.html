@@ -9,18 +9,36 @@
 </test-fixture>
 
 <script>
+  const dolphinContext = {
+    beanManager: {
+      onBeanUpdate: (callback) => {},
+      onArrayUpdate: (callback) => {},
+      notifyBeanChange: () => {},
+      notifyArrayChange: () => {},
+    },
+    createController: (name) => {
+      return Promise.resolve({
+        model: {},
+        onDestroyed: () => {}
+      })
+    }
+  }
+  const controllerName = "fooController"
+
   suite("<dolphin-controller>", () => {
 
-    test("simple use case", done => {
+    test("simple use case", (done) => {
+      // given:
       const element = fixture("simple-fixture")
 
+      // when:
+      element.dolphinContext = dolphinContext
+      element.name = controllerName
+      expect(element.state).to.equal("INITIALIZING")
+
+      // then:
       flush(() => {
-        element.set("model", { bean: "foo" })
-        element.set("model.bean", "bar")
-        element.set("model.array", [])
-        element.set("model.array", [1, 2, 3, 4])
-        element.splice("model.array", 1, 2, 9)
-        console.log(element.model)
+        expect(element.state).to.equal("READY")
         done()
       })
     })

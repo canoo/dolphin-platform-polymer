@@ -24,4 +24,4 @@ before_script:
 - bower update
 
 script:
-- wct --skip-plugin sauce
+- npm test
