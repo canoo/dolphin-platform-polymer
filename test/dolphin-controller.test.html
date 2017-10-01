@@ -11,15 +11,15 @@
 <script>
   const dolphinContext = {
     beanManager: {
-      onBeanUpdate: (callback) => {},
-      onArrayUpdate: (callback) => {},
-      notifyBeanChange: () => {},
-      notifyArrayChange: () => {},
+      onBeanUpdate: (callback) => { },
+      onArrayUpdate: (callback) => { },
+      notifyBeanChange: () => { },
+      notifyArrayChange: () => { },
     },
     createController: (name) => {
       return Promise.resolve({
         model: {},
-        onDestroyed: () => {}
+        onDestroyed: () => { }
       })
     }
   }
@@ -27,7 +27,7 @@
 
   suite("<dolphin-controller>", () => {
 
-    test("simple use case", (done) => {
+    test("change dolphin context and controller name", done => {
       // given:
       const element = fixture("simple-fixture")
 
@@ -39,6 +39,26 @@
       // then:
       flush(() => {
         expect(element.state).to.equal("READY")
+        done()
+      })
+    })
+
+    test("change controller model", done => {
+      // given:
+      const element = fixture("simple-fixture")
+      element.dolphinContext = dolphinContext
+      element.name = controllerName
+
+      // when:
+      flush(() => {
+        element.set("model", { bean: "foo" })
+        element.set("model.bean", "bar")
+        element.set("model.array", [])
+        element.set("model.array", [1, 2, 3, 4])
+        element.splice("model.array", 1, 2, ...[9])
+
+        // then:
+        expect(element.model).to.deep.equal({ array: [1, 9, 4], bean: "bar" })
         done()
       })
     })
