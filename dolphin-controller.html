@@ -1,0 +1,115 @@
+<link rel="import" href="./bower_components/polymer/polymer-element.html">
+
+<dom-module id="dolphin-controller">
+  <template>
+    <style>
+       :host {
+        display: block;
+      }
+    </style>
+  </template>
+
+  <script>
+    const clientContext = {
+      beanManager: {
+        onBeanUpdate: (callback) => {},
+        onArrayUpdate: (callback) => {},
+        notifyBeanChange: () => {},
+        notifyArrayChange: () => {},
+      },
+      createController: (controllerName) => {
+        return Promise.resolve({
+          model: {},
+          onDestroyed: () => {}
+        })
+      }
+    }
+
+    const controllerName = "controllerFoo"
+
+    function isNil(value) {
+      return value === null || value === undefined
+    }
+
+    class DolphinController extends Polymer.Element {
+      static get is() {
+        return "dolphin-controller"
+      }
+
+      static get properties() {
+        return {
+          state: String,
+          model: Object
+        }
+      }
+
+      static get observers() {
+        return ["_onModelChanged(model.*)"]
+      }
+
+      /**
+       * @param {dolphin.ClientContext} clientContext
+       * @param {string} controllerName
+       */
+      constructor(_clientContext, _controllerName) {
+        super()
+        this.clientContext = clientContext
+        this.beanManager = clientContext.beanManager
+        this.controllerName = controllerName
+        this.controllerState = "INITIALIZING"
+      }
+
+      ready() {
+        super.ready()
+        this.beanManager.onBeanUpdate(this._onDolphinBeanUpdated.bind(this))
+        this.beanManager.onArrayUpdate(this._onDolphinBeanArrayUpdated.bind(this))
+        this.clientContext.createController(controllerName)
+          .then(controller => {
+            this._onControllerReady(controller)
+            controller.onDestroyed(() => {
+              this._onControllerDestroyed(controller)
+            })
+          })
+      }
+
+      _onControllerReady(controller) {
+        console.log("_onControllerReady()")
+        this.controllerState = "READY"
+      }
+
+      _onControllerDestroyed(controller) {
+        console.log("_onControllerDestroyed()")
+        this.controllerState = "DESTROYED"
+      }
+
+      _onModelChanged(event) {
+        const propertyPath = event.path
+        const newValue = event.value
+        if (!isNil(newValue) && !isNil(newValue.indexSplices)) {
+          this._onModelBeanArrayChanged(propertyPath, newValue)
+        }
+        else {
+          this._onModelBeanChanged(propertyPath, newValue)
+        }
+      }
+
+      _onModelBeanChanged(propertyPath, newValue) {
+        console.log("on model bean changed:", propertyPath, newValue)
+      }
+
+      _onModelBeanArrayChanged(propertyPath, newValue) {
+        console.log("on model bean array changed:", propertyPath, newValue)
+      }
+
+      _onDolphinBeanUpdated(bean, propertyName, newValue, oldValue) {
+        console.log("on dolphin bean updated:", bean, propertyName, newValue, oldValue)
+      }
+
+      _onDolphinBeanArrayUpdated(bean, propertyName, startIndex, removedCount, addedItems) {
+        console.log("on dolphin bean array updated:", bean, propertyName, startIndex, removedCount, addedItems)
+      }
+    }
+
+    window.customElements.define(DolphinController.is, DolphinController)
+  </script>
+</dom-module>
