@@ -2,63 +2,78 @@
 <script src="../bower_components/web-component-tester/browser.js"></script>
 <link rel="import" href="../dolphin-controller.html">
 
-<test-fixture id="simple-fixture">
+<test-fixture id="simple-controller">
   <template>
-    <dolphin-controller></dolphin-controller>
+    <dolphin-controller name="fooController"></dolphin-controller>
   </template>
 </test-fixture>
 
 <script>
-  const dolphinContext = {
-    beanManager: {
-      onBeanUpdate: (callback) => { },
-      onArrayUpdate: (callback) => { },
-      notifyBeanChange: () => { },
-      notifyArrayChange: () => { },
-    },
-    createController: (name) => {
-      return Promise.resolve({
-        model: {},
-        onDestroyed: () => { }
-      })
-    }
-  }
-  const controllerName = "fooController"
-
   suite("<dolphin-controller>", () => {
 
-    test("change dolphin context and controller name", done => {
+    const dolphinContext = {
+      beanManager: {
+        onBeanUpdate: (callback) => { },
+        onArrayUpdate: (callback) => { },
+        notifyBeanChange: () => { },
+        notifyArrayChange: () => { },
+      },
+      createController: (name) => {
+        return Promise.resolve({
+          model: {},
+          onDestroyed: () => { }
+        })
+      }
+    }
+
+    test("create controller", done => {
       // given:
-      const element = fixture("simple-fixture")
+      const controller = fixture("simple-controller")
+      controller.dolphinContext = dolphinContext
 
       // when:
-      element.dolphinContext = dolphinContext
-      element.name = controllerName
-      expect(element.state).to.equal("INITIALIZING")
+      controller.create()
+      expect(controller.state).to.equal("INITIALIZING")
 
       // then:
       flush(() => {
-        expect(element.state).to.equal("READY")
+        expect(controller.state).to.equal("READY")
         done()
       })
     })
 
+    // test("destroy controller", done => {
+    //   // given:
+    //   const controller = fixture("simple-controller")
+    //   controller.dolphinContext = dolphinContext
+
+    //   // when:
+    //   controller.create()
+    //   controller.destroy()
+
+    //   // then:
+    //   flush(() => {
+    //     expect(controller.state).to.equal("DESTROYED")
+    //     done()
+    //   })
+    // })
+
     test("change controller model", done => {
       // given:
-      const element = fixture("simple-fixture")
-      element.dolphinContext = dolphinContext
-      element.name = controllerName
+      const controller = fixture("simple-controller")
+      controller.dolphinContext = dolphinContext
+      controller.create()
 
       // when:
       flush(() => {
-        element.set("model", { bean: "foo" })
-        element.set("model.bean", "bar")
-        element.set("model.array", [])
-        element.set("model.array", [1, 2, 3, 4])
-        element.splice("model.array", 1, 2, ...[9])
+        controller.set("model", { bean: "foo" })
+        controller.set("model.bean", "bar")
+        controller.set("model.array", [])
+        controller.set("model.array", [1, 2, 3, 4])
+        controller.splice("model.array", 1, 2, ...[9])
 
         // then:
-        expect(element.model).to.deep.equal({ array: [1, 9, 4], bean: "bar" })
+        expect(controller.model).to.deep.equal({ array: [1, 9, 4], bean: "bar" })
         done()
       })
     })

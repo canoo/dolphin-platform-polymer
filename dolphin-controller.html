@@ -23,7 +23,6 @@
       static get observers() {
         return [
           "_onDolphinContextChanged(dolphinContext)",
-          "_onNameChanged(name)",
           "_onModelChanged(model.*)"
         ]
       }
@@ -36,8 +35,8 @@
         }
       }
 
-      _onNameChanged() {
-        if (!isNil(this.name) && !isNil(this.dolphinContext)) {
+      create() {
+        if (!isNil(this.dolphinContext) && !isNil(this.name)) {
           this._onControllerInitializing()
           this.dolphinContext.createController(this.name)
             .then(controller => {
@@ -49,19 +48,28 @@
         }
       }
 
+      destroy() {
+        if (!isNil(this.controller)) {
+          this.controller.destroy()
+        }
+      }
+
       _onControllerInitializing() {
-        console.log("_onControllerInitializing()")
+        console.log("_onControllerInitializing()", this.name)
+        this.controller = null
         this.state = "INITIALIZING"
       }
 
       _onControllerReady(controller) {
-        console.log("_onControllerReady()", controller)
+        console.log("_onControllerReady()", this.name, controller)
+        this.controller = controller
         this.state = "READY"
       }
 
       _onControllerDestroyed(controller) {
-        console.log("_onControllerDestroyed()", controller)
-        this.controllerState = "DESTROYED"
+        console.log("_onControllerDestroyed()", this.name, controller)
+        this.controller = null
+        this.state = "DESTROYED"
       }
 
       _onModelChanged(event) {
