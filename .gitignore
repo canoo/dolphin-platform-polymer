@@ -1,7 +1,9 @@
-.idea
-node_modules/
+# dependencies.
 bower_components/
-test/build/
-tmp/
-coverage/
-.sonar/
+node_modules/
+
+# project files.
+.idea/
+
+# apple macos.
+*.DS_Store
