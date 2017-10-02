@@ -2,10 +2,6 @@
 
 <dom-module id="dolphin-controller">
   <script>
-    function isNil(value) {
-      return value === null || value === undefined
-    }
-
     class DolphinController extends Polymer.Element {
       static get is() {
         return "dolphin-controller"
@@ -13,32 +9,45 @@
 
       static get properties() {
         return {
-          dolphinContext: Object,
+          clientContext: {
+            type: Object,
+            value: () => window.clientContext
+          },
           name: String,
           state: String,
-          model: Object
+          model: Object,
+          auto: {
+            type: Boolean,
+            value: false
+          }
         }
       }
 
       static get observers() {
         return [
-          "_onDolphinContextChanged(dolphinContext)",
+          "_onClientContextChanged(clientContext)",
           "_onModelChanged(model.*)"
         ]
       }
 
-      _onDolphinContextChanged() {
-        if (!isNil(this.dolphinContext)) {
-          this.beanManager = this.dolphinContext.beanManager
-          this.beanManager.onBeanUpdate(this._onDolphinBeanUpdated.bind(this))
-          this.beanManager.onArrayUpdate(this._onDolphinBeanArrayUpdated.bind(this))
+      connectedCallback() {
+        super.connectedCallback()
+        if (!!this.auto) {
+          this.create()
+        }
+      }
+
+      disconnectedCallback() {
+        super.disconnectedCallback()
+        if (!!this.auto) {
+          this.destroy()
         }
       }
 
       create() {
-        if (!isNil(this.dolphinContext) && !isNil(this.name)) {
+        if (!isNil(this.clientContext) && !isNil(this.name)) {
           this._onControllerInitializing()
-          this.dolphinContext.createController(this.name)
+          this.clientContext.createController(this.name)
             .then(controller => {
               this._onControllerReady(controller)
               controller.onDestroyed(() => {
@@ -49,26 +58,34 @@
       }
 
       destroy() {
-        if (!isNil(this.controller)) {
-          this.controller.destroy()
+        if (!isNil(this._controller)) {
+          this._controller.destroy()
+        }
+      }
+
+      _onClientContextChanged() {
+        if (!isNil(this.clientContext)) {
+          this.beanManager = this.clientContext.beanManager
+          this.beanManager.onBeanUpdate(this._onReceiveDolphinBeanUpdate.bind(this))
+          this.beanManager.onArrayUpdate(this._onReceiveDolphinBeanArrayUpdate.bind(this))
         }
       }
 
       _onControllerInitializing() {
         console.log("_onControllerInitializing()", this.name)
-        this.controller = null
+        this._controller = null
         this.state = "INITIALIZING"
       }
 
       _onControllerReady(controller) {
         console.log("_onControllerReady()", this.name, controller)
-        this.controller = controller
+        this._controller = controller
         this.state = "READY"
       }
 
       _onControllerDestroyed(controller) {
         console.log("_onControllerDestroyed()", this.name, controller)
-        this.controller = null
+        this._controller = null
         this.state = "DESTROYED"
       }
 
@@ -91,15 +108,19 @@
         console.log("on model bean array changed:", propertyPath, newValue)
       }
 
-      _onDolphinBeanUpdated(bean, propertyName, newValue, oldValue) {
-        console.log("on dolphin bean updated:", bean, propertyName, newValue, oldValue)
+      _onReceiveDolphinBeanUpdate(bean, propertyName, newValue, oldValue) {
+        console.log("on receive dolphin bean:", bean, propertyName, newValue, oldValue)
       }
 
-      _onDolphinBeanArrayUpdated(bean, propertyName, startIndex, removedCount, addedItems) {
-        console.log("on dolphin bean array updated:", bean, propertyName, startIndex, removedCount, addedItems)
+      _onReceiveDolphinBeanArrayUpdate(bean, propertyName, startIndex, removedCount, addedItems) {
+        console.log("on receive dolphin bean array:", bean, propertyName, startIndex, removedCount, addedItems)
       }
     }
 
     window.customElements.define(DolphinController.is, DolphinController)
+
+    function isNil(value) {
+      return value === null || value === undefined
+    }
   </script>
 </dom-module>

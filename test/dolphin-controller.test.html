@@ -4,32 +4,48 @@
 
 <test-fixture id="simple-controller">
   <template>
-    <dolphin-controller name="fooController"></dolphin-controller>
+    <dolphin-controller name="SimpleController"></dolphin-controller>
+  </template>
+</test-fixture>
+
+<test-fixture id="simple-auto-controller">
+  <template>
+    <dolphin-controller name="SimpleController" auto></dolphin-controller>
   </template>
 </test-fixture>
 
 <script>
   suite("<dolphin-controller>", () => {
 
-    const dolphinContext = {
-      beanManager: {
-        onBeanUpdate: (callback) => { },
-        onArrayUpdate: (callback) => { },
-        notifyBeanChange: () => { },
-        notifyArrayChange: () => { },
-      },
-      createController: (name) => {
-        return Promise.resolve({
-          model: {},
-          onDestroyed: () => { }
-        })
+    setup(() => {
+      const clientContext = {
+        beanManager: {
+          onBeanUpdate: (callback) => { },
+          onArrayUpdate: (callback) => { },
+          notifyBeanChange: () => { },
+          notifyArrayChange: () => { },
+        },
+        createController: (name) => {
+          let onDestroyedCallback
+          return Promise.resolve({
+            model: {},
+            destroy: () => {
+              if (onDestroyedCallback) {
+                onDestroyedCallback()
+              }
+            },
+            onDestroyed: (callback) => {
+              onDestroyedCallback = callback
+            }
+          })
+        }
       }
-    }
+      window.clientContext = clientContext
+    })
 
     test("create controller", done => {
       // given:
       const controller = fixture("simple-controller")
-      controller.dolphinContext = dolphinContext
 
       // when:
       controller.create()
@@ -42,38 +58,62 @@
       })
     })
 
-    // test("destroy controller", done => {
-    //   // given:
-    //   const controller = fixture("simple-controller")
-    //   controller.dolphinContext = dolphinContext
-
-    //   // when:
-    //   controller.create()
-    //   controller.destroy()
-
-    //   // then:
-    //   flush(() => {
-    //     expect(controller.state).to.equal("DESTROYED")
-    //     done()
-    //   })
-    // })
-
-    test("change controller model", done => {
+    test("destroy controller", done => {
       // given:
       const controller = fixture("simple-controller")
-      controller.dolphinContext = dolphinContext
       controller.create()
 
       // when:
       flush(() => {
-        controller.set("model", { bean: "foo" })
-        controller.set("model.bean", "bar")
-        controller.set("model.array", [])
-        controller.set("model.array", [1, 2, 3, 4])
-        controller.splice("model.array", 1, 2, ...[9])
+        controller.destroy()
 
         // then:
-        expect(controller.model).to.deep.equal({ array: [1, 9, 4], bean: "bar" })
+        expect(controller.state).to.equal("DESTROYED")
+        done()
+      })
+    })
+
+    test("auto create controller", done => {
+      // when:
+      const controller = fixture("simple-auto-controller")
+      expect(controller.state).to.equal("INITIALIZING")
+
+      // then:
+      flush(() => {
+        expect(controller.state).to.equal("READY")
+        done()
+      })
+    })
+
+    test("auto destroy controller", done => {
+      // given:
+      const controller = fixture("simple-auto-controller")
+
+      flush(() => {
+        // when:
+        controller.remove()
+
+        // then:
+        expect(controller.state).to.equal("DESTROYED")
+        done()
+      })
+    })
+
+    test("change controller model", done => {
+      // given:
+      const controller = fixture("simple-controller")
+      controller.create()
+
+      // when:
+      controller.set("model", { bean: "foo" })
+      controller.set("model.bean", "bar")
+      controller.set("model.array", [])
+      controller.set("model.array", [1, 2, 3, 4, 5])
+      controller.splice("model.array", 1, 3, ...[8, 9])
+
+      // then:
+      flush(() => {
+        expect(controller.model).to.deep.equal({ array: [1, 8, 9, 5], bean: "bar" })
         done()
       })
     })
