@@ -13,13 +13,13 @@
             type: Object,
             value: () => window.clientContext
           },
-          name: String,
-          state: String,
-          model: Object,
           auto: {
             type: Boolean,
             value: false
-          }
+          },
+          name: String,
+          state: String,
+          model: Object
         }
       }
 
@@ -32,14 +32,14 @@
 
       connectedCallback() {
         super.connectedCallback()
-        if (!!this.auto) {
+        if (isTrue(this.auto)) {
           this.create()
         }
       }
 
       disconnectedCallback() {
         super.disconnectedCallback()
-        if (!!this.auto) {
+        if (isTrue(this.auto)) {
           this.destroy()
         }
       }
@@ -121,6 +121,10 @@
 
     function isNil(value) {
       return value === null || value === undefined
+    }
+
+    function isTrue(value) {
+      return !!value
     }
   </script>
 </dom-module>
