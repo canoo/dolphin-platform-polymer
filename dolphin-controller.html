@@ -83,9 +83,11 @@ limitations under the License.
           this.clientContext.createController(this.name)
             .then(controller => {
               this._onControllerReady(controller)
-              // controller.onDestroyed(() => {
-              //   this._onControllerDestroyed(controller)
-              // })
+              if (!isNil(controller.onDestroyed)) {
+                controller.onDestroyed(() => {
+                  this._onControllerDestroyed(controller)
+                })
+              }
             })
         }
       }
@@ -99,8 +101,8 @@ limitations under the License.
       _onClientContextChanged() {
         if (!isNil(this.clientContext)) {
           this._beanManager = this.clientContext.beanManager
-          this._beanManager.onBeanUpdate(this._onReceiveDolphinBeanUpdate.bind(this))
-          this._beanManager.onArrayUpdate(this._onReceiveDolphinBeanArrayUpdate.bind(this))
+          this._beanManager.onBeanUpdate(this._onBeanPropertyChanged.bind(this))
+          this._beanManager.onArrayUpdate(this._onBeanPropertyArrayChanged.bind(this))
         }
       }
 
@@ -113,8 +115,8 @@ limitations under the License.
       _onControllerReady(controller) {
         console.log("_onControllerReady()", this.name, controller)
         this._controller = controller
+        this._onBeanChanged(this._controller.model)
         this.state = STATUS_READY
-        this._onReceiveDolphinBeanInitial(this._controller.model)
       }
 
       _onControllerDestroyed(controller) {
@@ -131,10 +133,10 @@ limitations under the License.
         const newValue = event.value
         console.log("here", event)
         if (!isNil(newValue) && !isNil(newValue.indexSplices)) {
-          this._onModelBeanArrayChanged(propertyPath, newValue)
+          this._notifyBeanArrayChanged(propertyPath, newValue)
         }
         else {
-          this._onModelBeanChanged(propertyPath, newValue)
+          this._notifyBeanChanged(propertyPath, newValue)
         }
       }
 
@@ -147,8 +149,8 @@ limitations under the License.
         const propertyName = last(Polymer.Path.split(propertyPath))
         console.log("-->", propertyName, bean)
 
-        const oldValue = this._beanManager.notifyBeanChange(bean, propertyName, newValue)
-        this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
+        // const oldValue = this._beanManager.notifyBeanChange(bean, propertyName, newValue)
+        // this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
       }
 
       /**

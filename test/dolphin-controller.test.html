@@ -19,12 +19,6 @@
 
 <test-fixture id="SimpleController">
   <template>
-    <dolphin-controller name="SimpleController"></dolphin-controller>
-  </template>
-</test-fixture>
-
-<test-fixture id="SimpleAutoController">
-  <template>
     <dolphin-controller auto name="SimpleController"></dolphin-controller>
   </template>
 </test-fixture>
@@ -35,7 +29,7 @@
 
 <script>
   suite("<dolphin-controller>", () => {
-    suite.only("bean registry", () => {
+    suite("bean registry", () => {
       let controller
       setup(() => {
         // given:
@@ -98,38 +92,14 @@
 
   suite.skip("<dolphin-controller>", () => {
     setup(done => {
-      // const clientContextFactory = new dolphin.ClientContextFactory()
-      // const clientContext = clientContextFactory.create("http://localhost:8080/dolphin")
-      // clientContext.onConnect().then(done)
-      // window.clientContext = clientContext
-
-      // const clientContext = {
-      //   beanManager: {
-      //     onBeanUpdate: (callback) => { },
-      //     onArrayUpdate: (callback) => { },
-      //     notifyBeanChange: () => { },
-      //     notifyArrayChange: () => { },
-      //   },
-      //   createController: (name) => {
-      //     let onDestroyedCallback
-      //     return Promise.resolve({
-      //       model: {},
-      //       destroy: () => {
-      //         if (onDestroyedCallback) {
-      //           onDestroyedCallback()
-      //         }
-      //       },
-      //       onDestroyed: (callback) => {
-      //         onDestroyedCallback = callback
-      //       }
-      //     })
-      //   }
-      // }
-      // window.clientContext = clientContext
+      const clientContextFactory = new dolphin.ClientContextFactory()
+      const clientContext = clientContextFactory.create("http://localhost:8080/dolphin")
+      clientContext.onConnect().then(done)
+      window.clientContext = clientContext
     })
 
-    test("foo", done => {
-      const controller = fixture("SimpleController")
+    test("with server connection", done => {
+      const controller = fixture("EmptyController")
       controller.name = "FooController"
       controller.create()
 
@@ -153,6 +123,34 @@
         }, 200)
       }, 200)
     })
+  })
+
+  suite("<dolphin-controller>", () => {
+    setup(() => {
+      const clientContext = {
+        beanManager: {
+          onBeanUpdate: (callback) => { },
+          onArrayUpdate: (callback) => { },
+          notifyBeanChange: () => { },
+          notifyArrayChange: () => { },
+        },
+        createController: (name) => {
+          let onDestroyedCallback
+          return Promise.resolve({
+            model: {},
+            destroy: () => {
+              if (onDestroyedCallback) {
+                onDestroyedCallback()
+              }
+            },
+            onDestroyed: (callback) => {
+              onDestroyedCallback = callback
+            }
+          })
+        }
+      }
+      window.clientContext = clientContext
+    })
 
     test("set the initial value", done => {
       // given:
@@ -162,7 +160,7 @@
       }
 
       // when:
-      const controller = fixture("SimpleAutoController")
+      const controller = fixture("SimpleController")
 
       // then:
       flush(() => {
@@ -180,11 +178,11 @@
       }
 
       // when:
-      const controller = fixture("SimpleAutoController")
+      const controller = fixture("EmptyController")
 
       // then:
       flush(() => {
-        controller._onReceiveDolphinBeanUpdate(bean, "stringProp", "VALUE_2", "VALUE_1")
+        controller._onBeanPropertyChanged(bean, "stringProp", "VALUE_2", "VALUE_1")
         // sinon.assert.calledWithExactly(element.beanChangeObserver, { path: 'model.theProperty', value: 'VALUE_2', base: bean });
         done()
       })
@@ -205,7 +203,8 @@
 
     test("create controller", done => {
       // given:
-      const controller = fixture("SimpleController")
+      const controller = fixture("EmptyController")
+      controller.name = "EmptyController"
 
       // when:
       controller.create()
@@ -219,7 +218,8 @@
 
     test("destroy controller", done => {
       // given:
-      const controller = fixture("SimpleController")
+      const controller = fixture("EmptyController")
+      controller.name = "EmptyController"
       controller.create()
 
       // when:
@@ -234,7 +234,7 @@
 
     test("auto create controller", done => {
       // when:
-      const controller = fixture("SimpleAutoController")
+      const controller = fixture("SimpleController")
 
       // then:
       flush(() => {
@@ -245,7 +245,7 @@
 
     test("auto destroy controller", done => {
       // given:
-      const controller = fixture("SimpleAutoController")
+      const controller = fixture("SimpleController")
 
       flush(() => {
         // when:
@@ -259,7 +259,7 @@
 
     test("change controller model", done => {
       // given:
-      const controller = fixture("SimpleAutoController")
+      const controller = fixture("EmptyController")
 
       // when:
       controller.set("model", { beanProp: "foo" })
@@ -270,10 +270,11 @@
 
       // then:
       flush(() => {
-        expect(controller.model).to.deep.equal({ arrayProp: [1, 8, 9, 5], beanProp: "bar" })
+        expect(controller.model).to.eql(
+          { arrayProp: [1, 8, 9, 5], beanProp: "bar" }
+        )
         done()
       })
     })
-
   })
 </script>
