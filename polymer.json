@@ -1,7 +1,24 @@
 {
+  "entrypoint": "index.html",
+  "sources": [
+    "dolphin-controller.html",
+    "index.html"
+  ],
+  "extraDependencies": [
+    "analysis.json",
+    "LICENSE"
+  ],
   "lint": {
     "rules": [
       "polymer-2"
     ]
-  }
+  },
+  "builds": [
+    {
+      "preset": "es5-bundled"
+    },
+    {
+      "preset": "es6-bundled"
+    }
+  ]
 }
