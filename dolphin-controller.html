@@ -42,7 +42,7 @@ limitations under the License.
             type: Boolean,
             value: false
           },
-          state: {
+          status: {
             type: String,
             value: STATUS_NOT_READY
           },
@@ -106,64 +106,99 @@ limitations under the License.
         }
       }
 
+      _onBeanPropertyChanged(bean, propertyName, newValue) {
+          return this._beanManager.notifyBeanChange(bean, propertyName, newValue)
+      }
+
+      _onBeanPropertyArrayChanged(bean, propertyName, startIndex, removedCount, addedItems) {
+          return this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
+      }
+
       _onControllerInitializing() {
         console.log("_onControllerInitializing()", this.name)
         this._controller = null
-        this.state = STATUS_NOT_READY
+        this.status = STATUS_NOT_READY
       }
 
       _onControllerReady(controller) {
         console.log("_onControllerReady()", this.name, controller)
         this._controller = controller
         this._onBeanChanged(this._controller.model)
-        this.state = STATUS_READY
+        this.status = STATUS_READY
       }
 
       _onControllerDestroyed(controller) {
         console.log("_onControllerDestroyed()", this.name, controller)
         this._controller = null
-        this.state = STATUS_NOT_READY
+        this.status = STATUS_NOT_READY
       }
 
       /**
        * Receives changes of the `model` property and its subproperties.
        */
-      _onModelChanged(event) {
-        const propertyPath = event.path
-        const newValue = event.value
-        console.log("here", event)
-        if (!isNil(newValue) && !isNil(newValue.indexSplices)) {
-          this._notifyBeanArrayChanged(propertyPath, newValue)
+      _onModelChanged(changeRecord) {
+        console.log("changeRecord:", JSON.stringify(changeRecord))
+
+         // subproperty change record:
+         // path. Path to the property that changed. Use this to determine whether a property changed, a sub-property changed, or an array was mutated.
+         // value. New value of the path that changed.
+         // base. The object matching the non-wildcard portion of the path.
+
+        // * @param {string} path Path that should be notified.
+        // * @param {Array} splices Array of splice records indicating ordered
+        // *   changes that occurred to the array. Each record should have the
+        // *   following fields:
+        // *    * index: index at which the change occurred
+        // *    * removed: array of items that were removed from this index
+        // *    * addedCount: number of new items added at this index
+        // *    * object: a reference to the array in question
+        // *    * type: the string literal 'splice'
+
+        // Change record for array splices.
+        if (hasArraySpliceRecords(changeRecord)) {
+          const model = changeRecord.base
+          const propertyPath = changeRecord.path.substring(
+            "model.".length, changeRecord.path.length - ".splices".length);
+
+          const spliceRecords = changeRecord.value.indexSplices
+          for (const spliceRecord of spliceRecords) {
+            const startIndex = spliceRecord.index
+            const addedCount = spliceRecord.addedCount
+            const removedItems = spliceRecord.removed
+            this._notifyBeanArrayChanged(model, propertyPath,
+              startIndex, addedCount, removedItems)
+          }
         }
+        // Change record for subproperty updates.
         else {
-          this._notifyBeanChanged(propertyPath, newValue)
+          const model = changeRecord.base
+          const propertyPath = changeRecord.path.substring(
+            "model.".length, changeRecord.path.length - ".length".length)
+
+          const newValue = changeRecord.value
+          this._notifyBeanChanged(model, propertyPath, newValue)
+
+          // check if is length of array.
+          // const value = Polymer.Path.get(model, propertyPath)
+          // console.log("__", propertyPath, Array.isArray(value))
         }
       }
 
       /**
        * Notifies the Dolphin server about bean changes.
        */
-      _notifyBeanChanged(propertyPath, newValue) {
-        console.log("notify bean changed:", propertyPath, newValue)
-        const bean = this.get(propertyPath)
-        const propertyName = last(Polymer.Path.split(propertyPath))
+      _notifyBeanChanged(model, propertyPath, newValue) {
+        console.log("notify bean changed:", model, propertyPath, newValue)
+        const bean = Polymer.Path.get(model, propertyPath)
+        const propertyName = this._slicePropertyPath(propertyPath, -1)
         console.log("-->", propertyName, bean)
-
-        // const oldValue = this._beanManager.notifyBeanChange(bean, propertyName, newValue)
-        // this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
       }
 
       /**
        * Notifies the Dolphin server about bean array changes.
        */
-      _notifyBeanArrayChanged(propertyPath, newValue) {
-        console.log("notify bean array changed:", propertyPath, newValue)
-        const _propertyPath = propertyPath.substr(0, propertyPath.length - ".splices".length);
-        const _newValue = newValue.indexSplices[0].object
-        const startIndex = newValue.indexSplices[0].index
-        const addedCount = newValue.indexSplices[0].addedCount
-        const removedItems = newValue.indexSplices[0].removed
-        console.log("-->", _propertyPath, _newValue, startIndex, addedCount, removedItems)
+      _notifyBeanArrayChanged(model, propertyPath, startIndex, addedCount, removedItems) {
+        console.log("notify bean array changed:", model, propertyPath, startIndex, addedCount, removedItems)
       }
 
       /**
@@ -209,6 +244,11 @@ limitations under the License.
           this._beanRegistry.delete(bean)
         }
       }
+
+      _slicePropertyPath(propertyPath, start, end=undefined) {
+        const propertyPathArray = Polymer.Path.split(propertyPath)
+        return Polymer.Path.normalize(propertyPathArray.slice(start, end))
+      }
     }
 
     window.customElements.define(DolphinController.is, DolphinController)
@@ -224,6 +264,12 @@ limitations under the License.
     function last(array) {
       return array.slice(-1)[0]
     }
+
+    function hasArraySpliceRecords(changeRecord) {
+      const { path, value, base } = changeRecord
+      return path.endsWith(".splices") && value && value.indexSplices
+    }
+
   </script>
 
 </dom-module>
