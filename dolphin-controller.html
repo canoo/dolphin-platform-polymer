@@ -107,30 +107,123 @@ limitations under the License.
       }
 
       _onBeanPropertyChanged(bean, propertyName, newValue) {
-          return this._beanManager.notifyBeanChange(bean, propertyName, newValue)
+        return this._beanManager.notifyBeanChange(bean, propertyName, newValue)
       }
 
       _onBeanPropertyArrayChanged(bean, propertyName, startIndex, removedCount, addedItems) {
-          return this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
+        return this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
       }
 
       _onControllerInitializing() {
-        console.log("_onControllerInitializing()", this.name)
+        // console.log("_onControllerInitializing()", this.name)
         this._controller = null
         this.status = STATUS_NOT_READY
       }
 
       _onControllerReady(controller) {
-        console.log("_onControllerReady()", this.name, controller)
+        // console.log("_onControllerReady()", this.name, controller)
         this._controller = controller
         this._onBeanChanged(this._controller.model)
         this.status = STATUS_READY
       }
 
       _onControllerDestroyed(controller) {
-        console.log("_onControllerDestroyed()", this.name, controller)
+        // console.log("_onControllerDestroyed()", this.name, controller)
         this._controller = null
         this.status = STATUS_NOT_READY
+      }
+
+      // apply bean/array changes from dolphin to the model (bean to propertyPath)
+      // unregister old and register new property paths after model changed (beans, arrays).
+      // register and unregister property paths and subproperty paths of arrays and beans.
+
+      _binderUpdateArray(changeRecord, spliceRecord) {
+        const model = changeRecord.base
+        const path = this._slicePropertyPath(changeRecord.path, 1, -1)
+        const items = Polymer.Path.get(model, path)
+        console.log("u", path, items)
+
+        const startIndex = spliceRecord.index
+        const addedCount = spliceRecord.addedCount
+        const removedItems = spliceRecord.removed
+        console.log("v", startIndex, addedCount, removedItems)
+
+        for (let removedIndex = 0; removedIndex < removedItems.length; removedIndex++) {
+          const removedItem = removedItems[removedIndex]
+          const propertyPath = "model." + path + "." + (startIndex + removedIndex)
+          this._binderUnbind(removedItem, propertyPath)
+        }
+
+        for (let addedIndex = startIndex + addedCount; addedIndex < items.length; addedIndex++) {
+          const addedItem = items[addedIndex]
+          const propertyPath = "model." + path + "." + (addedIndex - addedCount + removedItems.length)
+          this._binderUnbind(addedItem, propertyPath)
+        }
+
+        for (let itemIndex = startIndex; itemIndex < items.length; itemIndex++) {
+          const item = items[itemIndex]
+          const propertyPath = "model." + path + "." + itemIndex
+          this._binderBind(item, propertyPath)
+        }
+      }
+
+      _binderBind(bean, propertyPath) {
+        console.log("bind", propertyPath, JSON.stringify(bean))
+
+        // if (!exists(value) || typeof value !== 'object') {
+        //   return;
+        // }
+        // var listenerList = this.listeners.get(value);
+        // if (!exists(listenerList)) {
+        //   listenerList = [];
+        //   this.listeners.set(value, listenerList);
+        // }
+        // listenerList.push({ element: element, rootPath: rootPath });
+
+        // if (Array.isArray(value)) {
+        //   for (var i = 0; i < value.length; i++) {
+        //     this.bind(element, rootPath + '.' + i, value[i]);
+        //   }
+        // }
+        // else if (typeof value === 'object') {
+        //   for (var propertyName in value) {
+        //     if (value.hasOwnProperty(propertyName)) {
+        //       this.bind(element, rootPath + '.' + propertyName, value[propertyName]);
+        //     }
+        //   }
+        // }
+      }
+
+      _binderUnbind(bean, propertyPath) {
+        console.log("unbind", propertyPath, JSON.stringify(bean))
+
+        // if (!exists(value) || typeof value !== 'object') {
+        //   return;
+        // }
+        // var listenerList = this.listeners.get(value);
+        // if (exists(listenerList)) {
+        //   var n = listenerList.length;
+        //   for (var i = 0; i < n; i++) {
+        //     var entry = listenerList[i];
+        //     if (entry.element === element && entry.rootPath === rootPath) {
+        //       listenerList.splice(i, 1);
+
+        //       if (Array.isArray(value)) {
+        //         for (var j = 0; j < value.length; j++) {
+        //           this.unbind(element, rootPath + '.' + j, value[j]);
+        //         }
+        //       }
+        //       else if (typeof value === 'object') {
+        //         for (var propertyName in value) {
+        //           if (value.hasOwnProperty(propertyName)) {
+        //             this.unbind(element, rootPath + '.' + propertyName, value[propertyName]);
+        //           }
+        //         }
+        //       }
+        //       return;
+        //     }
+        //   }
+        // }
       }
 
       /**
@@ -139,10 +232,10 @@ limitations under the License.
       _onModelChanged(changeRecord) {
         console.log("changeRecord:", JSON.stringify(changeRecord))
 
-         // subproperty change record:
-         // path. Path to the property that changed. Use this to determine whether a property changed, a sub-property changed, or an array was mutated.
-         // value. New value of the path that changed.
-         // base. The object matching the non-wildcard portion of the path.
+        // subproperty change record:
+        // path. Path to the property that changed. Use this to determine whether a property changed, a sub-property changed, or an array was mutated.
+        // value. New value of the path that changed.
+        // base. The object matching the non-wildcard portion of the path.
 
         // * @param {string} path Path that should be notified.
         // * @param {Array} splices Array of splice records indicating ordered
@@ -156,24 +249,28 @@ limitations under the License.
 
         // Change record for array splices.
         if (hasArraySpliceRecords(changeRecord)) {
+          // model.<propertyPath>.splices
           const model = changeRecord.base
-          const propertyPath = changeRecord.path.substring(
-            "model.".length, changeRecord.path.length - ".splices".length);
+          // const propertyPath = changeRecord.path.substring(
+          //   "model.".length, changeRecord.path.length - ".splices".length);
+          const propertyPath = this._slicePropertyPath(changeRecord.path, 1, -1)
 
           const spliceRecords = changeRecord.value.indexSplices
           for (const spliceRecord of spliceRecords) {
             const startIndex = spliceRecord.index
             const addedCount = spliceRecord.addedCount
             const removedItems = spliceRecord.removed
+
             this._notifyBeanArrayChanged(model, propertyPath,
               startIndex, addedCount, removedItems)
+            this._binderUpdateArray(changeRecord, spliceRecord)
           }
         }
         // Change record for subproperty updates.
         else {
+          // model.<propertyPath>.splices
           const model = changeRecord.base
-          const propertyPath = changeRecord.path.substring(
-            "model.".length, changeRecord.path.length - ".length".length)
+          const propertyPath = this._slicePropertyPath(changeRecord.path, 1)
 
           const newValue = changeRecord.value
           this._notifyBeanChanged(model, propertyPath, newValue)
@@ -188,24 +285,24 @@ limitations under the License.
        * Notifies the Dolphin server about bean changes.
        */
       _notifyBeanChanged(model, propertyPath, newValue) {
-        console.log("notify bean changed:", model, propertyPath, newValue)
+        // console.log("notify bean changed:", model, propertyPath, newValue)
         const bean = Polymer.Path.get(model, propertyPath)
         const propertyName = this._slicePropertyPath(propertyPath, -1)
-        console.log("-->", propertyName, bean)
+        // console.log("-->", propertyName, bean)
       }
 
       /**
        * Notifies the Dolphin server about bean array changes.
        */
       _notifyBeanArrayChanged(model, propertyPath, startIndex, addedCount, removedItems) {
-        console.log("notify bean array changed:", model, propertyPath, startIndex, addedCount, removedItems)
+        // console.log("notify bean array changed:", model, propertyPath, startIndex, addedCount, removedItems)
       }
 
       /**
        * Receives an initial bean from the Dolphin server.
        */
       _onBeanChanged(bean) {
-        console.log("on bean changed", bean)
+        // console.log("on bean changed", bean)
         this.set("model", bean)
       }
 
@@ -213,17 +310,57 @@ limitations under the License.
        * Receives a bean property change from the Dolphin server.
        */
       _onBeanPropertyChanged(bean, propertyName, newValue, oldValue) {
-        console.log("on bean property changed:",
-          bean, propertyName, newValue, oldValue)
+        // console.log("on bean property changed:",
+        //   bean, propertyName, newValue, oldValue)
+
+        // if (oldValue === newValue) {
+        //   return;
+        // }
+        // var listenerList = this.listeners.get(bean);
+        // if (exists(listenerList) && listenerList.length > 0) {
+        //   var entry = listenerList[0];
+        //   var element = entry.element;
+        //   var path = entry.rootPath + '.' + propertyName;
+        //   element.set(path, newValue);
+        // }
+        // else {
+        //   bean[propertyName] = newValue;
+        // }
       }
 
       /**
        * Receives a bean property array change from the Dolphin server.
        */
       _onBeanPropertyArrayChanged(bean, propertyName, startIndex, removedCount, addedItems) {
-        console.log("on bean property array changed:",
-          bean, propertyName, startIndex, removedCount, addedItems)
-      };
+        // console.log("on bean property array changed:",
+        //   bean, propertyName, startIndex, removedCount, addedItems)
+
+        // var array = bean[propertyName];
+        // var oldElements = array.slice(index, index + count);
+        // if (deepEqual(newElements, oldElements)) {
+        //   return;
+        // }
+        // var listenerList = this.listeners.get(bean);
+        // if (exists(listenerList) && listenerList.length > 0) {
+        //   var entry = listenerList[0];
+        //   var element = entry.element;
+        //   var path = entry.rootPath + '.' + propertyName;
+        //   if (typeof newElements === 'undefined') {
+        //     element.splice(path, index, count);
+        //   }
+        //   else {
+        //     element.splice.apply(element, [path, index, count].concat(newElements));
+        //   }
+        // }
+        // else {
+        //   if (typeof newElements === 'undefined') {
+        //     array.splice(index, count);
+        //   }
+        //   else {
+        //     array.splice.apply(array, [index, count].concat(newElements));
+        //   }
+        // }
+      }
 
       _queryPropertyPaths(bean) {
         return this._beanRegistry.get(bean) || new Set()
@@ -245,7 +382,7 @@ limitations under the License.
         }
       }
 
-      _slicePropertyPath(propertyPath, start, end=undefined) {
+      _slicePropertyPath(propertyPath, start, end = undefined) {
         const propertyPathArray = Polymer.Path.split(propertyPath)
         return Polymer.Path.normalize(propertyPathArray.slice(start, end))
       }
@@ -259,10 +396,6 @@ limitations under the License.
 
     function isTruthy(value) {
       return !!value
-    }
-
-    function last(array) {
-      return array.slice(-1)[0]
     }
 
     function hasArraySpliceRecords(changeRecord) {
