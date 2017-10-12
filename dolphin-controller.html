@@ -147,7 +147,7 @@ limitations under the License.
        * @param {any[]} params Array of params for the action
        */
       invoke(name, params) {
-        this._controller.invoke(actionName, actionParams)
+        this._controller.invoke(name, params)
       }
 
       /**
@@ -242,42 +242,51 @@ limitations under the License.
         // *    * object: a reference to the array in question
         // *    * type: the string literal 'splice'
 
+        // Starting from the start index specified, removes 0 or more items
+        // from the array and inserts 0 or more new items in their place.
+        function hasArraySpliceRecords(changeRecord) {
+          const { path, value, base } = changeRecord
+          return value && value.indexSplices
+        }
+
         // Change record for array splices.
         if (changeRecord.path.endsWith(".splices") && hasArraySpliceRecords(changeRecord)) {
           // model.<propertyPath>.splices
           const rootProperty = changeRecord.base
           const propertyPath = this._slicePropertyPath(changeRecord.path, 1, -1)
 
-          const bean = Polymer.Path.get(rootProperty, this.slicePropertyPath(propertyPath, 0, -1))
-          const propertyName = this.slicePropertyPath(propertyPath, -1)
+          const property = Polymer.Path.get(rootProperty, propertyPath)
+          const bean = Polymer.Path.get(rootProperty, this._slicePropertyPath(propertyPath, 0, -1))
+          const propertyName = this._slicePropertyPath(propertyPath, -1)
 
           const spliceRecords = changeRecord.value.indexSplices
           for (const spliceRecord of spliceRecords) {
+            const items = spliceRecord.object
             const startIndex = spliceRecord.index
             const removedItems = spliceRecord.removed
             const addedCount = spliceRecord.addedCount
 
             this._notifyBeanPropertySpliced(bean, propertyName,
               startIndex, removedItems, addedCount)
-            this._binderUpdateArray(changeRecord, spliceRecord)
+            this._binderUpdateArray(items, propertyPath,
+              startIndex, removedItems, addedCount)
           }
         }
         // Change record for subproperty updates.
         else {
-          // model.<propertyPath>
           const rootProperty = changeRecord.base
           const propertyPath = this._slicePropertyPath(changeRecord.path, 1)
 
-          const bean = Polymer.Path.get(rootProperty, this.slicePropertyPath(propertyPath, 0, -1))
-          const propertyName = this.slicePropertyPath(propertyPath, -1)
-
-          const newValue = changeRecord.value
-          this._notifyBeanPropertyChanged(bean, propertyName, newValue)
+          // model.<propertyPath>
+          const property = Polymer.Path.get(rootProperty, propertyPath)
+          const bean = Polymer.Path.get(rootProperty, this._slicePropertyPath(propertyPath, 0, -1))
+          const propertyName = this._slicePropertyPath(propertyPath, -1)
 
           // model.<propertyPath>.length
-          // check if is length of array.
-          // const property = Polymer.Path.get(rootProperty, propertyPath)
-          // console.log("__", propertyPath, isArray(property))
+          // console.log("is length of array", propertyPath, isArray(bean))
+
+          const newValue = changeRecord.value
+          const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
         }
       }
 
@@ -335,7 +344,7 @@ limitations under the License.
           this.splice(propertyPath, startIndex, removedCount, ...addedItems)
         }
         else {
-          property.splice(startIndex, removedCount, ...addedItems)
+          bean[propertyName].splice(startIndex, removedCount, ...addedItems)
         }
       }
 
@@ -344,39 +353,29 @@ limitations under the License.
       // register and unregister property paths and subproperty paths of arrays and beans.
 
       /**
-       * @param {any} changeRecord Record with change information
-       * @param {any} spliceRecord Record with splice information
+       * @param {any[]} items Array of current items
+       * @param {string} propertyPath Property path of the items
+       * @param {number} startIndex Index at which the change occurred
+       * @param {any[]} removedItems Array of items that were removed from this index
+       * @param {number} addedCount Number of items that were added at this index
        */
-      _binderUpdateArray(changeRecord, spliceRecord) {
-        const rootProperty = changeRecord.base
-        const propertyPath = this._slicePropertyPath(changeRecord.path, 1, -1)
-        const property = Polymer.Path.get(rootProperty, propertyPath)
-
-        // Starting from the start index specified, removes 0 or more items
-        // from the array and inserts 0 or more new items in their place.
-        const startIndex = spliceRecord.index
-        const removedItems = spliceRecord.removed
-        const addedCount = spliceRecord.addedCount
-        console.log("splices", stringify({ startIndex, removedItems, addedCount }))
-
-        const items = property
-
+      _binderUpdateArray(items, propertyPath, startIndex, removedItems, addedCount) {
         for (let removedIndex = 0; removedIndex < removedItems.length; removedIndex++) {
           const removedItem = removedItems[removedIndex]
-          const subPropertyPath = "model." + propertyPath + "." + (startIndex + removedIndex)
-          this._binderUnbind(removedItem, subPropertyPath)
+          const itemPropertyPath = Polymer.Path.normalize([propertyPath, startIndex + removedIndex])
+          this._binderUnbind(removedItem, itemPropertyPath)
         }
 
         for (let addedIndex = startIndex + addedCount; addedIndex < items.length; addedIndex++) {
           const addedItem = items[addedIndex]
-          const subPropertyPath = "model." + propertyPath + "." + (addedIndex - addedCount + removedItems.length)
-          this._binderUnbind(addedItem, subPropertyPath)
+          const itemPropertyPath = Polymer.Path.normalize([propertyPath, addedIndex - addedCount + removedItems.length])
+          this._binderUnbind(addedItem, itemPropertyPath)
         }
 
         for (let itemIndex = startIndex; itemIndex < items.length; itemIndex++) {
           const item = items[itemIndex]
-          const subPropertyPath = "model." + propertyPath + "." + itemIndex
-          this._binderBind(item, subPropertyPath)
+          const itemPropertyPath = Polymer.Path.normalize([propertyPath, itemIndex])
+          this._binderBind(item, itemPropertyPath)
         }
       }
 
@@ -390,7 +389,7 @@ limitations under the License.
         this._registerPropertyPath(bean, propertyPath)
 
         forEach(bean, (subBean, propertyName) => {
-          const subPropertyPath = propertyPath + "." + propertyName
+          const subPropertyPath = Polymer.Path.normalize([propertyPath, propertyName])
           this._binderBind(subBean, subPropertyPath)
         })
       }
@@ -405,7 +404,7 @@ limitations under the License.
         this._unregisterPropertyPath(bean, propertyPath)
 
         forEach(bean, (subBean, propertyName) => {
-          const subPropertyPath = propertyPath + "." + propertyName
+          const subPropertyPath = Polymer.Path.normalize([propertyPath, propertyName])
           this._binderUnbind(subBean, subPropertyPath)
         })
       }
@@ -488,11 +487,6 @@ limitations under the License.
 
     function isDeepEqual(a, b) {
       return a === b
-    }
-
-    function hasArraySpliceRecords(changeRecord) {
-      const { path, value, base } = changeRecord
-      return value && value.indexSplices
     }
 
     function forEach(collection, callback) {

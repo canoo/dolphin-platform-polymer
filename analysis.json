@@ -2992,7 +2992,7 @@
               "column": 6
             },
             "end": {
-              "line": 281,
+              "line": 286,
               "column": 7
             }
           },
@@ -3011,11 +3011,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 288,
+              "line": 293,
               "column": 6
             },
             "end": {
-              "line": 290,
+              "line": 295,
               "column": 7
             }
           },
@@ -3034,11 +3034,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 300,
+              "line": 305,
               "column": 6
             },
             "end": {
-              "line": 313,
+              "line": 318,
               "column": 7
             }
           },
@@ -3072,11 +3072,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 324,
+              "line": 329,
               "column": 6
             },
             "end": {
-              "line": 339,
+              "line": 344,
               "column": 7
             }
           },
@@ -3115,25 +3115,40 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 349,
+              "line": 357,
               "column": 6
             },
             "end": {
-              "line": 380,
+              "line": 375,
               "column": 7
             }
           },
           "metadata": {},
           "params": [
             {
-              "name": "changeRecord",
-              "type": "any",
-              "description": "Record with change information"
+              "name": "items",
+              "type": "Array.<any>",
+              "description": "Array of current items"
             },
             {
-              "name": "spliceRecord",
-              "type": "any",
-              "description": "Record with splice information"
+              "name": "propertyPath",
+              "type": "string",
+              "description": "Property path of the items"
+            },
+            {
+              "name": "startIndex",
+              "type": "number",
+              "description": "Index at which the change occurred"
+            },
+            {
+              "name": "removedItems",
+              "type": "Array.<any>",
+              "description": "Array of items that were removed from this index"
+            },
+            {
+              "name": "addedCount",
+              "type": "number",
+              "description": "Number of items that were added at this index"
             }
           ]
         },
@@ -3143,11 +3158,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 385,
+              "line": 380,
               "column": 6
             },
             "end": {
-              "line": 395,
+              "line": 390,
               "column": 7
             }
           },
@@ -3167,11 +3182,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 400,
+              "line": 395,
               "column": 6
             },
             "end": {
-              "line": 410,
+              "line": 405,
               "column": 7
             }
           },
@@ -3191,11 +3206,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 415,
+              "line": 410,
               "column": 6
             },
             "end": {
-              "line": 417,
+              "line": 412,
               "column": 7
             }
           },
@@ -3212,11 +3227,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 422,
+              "line": 417,
               "column": 6
             },
             "end": {
-              "line": 428,
+              "line": 423,
               "column": 7
             }
           },
@@ -3236,11 +3251,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 433,
+              "line": 428,
               "column": 6
             },
             "end": {
-              "line": 439,
+              "line": 434,
               "column": 7
             }
           },
@@ -3260,11 +3275,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 444,
+              "line": 439,
               "column": 6
             },
             "end": {
-              "line": 447,
+              "line": 442,
               "column": 7
             }
           },
@@ -3990,7 +4005,7 @@
           "column": 4
         },
         "end": {
-          "line": 448,
+          "line": 443,
           "column": 5
         }
       },
