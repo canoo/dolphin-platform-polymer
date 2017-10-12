@@ -24,6 +24,18 @@ limitations under the License.
     const STATUS_READY = "READY"
 
     /**
+     * The `dolphin-controller` element serves as a Dolphin controller.
+     *
+     * ~~~html
+     * <dolphin-controller
+     *   auto
+     *   name="MovieController"
+     *   model="{{hostModel}}"></dolphin-controller>
+     * ~~~
+     *
+     * With `auto` set to `true`, the element automatically creates and destroys a
+     * Dolphin controller, when it is attached or detached from the DOM tree.
+     *
      * @customElement
      * @polymer
      */
@@ -34,19 +46,41 @@ limitations under the License.
 
       static get properties() {
         return {
+          /**
+           * The `ClientContext` of the Dolphin JavaScript client, which should be already
+           * connected. Defaults to `window.clientContext`.
+           */
           clientContext: {
             type: Object,
             value: () => window.clientContext
           },
+
+          /**
+           * If true, automatically creates and destroys a Dolphin controller, when the
+           * element is attached or detached from the DOM tree.
+           */
           auto: {
             type: Boolean,
             value: false
           },
+
+          /**
+           * The status of the controller. Either "READY" or "NOT-READY".
+           */
           status: {
             type: String,
             value: STATUS_NOT_READY
           },
+
+          /**
+           * The name of the Dolphin controller.
+           */
           name: String,
+
+          /**
+           * The model object graph. Receives changes from Dolphin and notifies Dolphin
+           * when was changed.
+           */
           model: Object
         }
       }
