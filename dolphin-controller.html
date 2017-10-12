@@ -65,7 +65,8 @@ limitations under the License.
           },
 
           /**
-           * The status of the controller. Either "READY" or "NOT-READY".
+           * The status of the Dolphin controller. Either "READY" or "NOT-READY". Initially
+           * is set to "NOT-READY".
            */
           status: {
             type: String,
@@ -80,6 +81,8 @@ limitations under the License.
           /**
            * The model object graph. Receives changes from Dolphin and notifies Dolphin
            * when was changed.
+           *
+           * @type {Object}
            */
           model: Object
         }
@@ -111,6 +114,9 @@ limitations under the License.
         }
       }
 
+      /**
+       * Creates a Dolphin controller.
+       */
       create() {
         if (!isNil(this.clientContext) && !isNil(this.name)) {
           this._onControllerInitializing()
@@ -126,45 +132,176 @@ limitations under the License.
         }
       }
 
+      /**
+       * Destroys a Dolphin controller.
+       */
       destroy() {
         if (!isNil(this._controller)) {
           this._controller.destroy()
         }
       }
 
-      _onClientContextChanged() {
-        if (!isNil(this.clientContext)) {
-          this._beanManager = this.clientContext.beanManager
-          this._beanManager.onBeanUpdate(this._onBeanPropertyChanged.bind(this))
-          this._beanManager.onArrayUpdate(this._onBeanPropertyArrayChanged.bind(this))
-        }
-      }
-
-      _onBeanPropertyChanged(bean, propertyName, newValue) {
-        return this._beanManager.notifyBeanChange(bean, propertyName, newValue)
-      }
-
-      _onBeanPropertyArrayChanged(bean, propertyName, startIndex, removedCount, addedItems) {
-        return this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
-      }
-
+      /**
+       * Called when the controller is initializing.
+       */
       _onControllerInitializing() {
-        // console.log("_onControllerInitializing()", this.name)
         this._controller = null
         this.status = STATUS_NOT_READY
       }
 
+      /**
+       * Called when the controller is ready.
+       */
       _onControllerReady(controller) {
-        // console.log("_onControllerReady()", this.name, controller)
         this._controller = controller
         this._onBeanChanged(this._controller.model)
         this.status = STATUS_READY
       }
 
+      /**
+       * Called when the controller is destroyed.
+       */
       _onControllerDestroyed(controller) {
-        // console.log("_onControllerDestroyed()", this.name, controller)
         this._controller = null
         this.status = STATUS_NOT_READY
+      }
+
+      /**
+       *
+       */
+      _onClientContextChanged() {
+        if (!isNil(this.clientContext)) {
+          this._beanManager = this.clientContext.beanManager
+          this._beanManager.onBeanUpdate(this._onBeanPropertyChanged.bind(this))
+          this._beanManager.onArrayUpdate(this._onBeanPropertySpliced.bind(this))
+        }
+      }
+
+      /**
+       * Notifies the Dolphin server about bean property value changes.
+       *
+       * @param {Object} bean the bean with the changed property
+       * @param {string} propertyName the property name of the changed value
+       * @param {Object} newValue the new value
+       * @return {Object} the old value
+       */
+      _notifyBeanPropertyChanged(bean, propertyName, newValue) {
+        return this._beanManager.notifyBeanChange(bean, propertyName,
+          newValue)
+      }
+
+      /**
+       * Notifies the Dolphin server about bean property array splices.
+       *
+       * @param {Object} bean the bean with the spliced array property
+       * @param {string} propertyName the property name of the spliced array
+       * @param {number} startIndex the start index of the splice
+       * @param {Object} removedItems the removed array items
+       * @param {number} addedCount the count of added items
+       */
+      _notifyBeanPropertySpliced(bean, propertyName, startIndex, removedItems, addedCount) {
+        return this._beanManager.notifyArrayChange(bean, propertyName,
+          startIndex, addedCount, removedItems)
+      }
+
+      /**
+       * Receives changes of the `model` property and its subproperties.
+       */
+      _onModelChanged(changeRecord) {
+        console.log("changeRecord:", JSON.stringify(changeRecord, null, " "))
+
+        // subproperty change record:
+        // path. Path to the property that changed. Use this to determine whether a property changed, a sub-property changed, or an array was mutated.
+        // value. New value of the path that changed.
+        // base. The object matching the non-wildcard portion of the path.
+
+        // * @param {string} path Path that should be notified.
+        // * @param {Array} splices Array of splice records indicating ordered
+        // *   changes that occurred to the array. Each record should have the
+        // *   following fields:
+        // *    * index: index at which the change occurred
+        // *    * removed: array of items that were removed from this index
+        // *    * addedCount: number of new items added at this index
+        // *    * object: a reference to the array in question
+        // *    * type: the string literal 'splice'
+
+        // Change record for array splices.
+        if (changeRecord.path.endsWith(".splices") && hasArraySpliceRecords(changeRecord)) {
+          // model.<modelPropertyPath>.splices
+          const model = changeRecord.base
+          const propertyPath = this._slicePropertyPath(changeRecord.path, 1, -1)
+
+          const spliceRecords = changeRecord.value.indexSplices
+          for (const spliceRecord of spliceRecords) {
+            const startIndex = spliceRecord.index
+            const removedItems = spliceRecord.removed
+            const addedCount = spliceRecord.addedCount
+
+            this._notifyBeanPropertySpliced(model, propertyPath,
+              startIndex, removedItems, addedCount)
+            this._binderUpdateArray(changeRecord, spliceRecord)
+          }
+        }
+        // Change record for subproperty updates.
+        else {
+          // model.<modelPropertyPath>.splices
+          const model = changeRecord.base
+          const propertyPath = this._slicePropertyPath(changeRecord.path, 1)
+
+          const newValue = changeRecord.value
+          this._notifyBeanPropertyChanged(model, propertyPath, newValue)
+
+          // check if is length of array.
+          // const value = Polymer.Path.get(model, propertyPath)
+          // console.log("__", propertyPath, Array.isArray(value))
+        }
+      }
+
+      /**
+       * Receives an initial bean from the Dolphin server.
+       */
+      _onBeanChanged(bean) {
+        // console.log("on bean changed", bean)
+        this.set("model", bean)
+      }
+
+      /**
+       * Receives a bean property change from the Dolphin server.
+       */
+      _onBeanPropertyChanged(bean, propertyName, newValue, oldValue) {
+        // HERE: is this object comparison right?
+        if (isEqual(oldValue, newValue)) { return }
+
+        const propertyPaths = this._queryPropertyPaths(bean)
+        if (propertyPaths.size > 0) {
+          // HERE: is it ok to just fire property changes for the first element?
+          const propertyPath = propertyPaths[0]
+          this.set(propertyPath, newValue)
+        }
+        else {
+          bean[propertyName] = newValue
+        }
+      }
+
+      /**
+       * Receives a bean property array change from the Dolphin server.
+       */
+      _onBeanPropertySpliced(bean, propertyName, startIndex, removedCount, addedItems) {
+        const items = bean[propertyName]
+        const oldItems = items.slice(startIndex, startIndex + removedCount)
+
+        // HERE: is this object comparison right?
+        if (isDeepEqual(items, oldItems)) { return }
+
+        const propertyPaths = this._queryPropertyPaths(bean)
+        if (propertyPath.size > 0) {
+          // HERE: is it ok to just fire property changes for the first element?
+          const propertyPath = propertyPaths[0]
+          this.splice(propertyPath, startIndex, removedCount, ...addedItems)
+        }
+        else {
+          items.splice(startIndex, removedCount, ...addedItems)
+        }
       }
 
       // apply bean/array changes from dolphin to the model (bean to propertyPath)
@@ -227,129 +364,6 @@ limitations under the License.
         })
       }
 
-      /**
-       * Receives changes of the `model` property and its subproperties.
-       */
-      _onModelChanged(changeRecord) {
-        console.log("changeRecord:", JSON.stringify(changeRecord, null, " "))
-
-        // subproperty change record:
-        // path. Path to the property that changed. Use this to determine whether a property changed, a sub-property changed, or an array was mutated.
-        // value. New value of the path that changed.
-        // base. The object matching the non-wildcard portion of the path.
-
-        // * @param {string} path Path that should be notified.
-        // * @param {Array} splices Array of splice records indicating ordered
-        // *   changes that occurred to the array. Each record should have the
-        // *   following fields:
-        // *    * index: index at which the change occurred
-        // *    * removed: array of items that were removed from this index
-        // *    * addedCount: number of new items added at this index
-        // *    * object: a reference to the array in question
-        // *    * type: the string literal 'splice'
-
-        // Change record for array splices.
-        if (changeRecord.path.endsWith(".splices") && hasArraySpliceRecords(changeRecord)) {
-          // model.<modelPropertyPath>.splices
-          const model = changeRecord.base
-          const propertyPath = this._slicePropertyPath(changeRecord.path, 1, -1)
-
-          const spliceRecords = changeRecord.value.indexSplices
-          for (const spliceRecord of spliceRecords) {
-            const startIndex = spliceRecord.index
-            const removedItems = spliceRecord.removed
-            const addedCount = spliceRecord.addedCount
-
-            this._notifyBeanArrayChanged(model, propertyPath,
-              startIndex, addedCount, removedItems)
-            this._binderUpdateArray(changeRecord, spliceRecord)
-          }
-        }
-        // Change record for subproperty updates.
-        else {
-          // model.<modelPropertyPath>.splices
-          const model = changeRecord.base
-          const propertyPath = this._slicePropertyPath(changeRecord.path, 1)
-
-          const newValue = changeRecord.value
-          this._notifyBeanChanged(model, propertyPath, newValue)
-
-          // check if is length of array.
-          // const value = Polymer.Path.get(model, propertyPath)
-          // console.log("__", propertyPath, Array.isArray(value))
-        }
-      }
-
-      /**
-       * Notifies the Dolphin server about bean changes.
-       */
-      _notifyBeanChanged(model, propertyPath, newValue) {
-        // console.log("notify bean changed:", model, propertyPath, newValue)
-        const bean = Polymer.Path.get(model, propertyPath)
-        const propertyName = this._slicePropertyPath(propertyPath, -1)
-        // console.log("-->", propertyName, bean)
-      }
-
-      /**
-       * Notifies the Dolphin server about bean array changes.
-       */
-      _notifyBeanArrayChanged(model, propertyPath, startIndex, addedCount, removedItems) {
-        // console.log("notify bean array changed:", model, propertyPath, startIndex, addedCount, removedItems)
-      }
-
-      /**
-       * Receives an initial bean from the Dolphin server.
-       */
-      _onBeanChanged(bean) {
-        // console.log("on bean changed", bean)
-        this.set("model", bean)
-      }
-
-      /**
-       * Receives a bean property change from the Dolphin server.
-       */
-      _onBeanPropertyChanged(bean, propertyName, newValue, oldValue) {
-        // console.log("on bean property changed:",
-        //   bean, propertyName, newValue, oldValue)
-
-        // HERE: is this object comparison right?
-        if (isEqual(oldValue, newValue)) { return }
-
-        const propertyPaths = this._queryPropertyPaths(bean)
-        if (propertyPaths.size > 0) {
-          // HERE: is it ok to just fire property changes for the first element?
-          const propertyPath = propertyPaths[0]
-          this.set(propertyPath, newValue)
-        }
-        else {
-          bean[propertyName] = newValue
-        }
-      }
-
-      /**
-       * Receives a bean property array change from the Dolphin server.
-       */
-      _onBeanPropertyArrayChanged(bean, propertyName, startIndex, removedCount, addedItems) {
-        // console.log("on bean property array changed:",
-        //   bean, propertyName, startIndex, removedCount, addedItems)
-
-        const items = bean[propertyName]
-        const oldItems = items.slice(startIndex, startIndex + removedCount)
-
-        // HERE: is this object comparison right?
-        if (isDeepEqual(items, oldItems)) { return }
-
-        const propertyPaths = this._queryPropertyPaths(bean)
-        if (propertyPath.size > 0) {
-          // HERE: is it ok to just fire property changes for the first element?
-          const propertyPath = propertyPaths[0]
-          this.splice(propertyPath, startIndex, removedCount, ...addedItems)
-        }
-        else {
-          items.splice(startIndex, removedCount, ...addedItems)
-        }
-      }
-
       _queryPropertyPaths(bean) {
         return this._beanRegistry.get(bean) || new Set()
       }
@@ -382,6 +396,10 @@ limitations under the License.
       return typeof value === "object"
     }
 
+    function isArray(value) {
+      return Array.isArray(value)
+    }
+
     function isNil(value) {
       return value === null || value === undefined
     }
@@ -404,7 +422,7 @@ limitations under the License.
     }
 
     function forEach(collection, callback) {
-      if (Array.isArray(collection)) {
+      if (isArray(collection)) {
         for (let itemIndex = 0; itemIndex < bean.length; itemIndex++) {
           callback(collection[itemIndex], itemIndex, collection)
         }

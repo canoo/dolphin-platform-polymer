@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "elements": [
     {
-      "description": "",
+      "description": "The `dolphin-controller` element serves as a Dolphin controller.\n\n~~~html\n<dolphin-controller\n  auto\n  name=\"MovieController\"\n  model=\"{{hostModel}}\"></dolphin-controller>\n~~~\n\nWith `auto` set to `true`, the element automatically creates and destroys a\nDolphin controller, when it is attached or detached from the DOM tree.",
       "summary": "",
       "path": "dolphin-controller.html",
       "properties": [
@@ -768,15 +768,15 @@
         {
           "name": "clientContext",
           "type": "Object",
-          "description": "",
+          "description": "The `ClientContext` of the Dolphin JavaScript client, which should be already\nconnected. Defaults to `window.clientContext`.",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 36,
+              "line": 52,
               "column": 10
             },
             "end": {
-              "line": 39,
+              "line": 55,
               "column": 11
             }
           },
@@ -787,15 +787,15 @@
         {
           "name": "auto",
           "type": "boolean",
-          "description": "",
+          "description": "If true, automatically creates and destroys a Dolphin controller, when the\nelement is attached or detached from the DOM tree.",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 40,
+              "line": 61,
               "column": 10
             },
             "end": {
-              "line": 43,
+              "line": 64,
               "column": 11
             }
           },
@@ -805,17 +805,17 @@
           "defaultValue": "false"
         },
         {
-          "name": "state",
+          "name": "status",
           "type": "string",
-          "description": "",
+          "description": "The status of the Dolphin controller. Either \"READY\" or \"NOT-READY\". Initially\nis set to \"NOT-READY\".",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 44,
+              "line": 70,
               "column": 10
             },
             "end": {
-              "line": 47,
+              "line": 73,
               "column": 11
             }
           },
@@ -826,15 +826,15 @@
         {
           "name": "name",
           "type": "string",
-          "description": "",
+          "description": "The name of the Dolphin controller.",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 48,
+              "line": 78,
               "column": 10
             },
             "end": {
-              "line": 48,
+              "line": 78,
               "column": 22
             }
           },
@@ -845,15 +845,15 @@
         {
           "name": "model",
           "type": "Object",
-          "description": "",
+          "description": "The model object graph. Receives changes from Dolphin and notifies Dolphin\nwhen was changed.",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 49,
+              "line": 86,
               "column": 10
             },
             "end": {
-              "line": 49,
+              "line": 86,
               "column": 23
             }
           },
@@ -2644,11 +2644,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 65,
+              "line": 102,
               "column": 6
             },
             "end": {
-              "line": 70,
+              "line": 107,
               "column": 7
             }
           },
@@ -2661,11 +2661,11 @@
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 72,
+              "line": 109,
               "column": 6
             },
             "end": {
-              "line": 77,
+              "line": 114,
               "column": 7
             }
           },
@@ -2762,15 +2762,15 @@
         },
         {
           "name": "create",
-          "description": "",
+          "description": "Creates a Dolphin controller.",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 79,
+              "line": 119,
               "column": 6
             },
             "end": {
-              "line": 90,
+              "line": 132,
               "column": 7
             }
           },
@@ -2779,32 +2779,15 @@
         },
         {
           "name": "destroy",
-          "description": "",
+          "description": "Destroys a Dolphin controller.",
           "privacy": "public",
           "sourceRange": {
             "start": {
-              "line": 92,
+              "line": 137,
               "column": 6
             },
             "end": {
-              "line": 96,
-              "column": 7
-            }
-          },
-          "metadata": {},
-          "params": []
-        },
-        {
-          "name": "_onClientContextChanged",
-          "description": "",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 98,
-              "column": 6
-            },
-            "end": {
-              "line": 104,
+              "line": 141,
               "column": 7
             }
           },
@@ -2813,15 +2796,15 @@
         },
         {
           "name": "_onControllerInitializing",
-          "description": "",
+          "description": "Called when the controller is initializing.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 106,
+              "line": 146,
               "column": 6
             },
             "end": {
-              "line": 110,
+              "line": 149,
               "column": 7
             }
           },
@@ -2830,15 +2813,15 @@
         },
         {
           "name": "_onControllerReady",
-          "description": "",
+          "description": "Called when the controller is ready.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 112,
+              "line": 154,
               "column": 6
             },
             "end": {
-              "line": 117,
+              "line": 158,
               "column": 7
             }
           },
@@ -2851,15 +2834,15 @@
         },
         {
           "name": "_onControllerDestroyed",
-          "description": "",
+          "description": "Called when the controller is destroyed.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 119,
+              "line": 163,
               "column": 6
             },
             "end": {
-              "line": 123,
+              "line": 166,
               "column": 7
             }
           },
@@ -2871,71 +2854,120 @@
           ]
         },
         {
+          "name": "_onClientContextChanged",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 171,
+              "column": 6
+            },
+            "end": {
+              "line": 177,
+              "column": 7
+            }
+          },
+          "metadata": {},
+          "params": []
+        },
+        {
+          "name": "_notifyBeanPropertyChanged",
+          "description": "Notifies the Dolphin server about bean property value changes.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 187,
+              "column": 6
+            },
+            "end": {
+              "line": 190,
+              "column": 7
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "bean",
+              "type": "Object",
+              "description": "the bean with the changed property"
+            },
+            {
+              "name": "propertyName",
+              "type": "string",
+              "description": "the property name of the changed value"
+            },
+            {
+              "name": "newValue",
+              "type": "Object",
+              "description": "the new value"
+            }
+          ],
+          "return": {
+            "type": "Object",
+            "desc": "the old value"
+          }
+        },
+        {
+          "name": "_notifyBeanPropertySpliced",
+          "description": "Notifies the Dolphin server about bean property array splices.",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 201,
+              "column": 6
+            },
+            "end": {
+              "line": 204,
+              "column": 7
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "bean",
+              "type": "Object",
+              "description": "the bean with the spliced array property"
+            },
+            {
+              "name": "propertyName",
+              "type": "string",
+              "description": "the property name of the spliced array"
+            },
+            {
+              "name": "startIndex",
+              "type": "number",
+              "description": "the start index of the splice"
+            },
+            {
+              "name": "removedItems",
+              "type": "Object",
+              "description": "the removed array items"
+            },
+            {
+              "name": "addedCount",
+              "type": "number",
+              "description": "the count of added items"
+            }
+          ]
+        },
+        {
           "name": "_onModelChanged",
           "description": "Receives changes of the `model` property and its subproperties.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 128,
+              "line": 209,
               "column": 6
             },
             "end": {
-              "line": 138,
+              "line": 257,
               "column": 7
             }
           },
           "metadata": {},
           "params": [
             {
-              "name": "event"
-            }
-          ]
-        },
-        {
-          "name": "_notifyBeanChanged",
-          "description": "Notifies the Dolphin server about bean changes.",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 143,
-              "column": 6
-            },
-            "end": {
-              "line": 151,
-              "column": 7
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "propertyPath"
-            },
-            {
-              "name": "newValue"
-            }
-          ]
-        },
-        {
-          "name": "_notifyBeanArrayChanged",
-          "description": "Notifies the Dolphin server about bean array changes.",
-          "privacy": "protected",
-          "sourceRange": {
-            "start": {
-              "line": 156,
-              "column": 6
-            },
-            "end": {
-              "line": 164,
-              "column": 7
-            }
-          },
-          "metadata": {},
-          "params": [
-            {
-              "name": "propertyPath"
-            },
-            {
-              "name": "newValue"
+              "name": "changeRecord"
             }
           ]
         },
@@ -2945,11 +2977,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 169,
+              "line": 262,
               "column": 6
             },
             "end": {
-              "line": 172,
+              "line": 265,
               "column": 7
             }
           },
@@ -2966,11 +2998,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 177,
+              "line": 270,
               "column": 6
             },
             "end": {
-              "line": 180,
+              "line": 283,
               "column": 7
             }
           },
@@ -2991,16 +3023,16 @@
           ]
         },
         {
-          "name": "_onBeanPropertyArrayChanged",
+          "name": "_onBeanPropertySpliced",
           "description": "Receives a bean property array change from the Dolphin server.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 185,
+              "line": 288,
               "column": 6
             },
             "end": {
-              "line": 188,
+              "line": 304,
               "column": 7
             }
           },
@@ -3024,16 +3056,88 @@
           ]
         },
         {
+          "name": "_binderUpdateArray",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 310,
+              "column": 6
+            },
+            "end": {
+              "line": 340,
+              "column": 7
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "changeRecord"
+            },
+            {
+              "name": "spliceRecord"
+            }
+          ]
+        },
+        {
+          "name": "_binderBind",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 342,
+              "column": 6
+            },
+            "end": {
+              "line": 352,
+              "column": 7
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "bean"
+            },
+            {
+              "name": "propertyPath"
+            }
+          ]
+        },
+        {
+          "name": "_binderUnbind",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 354,
+              "column": 6
+            },
+            "end": {
+              "line": 364,
+              "column": 7
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "bean"
+            },
+            {
+              "name": "propertyPath"
+            }
+          ]
+        },
+        {
           "name": "_queryPropertyPaths",
           "description": "",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 190,
+              "line": 366,
               "column": 6
             },
             "end": {
-              "line": 192,
+              "line": 368,
               "column": 7
             }
           },
@@ -3050,11 +3154,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 194,
+              "line": 370,
               "column": 6
             },
             "end": {
-              "line": 200,
+              "line": 376,
               "column": 7
             }
           },
@@ -3074,11 +3178,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 202,
+              "line": 378,
               "column": 6
             },
             "end": {
-              "line": 208,
+              "line": 384,
               "column": 7
             }
           },
@@ -3089,6 +3193,33 @@
             },
             {
               "name": "propertyPath"
+            }
+          ]
+        },
+        {
+          "name": "_slicePropertyPath",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 386,
+              "column": 6
+            },
+            "end": {
+              "line": 389,
+              "column": 7
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "propertyPath"
+            },
+            {
+              "name": "start"
+            },
+            {
+              "name": "end = undefined"
             }
           ]
         }
@@ -3797,11 +3928,11 @@
       "metadata": {},
       "sourceRange": {
         "start": {
-          "line": 29,
+          "line": 41,
           "column": 4
         },
         "end": {
-          "line": 209,
+          "line": 390,
           "column": 5
         }
       },
@@ -3811,14 +3942,14 @@
       "attributes": [
         {
           "name": "client-context",
-          "description": "",
+          "description": "The `ClientContext` of the Dolphin JavaScript client, which should be already\nconnected. Defaults to `window.clientContext`.",
           "sourceRange": {
             "start": {
-              "line": 36,
+              "line": 52,
               "column": 10
             },
             "end": {
-              "line": 39,
+              "line": 55,
               "column": 11
             }
           },
@@ -3827,14 +3958,14 @@
         },
         {
           "name": "auto",
-          "description": "",
+          "description": "If true, automatically creates and destroys a Dolphin controller, when the\nelement is attached or detached from the DOM tree.",
           "sourceRange": {
             "start": {
-              "line": 40,
+              "line": 61,
               "column": 10
             },
             "end": {
-              "line": 43,
+              "line": 64,
               "column": 11
             }
           },
@@ -3842,15 +3973,15 @@
           "type": "boolean"
         },
         {
-          "name": "state",
-          "description": "",
+          "name": "status",
+          "description": "The status of the Dolphin controller. Either \"READY\" or \"NOT-READY\". Initially\nis set to \"NOT-READY\".",
           "sourceRange": {
             "start": {
-              "line": 44,
+              "line": 70,
               "column": 10
             },
             "end": {
-              "line": 47,
+              "line": 73,
               "column": 11
             }
           },
@@ -3859,14 +3990,14 @@
         },
         {
           "name": "name",
-          "description": "",
+          "description": "The name of the Dolphin controller.",
           "sourceRange": {
             "start": {
-              "line": 48,
+              "line": 78,
               "column": 10
             },
             "end": {
-              "line": 48,
+              "line": 78,
               "column": 22
             }
           },
@@ -3875,14 +4006,14 @@
         },
         {
           "name": "model",
-          "description": "",
+          "description": "The model object graph. Receives changes from Dolphin and notifies Dolphin\nwhen was changed.",
           "sourceRange": {
             "start": {
-              "line": 49,
+              "line": 86,
               "column": 10
             },
             "end": {
-              "line": 49,
+              "line": 86,
               "column": 23
             }
           },
