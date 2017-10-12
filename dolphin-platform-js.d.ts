@@ -23,18 +23,23 @@ declare namespace dolphin {
     notifyArrayChange(bean: any,
       propertyName: string,
       startIndex: number,
-      insertCount: number,
-      removedElements: any[]): any
+      addedCount: number,
+      removedItems: any[]): any
     onAdded(eventHandler: any): Subscription
     onAdded(type: any,
       eventHandler: any): Subscription
     onRemoved(eventHandler: any): Subscription
     onRemoved(type: any,
       eventHandler: any): Subscription
-    onBeanUpdate(eventHandler: any): Subscription
+    onBeanUpdate(eventHandler: (bean: any,
+      propertyName: string,
+      newValue: any, oldValue: any) => void): Subscription
     onBeanUpdate(type: any,
       eventHandler: any): Subscription
-    onArrayUpdate(eventHandler: any): Subscription
+    onArrayUpdate(eventHandler: (bean: any,
+      startIndex: number,
+      removedCount: number,
+      addedItems: any[]) => void): Subscription
     onArrayUpdate(type: any,
       eventHandler: any): Subscription
   }

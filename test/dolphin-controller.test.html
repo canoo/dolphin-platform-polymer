@@ -79,7 +79,7 @@
         const controller = fixture("SimpleController")
 
         flush(() => {
-          controller.splice("model.arrayBean.arrayProp", 2, 2, ...[6, 7, 8])
+          controller.splice("model.arrayBean.arrayProp", 2, 2, ...[10, 11, 12])
           done()
         })
       })

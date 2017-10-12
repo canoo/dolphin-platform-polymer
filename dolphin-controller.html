@@ -143,10 +143,12 @@ limitations under the License.
         const items = Polymer.Path.get(model, path)
         console.log("u", path, items)
 
+        // Starting from the start index specified, removes 0 or more items
+        // from the array and inserts 0 or more new items in their place.
         const startIndex = spliceRecord.index
-        const addedCount = spliceRecord.addedCount
         const removedItems = spliceRecord.removed
-        console.log("v", startIndex, addedCount, removedItems)
+        const addedCount = spliceRecord.addedCount
+        console.log("splices", JSON.stringify({ startIndex, removedItems, addedCount }, null, " "))
 
         for (let removedIndex = 0; removedIndex < removedItems.length; removedIndex++) {
           const removedItem = removedItems[removedIndex]
@@ -168,69 +170,34 @@ limitations under the License.
       }
 
       _binderBind(bean, propertyPath) {
-        console.log("bind", propertyPath, JSON.stringify(bean))
+        console.log("bind", JSON.stringify({ bean, propertyPath }, null, " "))
 
-        // if (!exists(value) || typeof value !== 'object') {
-        //   return;
-        // }
-        // var listenerList = this.listeners.get(value);
-        // if (!exists(listenerList)) {
-        //   listenerList = [];
-        //   this.listeners.set(value, listenerList);
-        // }
-        // listenerList.push({ element: element, rootPath: rootPath });
+        if (isNil(bean) || !isObject(bean)) { return }
+        this._registerPropertyPath(bean, propertyPath)
 
-        // if (Array.isArray(value)) {
-        //   for (var i = 0; i < value.length; i++) {
-        //     this.bind(element, rootPath + '.' + i, value[i]);
-        //   }
-        // }
-        // else if (typeof value === 'object') {
-        //   for (var propertyName in value) {
-        //     if (value.hasOwnProperty(propertyName)) {
-        //       this.bind(element, rootPath + '.' + propertyName, value[propertyName]);
-        //     }
-        //   }
-        // }
+        forEach(bean, (subBean, propertyName) => {
+          const subPropertyPath = propertyPath + "." + propertyName
+          this._binderBind(subBean, subPropertyPath)
+        })
       }
 
       _binderUnbind(bean, propertyPath) {
-        console.log("unbind", propertyPath, JSON.stringify(bean))
+        console.log("unbind", JSON.stringify({ bean, propertyPath }, null, " "))
 
-        // if (!exists(value) || typeof value !== 'object') {
-        //   return;
-        // }
-        // var listenerList = this.listeners.get(value);
-        // if (exists(listenerList)) {
-        //   var n = listenerList.length;
-        //   for (var i = 0; i < n; i++) {
-        //     var entry = listenerList[i];
-        //     if (entry.element === element && entry.rootPath === rootPath) {
-        //       listenerList.splice(i, 1);
+        if (isNil(bean) || !isObject(bean)) { return }
+        this._unregisterPropertyPath(bean, propertyPath)
 
-        //       if (Array.isArray(value)) {
-        //         for (var j = 0; j < value.length; j++) {
-        //           this.unbind(element, rootPath + '.' + j, value[j]);
-        //         }
-        //       }
-        //       else if (typeof value === 'object') {
-        //         for (var propertyName in value) {
-        //           if (value.hasOwnProperty(propertyName)) {
-        //             this.unbind(element, rootPath + '.' + propertyName, value[propertyName]);
-        //           }
-        //         }
-        //       }
-        //       return;
-        //     }
-        //   }
-        // }
+        forEach(bean, (subBean, propertyName) => {
+          const subPropertyPath = propertyPath + "." + propertyName
+          this._binderUnbind(subBean, subPropertyPath)
+        })
       }
 
       /**
        * Receives changes of the `model` property and its subproperties.
        */
       _onModelChanged(changeRecord) {
-        console.log("changeRecord:", JSON.stringify(changeRecord))
+        console.log("changeRecord:", JSON.stringify(changeRecord, null, " "))
 
         // subproperty change record:
         // path. Path to the property that changed. Use this to determine whether a property changed, a sub-property changed, or an array was mutated.
@@ -248,18 +215,16 @@ limitations under the License.
         // *    * type: the string literal 'splice'
 
         // Change record for array splices.
-        if (hasArraySpliceRecords(changeRecord)) {
-          // model.<propertyPath>.splices
+        if (changeRecord.path.endsWith(".splices") && hasArraySpliceRecords(changeRecord)) {
+          // model.<modelPropertyPath>.splices
           const model = changeRecord.base
-          // const propertyPath = changeRecord.path.substring(
-          //   "model.".length, changeRecord.path.length - ".splices".length);
           const propertyPath = this._slicePropertyPath(changeRecord.path, 1, -1)
 
           const spliceRecords = changeRecord.value.indexSplices
           for (const spliceRecord of spliceRecords) {
             const startIndex = spliceRecord.index
-            const addedCount = spliceRecord.addedCount
             const removedItems = spliceRecord.removed
+            const addedCount = spliceRecord.addedCount
 
             this._notifyBeanArrayChanged(model, propertyPath,
               startIndex, addedCount, removedItems)
@@ -268,7 +233,7 @@ limitations under the License.
         }
         // Change record for subproperty updates.
         else {
-          // model.<propertyPath>.splices
+          // model.<modelPropertyPath>.splices
           const model = changeRecord.base
           const propertyPath = this._slicePropertyPath(changeRecord.path, 1)
 
@@ -313,19 +278,18 @@ limitations under the License.
         // console.log("on bean property changed:",
         //   bean, propertyName, newValue, oldValue)
 
-        // if (oldValue === newValue) {
-        //   return;
-        // }
-        // var listenerList = this.listeners.get(bean);
-        // if (exists(listenerList) && listenerList.length > 0) {
-        //   var entry = listenerList[0];
-        //   var element = entry.element;
-        //   var path = entry.rootPath + '.' + propertyName;
-        //   element.set(path, newValue);
-        // }
-        // else {
-        //   bean[propertyName] = newValue;
-        // }
+        // HERE: is this object comparison right?
+        if (isEqual(oldValue, newValue)) { return }
+
+        const propertyPaths = this._queryPropertyPaths(bean)
+        if (propertyPaths.size > 0) {
+          // HERE: is it ok to just fire property changes for the first element?
+          const propertyPath = propertyPaths[0]
+          this.set(propertyPath, newValue)
+        }
+        else {
+          bean[propertyName] = newValue
+        }
       }
 
       /**
@@ -335,31 +299,21 @@ limitations under the License.
         // console.log("on bean property array changed:",
         //   bean, propertyName, startIndex, removedCount, addedItems)
 
-        // var array = bean[propertyName];
-        // var oldElements = array.slice(index, index + count);
-        // if (deepEqual(newElements, oldElements)) {
-        //   return;
-        // }
-        // var listenerList = this.listeners.get(bean);
-        // if (exists(listenerList) && listenerList.length > 0) {
-        //   var entry = listenerList[0];
-        //   var element = entry.element;
-        //   var path = entry.rootPath + '.' + propertyName;
-        //   if (typeof newElements === 'undefined') {
-        //     element.splice(path, index, count);
-        //   }
-        //   else {
-        //     element.splice.apply(element, [path, index, count].concat(newElements));
-        //   }
-        // }
-        // else {
-        //   if (typeof newElements === 'undefined') {
-        //     array.splice(index, count);
-        //   }
-        //   else {
-        //     array.splice.apply(array, [index, count].concat(newElements));
-        //   }
-        // }
+        const items = bean[propertyName]
+        const oldItems = items.slice(startIndex, startIndex + removedCount)
+
+        // HERE: is this object comparison right?
+        if (isDeepEqual(items, oldItems)) { return }
+
+        const propertyPaths = this._queryPropertyPaths(bean)
+        if (propertyPath.size > 0) {
+          // HERE: is it ok to just fire property changes for the first element?
+          const propertyPath = propertyPaths[0]
+          this.splice(propertyPath, startIndex, removedCount, ...addedItems)
+        }
+        else {
+          items.splice(startIndex, removedCount, ...addedItems)
+        }
       }
 
       _queryPropertyPaths(bean) {
@@ -390,6 +344,10 @@ limitations under the License.
 
     window.customElements.define(DolphinController.is, DolphinController)
 
+    function isObject(value) {
+      return typeof value === "object"
+    }
+
     function isNil(value) {
       return value === null || value === undefined
     }
@@ -398,9 +356,32 @@ limitations under the License.
       return !!value
     }
 
+    function isEqual(a, b) {
+      return a === b
+    }
+
+    function isDeepEqual(a, b) {
+      return a === b
+    }
+
     function hasArraySpliceRecords(changeRecord) {
       const { path, value, base } = changeRecord
-      return path.endsWith(".splices") && value && value.indexSplices
+      return value && value.indexSplices
+    }
+
+    function forEach(collection, callback) {
+      if (Array.isArray(collection)) {
+        for (let itemIndex = 0; itemIndex < bean.length; itemIndex++) {
+          callback(collection[itemIndex], itemIndex, collection)
+        }
+        return collection
+      }
+      for (let propertyName in Object(collection)) {
+        if (collection.hasOwnProperty(propertyName)) {
+          callback(collection[propertyName], propertyName, collection)
+        }
+      }
+      return collection
     }
 
   </script>
