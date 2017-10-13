@@ -224,26 +224,7 @@ limitations under the License.
        */
       _onModelChanged(changeRecord) {
         if (this.status !== STATUS_READY) { return }
-        console.log("changeRecord:", stringify(changeRecord))
 
-        // subproperty change record:
-        // path. Path to the property that changed. Use this to determine whether
-        // a property changed, a sub-property changed, or an array was mutated.
-        // value. New value of the path that changed.
-        // base. The object matching the non-wildcard portion of the path.
-
-        // * @param {string} path Path that should be notified.
-        // * @param {Array} splices Array of splice records indicating ordered
-        // *   changes that occurred to the array. Each record should have the
-        // *   following fields:
-        // *    * index: index at which the change occurred
-        // *    * removed: array of items that were removed from this index
-        // *    * addedCount: number of new items added at this index
-        // *    * object: a reference to the array in question
-        // *    * type: the string literal 'splice'
-
-        // Starting from the start index specified, removes 0 or more items
-        // from the array and inserts 0 or more new items in their place.
         function hasArraySpliceRecords(changeRecord) {
           const { path, value, base } = changeRecord
           return value && value.indexSplices
@@ -281,9 +262,6 @@ limitations under the License.
           const property = Polymer.Path.get(rootProperty, propertyPath)
           const bean = Polymer.Path.get(rootProperty, this._slicePropertyPath(propertyPath, 0, -1))
           const propertyName = this._slicePropertyPath(propertyPath, -1)
-
-          // model.<propertyPath>.length
-          // console.log("is length of array", propertyPath, isArray(bean))
 
           const newValue = changeRecord.value
           const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
@@ -348,10 +326,6 @@ limitations under the License.
         }
       }
 
-      // apply bean/array changes from dolphin to the model (bean to propertyPath)
-      // unregister old and register new property paths after model changed (beans, arrays).
-      // register and unregister property paths and subproperty paths of arrays and beans.
-
       /**
        * @param {any[]} items Array of current items
        * @param {string} propertyPath Property path of the items
@@ -362,19 +336,20 @@ limitations under the License.
       _binderUpdateArray(items, propertyPath, startIndex, removedItems, addedCount) {
         for (let removedIndex = 0; removedIndex < removedItems.length; removedIndex++) {
           const removedItem = removedItems[removedIndex]
-          const itemPropertyPath = Polymer.Path.normalize([propertyPath, startIndex + removedIndex])
+          const itemPropertyPath = this._buildPropertyPath(propertyPath, startIndex + removedIndex)
           this._binderUnbind(removedItem, itemPropertyPath)
         }
 
+        // HERE: is the name addedIndex appropriate here?
         for (let addedIndex = startIndex + addedCount; addedIndex < items.length; addedIndex++) {
           const addedItem = items[addedIndex]
-          const itemPropertyPath = Polymer.Path.normalize([propertyPath, addedIndex - addedCount + removedItems.length])
+          const itemPropertyPath = this._buildPropertyPath(propertyPath, addedIndex - addedCount + removedItems.length)
           this._binderUnbind(addedItem, itemPropertyPath)
         }
 
         for (let itemIndex = startIndex; itemIndex < items.length; itemIndex++) {
           const item = items[itemIndex]
-          const itemPropertyPath = Polymer.Path.normalize([propertyPath, itemIndex])
+          const itemPropertyPath = this._buildPropertyPath(propertyPath, itemIndex)
           this._binderBind(item, itemPropertyPath)
         }
       }
@@ -383,13 +358,12 @@ limitations under the License.
        *
        */
       _binderBind(bean, propertyPath) {
-        console.log("bind", stringify({ bean, propertyPath }))
         if (isNil(bean) || !isObject(bean)) { return }
 
         this._registerPropertyPath(bean, propertyPath)
 
         forEach(bean, (subBean, propertyName) => {
-          const subPropertyPath = Polymer.Path.normalize([propertyPath, propertyName])
+          const subPropertyPath = this._buildPropertyPath(propertyPath, propertyName)
           this._binderBind(subBean, subPropertyPath)
         })
       }
@@ -398,13 +372,12 @@ limitations under the License.
        *
        */
       _binderUnbind(bean, propertyPath) {
-        console.log("unbind", stringify({ bean, propertyPath }))
         if (isNil(bean) || !isObject(bean)) { return }
 
         this._unregisterPropertyPath(bean, propertyPath)
 
         forEach(bean, (subBean, propertyName) => {
-          const subPropertyPath = Polymer.Path.normalize([propertyPath, propertyName])
+          const subPropertyPath = this._buildPropertyPath(propertyPath, propertyName)
           this._binderUnbind(subBean, subPropertyPath)
         })
       }
@@ -441,17 +414,24 @@ limitations under the License.
       /**
        *
        */
+      _buildPropertyPath(...propertyPathElements) {
+        return Polymer.Path.normalize(propertyPathElements)
+      }
+
+      /**
+       *
+       */
       _slicePropertyPath(propertyPath, start, end = undefined) {
-        const propertyPathArray = Polymer.Path.split(propertyPath)
-        return Polymer.Path.normalize(propertyPathArray.slice(start, end))
+        const propertyPathElements = Polymer.Path.split(propertyPath)
+        return Polymer.Path.normalize(propertyPathElements.slice(start, end))
       }
     }
 
     window.customElements.define(DolphinController.is, DolphinController)
 
-    function stringify(value, padding = " ") {
-      return JSON.stringify(changeRecord, null, padding)
-    }
+    // function stringify(value, padding = " ") {
+    //   return JSON.stringify(changeRecord, null, padding)
+    // }
 
     /**
      * True, if `value` is an object.
@@ -488,6 +468,12 @@ limitations under the License.
     function isDeepEqual(a, b) {
       return a === b
     }
+
+    // function forEach(collection, callback) {
+    //   Object.keys(collection).forEach(key =>
+    //     callback(collection[key], key, collection)
+    //   )
+    // }
 
     function forEach(collection, callback) {
       if (isArray(collection)) {
