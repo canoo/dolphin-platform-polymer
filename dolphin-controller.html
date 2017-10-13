@@ -313,7 +313,7 @@ limitations under the License.
         // HERE: is this object comparison right?
         const newItems = bean[propertyName]
         const oldItems = newItems.slice(startIndex, startIndex + removedCount)
-        if (isDeepEqual(newItems, oldItems)) { return }
+        if (isArrayEqual(newItems, oldItems)) { return }
 
         const propertyPaths = this._queryPropertyPaths(bean)
         if (propertyPath.size > 0) {
@@ -465,8 +465,24 @@ limitations under the License.
       return a === b
     }
 
-    function isDeepEqual(a, b) {
-      return a === b
+    /**
+     * Compares if one array is equal to another array.
+     *
+     * @param {Array} a One array
+     * @param {Array} b Another array
+     * @returns {boolean} True, if the array is equal to the other array
+     */
+    function isArrayEqual(a, b) {
+      if ((a === b) || (isNil(a) && isNil(b))) { return true }
+      if (isNil(a) !== isNil(b)) { return false }
+      if (a.length !== b.length) { return false }
+
+      for (let index = 0; index < a.length; index++) {
+        if (a[index] !== b[index]) {
+          return false
+        }
+      }
+      return true
     }
 
     // function forEach(collection, callback) {
