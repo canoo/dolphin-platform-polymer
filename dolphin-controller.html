@@ -224,18 +224,44 @@ limitations under the License.
        */
       _onModelChanged(changeRecord) {
         if (this.status !== STATUS_READY) { return }
-        // console.log("--", pretty(changeRecord))
 
-        function hasArraySpliceRecords(changeRecord) {
+        const hasArraySpliceRecords = (changeRecord) => {
           const { path, value, base } = changeRecord
           return value && value.indexSplices
         }
 
-        // Change record for array splices.
-        if (changeRecord.path.endsWith(".splices") && hasArraySpliceRecords(changeRecord)) {
-          // model.<propertyPath>.splices
-          const rootProperty = changeRecord.base
-          const propertyPath = this._slicePropertyPath(changeRecord.path, 1, -1)
+        const handleBeanPropertyChanged = (changeRecord) => {
+          const rootProperty = { model: changeRecord.base }
+          const propertyPath = changeRecord.path
+
+          const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
+          const propertyName = this._slicePropertyPath(propertyPath, -1)
+          const bean = Polymer.Path.get(rootProperty, parentPropertyPath)
+          const property = Polymer.Path.get(rootProperty, propertyPath)
+
+          // Ignore replacing an array using Polymer. This will cause stray beans in bean registry.
+          if (isArray(property)) { return }
+
+          // Ignore array.length change records from Polymer.
+          if (propertyName === "length" && isArray(bean)) { return }
+
+          const newValue = changeRecord.value
+          const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
+
+          if (!isNil(oldValue)) {
+            this._binderUnbind(oldValue, propertyPath)
+          }
+          if (!isNil(newValue)) {
+            this._binderBind(newValue, propertyPath)
+          }
+
+          // console.log("changed path:", pretty0(propertyPath))
+          // console.log("registered paths:", pretty0(Array.from(this._beanRegistry.values())))
+        }
+
+        const handleBeanPropertySpliced = (changeRecord) => {
+          const rootProperty = { model: changeRecord.base }
+          const propertyPath = this._slicePropertyPath(changeRecord.path, 0, -1)
 
           const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
           const propertyName = this._slicePropertyPath(propertyPath, -1)
@@ -254,30 +280,19 @@ limitations under the License.
             this._binderUpdateArray(items, propertyPath,
               startIndex, removedItems, addedCount)
           }
+
+          // console.log("changed path:", pretty0(propertyPath))
+          // console.log("registered paths:", pretty0(Array.from(this._beanRegistry.values())))
+        }
+
+        // Change record for array splices.
+        if (changeRecord.path.endsWith(".splices") && hasArraySpliceRecords(changeRecord)) {
+          handleBeanPropertySpliced(changeRecord)
         }
         // Change record for subproperty updates.
         else {
-          const rootProperty = { model: changeRecord.base }
-          const propertyPath = changeRecord.path
-
-          // model.<propertyPath>
-          const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
-          const propertyName = this._slicePropertyPath(propertyPath, -1)
-          const bean = Polymer.Path.get(rootProperty, parentPropertyPath)
-          const property = Polymer.Path.get(rootProperty, propertyPath)
-
-          const newValue = changeRecord.value
-          const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
-
-          if (!isNil(oldValue)) {
-            this._binderUnbind(oldValue, propertyPath)
-          }
-          if (!isNil(newValue)) {
-            this._binderBind(newValue, propertyPath)
-          }
+          handleBeanPropertyChanged(changeRecord)
         }
-
-        // console.log("_beanRegistry", pretty(this._beanRegistry))
       }
 
       /**
@@ -370,6 +385,7 @@ limitations under the License.
        *
        */
       _binderBind(bean, propertyPath) {
+        // Return, if `bean` is not a bean.
         if (isNil(bean) || !isObject(bean)) { return }
 
         this._registerPropertyPath(bean, propertyPath)
@@ -384,6 +400,7 @@ limitations under the License.
        *
        */
       _binderUnbind(bean, propertyPath) {
+        // Return, if `bean` is not a bean.
         if (isNil(bean) || !isObject(bean)) { return }
 
         this._unregisterPropertyPath(bean, propertyPath)
@@ -427,7 +444,7 @@ limitations under the License.
        *
        */
       _buildPropertyPath(...propertyPathElements) {
-        return Polymer.Path.normalize(propertyPathElements.filter(it => it.length > 0))
+        return Polymer.Path.normalize(propertyPathElements)
       }
 
       /**
@@ -441,17 +458,21 @@ limitations under the License.
 
     window.customElements.define(DolphinController.is, DolphinController)
 
-    function pretty(value, padding = "  ") {
+    function pretty(value, padding = 2) {
       function replacer(key, value) {
-        if (value.constructor.name === "Map") {
+        if (value && value.constructor.name === "Map") {
           return Array.from(value)
         }
-        if (value.constructor.name === "Set") {
+        if (value && value.constructor.name === "Set") {
           return Array.from(value)
         }
         return value
       }
       return JSON.stringify(value, replacer, padding)
+    }
+
+    function pretty0(value) {
+       return pretty(value, 0)
     }
 
     /**

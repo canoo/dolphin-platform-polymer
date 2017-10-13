@@ -69,7 +69,7 @@
         window.clientContext = createClientContextMock()
         window.clientContext._model = {
           arrayBean: {
-            arrayProp: [0, 1, 2, 3, 4, 5]
+            arrayProp: [0, { id: 1 }, { id: 2 }, 3, 4, 5]
           }
         }
       })
@@ -80,6 +80,8 @@
 
         flush(() => {
           controller.splice("model.arrayBean.arrayProp", 2, 2, ...[10, 11, 12])
+          controller.splice("model.arrayBean.arrayProp", 0, 10, ...[{ id: 13 }])
+          // controller.set("model.arrayBean.arrayProp", [{ id: 14 }])
           done()
         })
       })
