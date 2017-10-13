@@ -28,11 +28,10 @@
 <!-- ------------------------------------------------------------------------------------------ -->
 
 <script>
-  function createClientContext(done) {
-    const clientContextFactory = new dolphin.ClientContextFactory()
-    const clientContext = clientContextFactory.create("http://localhost:8080/dolphin")
-    clientContext.onConnect().then(done)
-    return clientContext
+  function createClientContext(url = "http://localhost:8080/dolphin") {
+    const factory = new dolphin.ClientContextFactory()
+    const config = {}
+    return factory.create(url, config)
   }
 
   function createClientContextMock() {
@@ -63,7 +62,7 @@
   }
 
   suite("<dolphin-controller>", () => {
-    suite.only("bindings", () => {
+    suite("bindings", () => {
       setup(() => {
         // setup:
         window.clientContext = createClientContextMock()
@@ -87,7 +86,7 @@
       })
     })
 
-    suite.skip("simple binding (array)", () => {
+    suite("simple binding (array)", () => {
       // fixtures:
       let arrayBean
 
@@ -117,18 +116,18 @@
 
         flush(() => {
           // when:
-          controller._onBeanPropertyArrayChanged(arrayBean, "arrayProp", 1, 0, 99)
+          controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [90, 91])
 
           // then:
-          expect(onModelChangedSpy).to.have.been.calledWith({
-            path: "model.arrayProp.slices",
-            value: { arrayProp: [1, 99, 2, 3] },
-            base: { arrayProp: [1, 99, 2, 3] }
-          })
-          console.log(JSON.stringify(onModelChangedSpy.args))
-          console.log(JSON.stringify(onModelChangedSpy.getCall(0).args))
+          // expect(onModelChangedSpy).to.have.been.calledWith({
+          //   path: "model.arrayProp.slices",
+          //   value: { arrayProp: [1, 90, 91, 2, 3] },
+          //   base: { arrayProp: [1, 90, 91, 2, 3] }
+          // })
+          // console.log(JSON.stringify(onModelChangedSpy.args))
+          // console.log(JSON.stringify(onModelChangedSpy.getCall(0).args))
 
-          expect(controller.model).to.eql({ arrayProp: [1, 99, 2, 3] })
+          expect(controller.model).to.eql({ arrayProp: [1, 90, 91, 2, 3] })
           done()
         })
       })
@@ -138,26 +137,24 @@
         const controller = fixture("SimpleController")
         const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
-        console.log(sinon)
-
         flush(() => {
           // when:
-          controller._onBeanPropertyArrayChanged(arrayBean, "arrayProp", 1, 0, 99)
+          controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [90, 91])
 
           // then:
-          expect(onModelChangedSpy).to.have.been.calledWith({
-            path: "model.arrayProp.slices"
-          })
-          console.log(JSON.stringify(onModelChangedSpy.args))
-          console.log(JSON.stringify(onModelChangedSpy.getCall(0).args))
+          // expect(onModelChangedSpy).to.have.been.calledWith({
+          //   path: "model.arrayProp.slices"
+          // })
+          // console.log(JSON.stringify(onModelChangedSpy.args))
+          // console.log(JSON.stringify(onModelChangedSpy.getCall(0).args))
 
-          expect(controller.model).to.eql({ arrayProp: [1, 99, 2, 3] })
+          expect(controller.model).to.eql({ arrayProp: [1, 90, 91, 2, 3] })
           done()
         })
       })
     })
 
-    suite.skip("bean registry", () => {
+    suite("bean registry", () => {
       let controller
       setup(() => {
         // given:
@@ -235,7 +232,7 @@
       })
     })
 
-    suite.skip("with client context", () => {
+    suite("with client context", () => {
       setup(() => {
         window.clientContext = createClientContextMock()
       })
@@ -338,11 +335,11 @@
         controller.set("model", { fakeArray: {}, realArray: [] })
         controller.set("model.fakeArray.splices", "_splices")
         controller.set("model.fakeArray.length", "_length")
-        controller.splice("model.realArray", 0, 0, [1, 3, 3, 7])
+        controller.splice("model.realArray", 0, 0, ...[1, 3, 3, 7])
 
         setTimeout(() => {
           done()
-        }, 100)
+        }, 20)
 
         // controller.set("model", { beanProp: "foo" })
         // controller.set("model.beanProp", "bar")
@@ -368,7 +365,12 @@
 
     suite.skip("with client context mock", () => {
       setup(done => {
-        window.clientContext = createClientContext(done)
+        window.clientContext = createClientContext()
+        window.clientContext.onConnect().then(done)
+      })
+
+      teardown(done => {
+        window.clientContext.disconnect().then(done)
       })
 
       test("change valueProperty", done => {
@@ -377,24 +379,25 @@
         controller.create()
 
         setTimeout(() => {
-          // value change.
-          console.log("--- value change", controller.model, controller._controller.model)
+          console.log("--- root bean:", controller.model, controller._controller.model)
+
+          // bean change.
           controller.model.valueProperty = "lorem ipsum dolor"
-          const oldValue = window.clientContext.beanManager.notifyBeanChange(controller.model, "valueProperty", "lorem ipsum dolor")
-          console.log("oldValue:", oldValue)
+          const newValue1 = controller.model
+          const oldValue1 = controller._notifyBeanPropertyChanged(newValue1, "valueProperty", "lorem ipsum dolor")
+          console.log("--- bean change:", newValue1, oldValue1)
 
           setTimeout(() => {
-            // value change.
-            console.log("--- value change", controller.model, controller._controller.model)
-
+            // bean change.
             controller.model.valueProperty = "lorem ipsum dolor 2"
-            const oldValue2 = window.clientContext.beanManager.notifyBeanChange(controller.model, "valueProperty", "lorem ipsum dolor 2")
-            console.log("oldValue2:", oldValue2)
+            const newValue2 = controller.model
+            const oldValue2 = controller._notifyBeanPropertyChanged(newValue2, "valueProperty", "lorem ipsum dolor 2")
+            console.log("--- bean change:", newValue2, oldValue2)
 
-            console.log("--- value change", controller.model, controller._controller.model)
+            controller.destroy()
             done()
-          }, 200)
-        }, 200)
+          }, 20)
+        }, 20)
       })
     })
 

@@ -117,27 +117,26 @@ limitations under the License.
        * Creates a Dolphin controller.
        */
       create() {
-        if (!isNil(this.clientContext) && !isNil(this.name)) {
-          this._onControllerInitializing()
-          this.clientContext.createController(this.name)
-            .then(controller => {
-              this._onControllerReady(controller)
-              if (!isNil(controller.onDestroyed)) {
-                controller.onDestroyed(() => {
-                  this._onControllerDestroyed(controller)
-                })
-              }
+        if (isNil(this.clientContext) || isNil(this.name)) { return }
+
+        this._onControllerInitializing()
+        this.clientContext.createController(this.name).then(controller => {
+          this._onControllerReady(controller)
+          if (!isNil(controller.onDestroyed)) {
+            controller.onDestroyed(() => {
+              this._onControllerDestroyed(controller)
             })
-        }
+          }
+        })
       }
 
       /**
        * Destroys a Dolphin controller.
        */
       destroy() {
-        if (!isNil(this._controller)) {
-          this._controller.destroy()
-        }
+        if (isNil(this._controller)) { return }
+
+        this._controller.destroy()
       }
 
       /**
@@ -166,6 +165,8 @@ limitations under the License.
       _onControllerReady(controller) {
         this._controller = controller
         this.status = STATUS_READY
+
+        // `this._controller.model` and `this.model` will refer to the same object.
         this._onRootBeanChanged(this._controller.model)
       }
 
@@ -183,11 +184,11 @@ limitations under the License.
        *
        */
       _onClientContextChanged() {
-        if (!isNil(this.clientContext)) {
-          this._beanManager = this.clientContext.beanManager
-          this._beanManager.onBeanUpdate(this._onBeanPropertyChanged.bind(this))
-          this._beanManager.onArrayUpdate(this._onBeanPropertySpliced.bind(this))
-        }
+        if (isNil(this.clientContext)) { return }
+
+        this._beanManager = this.clientContext.beanManager
+        this._beanManager.onBeanUpdate(this._onBeanPropertyChanged.bind(this))
+        this._beanManager.onArrayUpdate(this._onBeanPropertySpliced.bind(this))
       }
 
       /**
@@ -199,8 +200,7 @@ limitations under the License.
        * @return {any} Old value
        */
       _notifyBeanPropertyChanged(bean, propertyName, newValue) {
-        return this._beanManager.notifyBeanChange(bean, propertyName,
-          newValue)
+        return this._beanManager.notifyBeanChange(bean, propertyName, newValue)
       }
 
       /**
@@ -213,8 +213,7 @@ limitations under the License.
        * @param {number} addedCount Number of items that were added at this index
        */
       _notifyBeanPropertySpliced(bean, propertyName, startIndex, removedItems, addedCount) {
-        return this._beanManager.notifyArrayChange(bean, propertyName,
-          startIndex, addedCount, removedItems)
+        return this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
       }
 
       /**
@@ -224,20 +223,16 @@ limitations under the License.
        */
       _onModelChanged(changeRecord) {
         if (this.status !== STATUS_READY) { return }
+        // console.log(pretty(changeRecord))
 
-        const hasArraySpliceRecords = (changeRecord) => {
-          const { path, value, base } = changeRecord
-          return value && value.indexSplices
-        }
-
-        const handleBeanPropertyChanged = (changeRecord) => {
-          const rootProperty = { model: changeRecord.base }
-          const propertyPath = changeRecord.path
-
+        const handleBeanPropertyChanged = (rootProperty, propertyPath, newValue) => {
           const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
           const propertyName = this._slicePropertyPath(propertyPath, -1)
           const bean = Polymer.Path.get(rootProperty, parentPropertyPath)
           const property = Polymer.Path.get(rootProperty, propertyPath)
+
+          // Ignore empty beans.
+          if (isNil(bean)) { return }
 
           // Ignore replacing an array using Polymer. This will cause stray beans in bean registry.
           if (isArray(property)) { return }
@@ -245,7 +240,6 @@ limitations under the License.
           // Ignore array.length change records from Polymer.
           if (propertyName === "length" && isArray(bean)) { return }
 
-          const newValue = changeRecord.value
           const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
 
           if (!isNil(oldValue)) {
@@ -259,39 +253,44 @@ limitations under the License.
           // console.log("registered paths:", pretty0(Array.from(this._beanRegistry.values())))
         }
 
-        const handleBeanPropertySpliced = (changeRecord) => {
-          const rootProperty = { model: changeRecord.base }
-          const propertyPath = this._slicePropertyPath(changeRecord.path, 0, -1)
-
+        const handleBeanPropertySpliced = (rootProperty, propertyPath, spliceRecords) => {
           const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
           const propertyName = this._slicePropertyPath(propertyPath, -1)
           const bean = Polymer.Path.get(rootProperty, parentPropertyPath)
           const property = Polymer.Path.get(rootProperty, propertyPath)
 
-          const spliceRecords = changeRecord.value.indexSplices
           for (const spliceRecord of spliceRecords) {
             const items = spliceRecord.object
             const startIndex = spliceRecord.index
             const removedItems = spliceRecord.removed
             const addedCount = spliceRecord.addedCount
 
-            this._notifyBeanPropertySpliced(bean, propertyName,
-              startIndex, removedItems, addedCount)
-            this._binderUpdateArray(items, propertyPath,
-              startIndex, removedItems, addedCount)
+            this._notifyBeanPropertySpliced(bean, propertyName, startIndex, removedItems, addedCount)
+            this._binderUpdateArray(items, propertyPath, startIndex, removedItems, addedCount)
           }
 
           // console.log("changed path:", pretty0(propertyPath))
           // console.log("registered paths:", pretty0(Array.from(this._beanRegistry.values())))
         }
 
+        const hasSpliceRecords = (changeRecord) => {
+          const { path, value, base } = changeRecord
+          return value && value.indexSplices
+        }
+
+        const rootProperty = { model: changeRecord.base }
+        const propertyPath = changeRecord.path
+
         // Change record for array splices.
-        if (changeRecord.path.endsWith(".splices") && hasArraySpliceRecords(changeRecord)) {
-          handleBeanPropertySpliced(changeRecord)
+        if (hasSpliceRecords(changeRecord)) {
+          const splicePropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
+          const spliceRecords = changeRecord.value.indexSplices
+          handleBeanPropertySpliced(rootProperty, splicePropertyPath, spliceRecords)
         }
         // Change record for subproperty updates.
         else {
-          handleBeanPropertyChanged(changeRecord)
+          const newValue = changeRecord.value
+          handleBeanPropertyChanged(rootProperty, propertyPath, newValue)
         }
       }
 
@@ -343,7 +342,7 @@ limitations under the License.
         if (isArrayEqual(newItems, oldItems)) { return }
 
         const propertyPaths = this._queryPropertyPaths(bean)
-        if (propertyPath.size > 0) {
+        if (propertyPaths.size > 0) {
           // HERE: is it ok to fire property changes only for the first element?
           const propertyPath = propertyPaths[0]
           this.splice(propertyPath, startIndex, removedCount, ...addedItems)
@@ -367,7 +366,7 @@ limitations under the License.
           this._binderUnbind(removedItem, itemPropertyPath)
         }
 
-        // HERE: is the name addedIndex appropriate here?
+        // HERE: is the name `addedIndex` appropriate?
         for (let addedIndex = startIndex + addedCount; addedIndex < items.length; addedIndex++) {
           const addedItem = items[addedIndex]
           const itemPropertyPath = this._buildPropertyPath(propertyPath, addedIndex - addedCount + removedItems.length)
@@ -528,33 +527,33 @@ limitations under the License.
       return true
     }
 
-    // function forEach(collection, callback) {
-    //   Object.keys(collection).forEach(key =>
-    //     callback(collection[key], key, collection)
-    //   )
-    // }
-
     function forEach(collection, callback) {
-      if (isArray(collection)) {
-        const array = collection
-        for (let itemIndex = 0; itemIndex < array.length; itemIndex++) {
-          const item = array[itemIndex]
-          callback(item, itemIndex, array)
-        }
-        return array
-      }
-      if (isObject(collection)) {
-        const object = Object(collection)
-        for (let propertyName in object) {
-          if (object.hasOwnProperty(propertyName)) {
-            const property = object[propertyName]
-            callback(property, propertyName, object)
-          }
-        }
-        return object
-      }
-      return collection
+      Object.keys(collection).forEach(key =>
+        callback(collection[key], key, collection)
+      )
     }
+
+    // function forEach(collection, callback) {
+    //   if (isArray(collection)) {
+    //     const array = collection
+    //     for (let itemIndex = 0; itemIndex < array.length; itemIndex++) {
+    //       const item = array[itemIndex]
+    //       callback(item, itemIndex, array)
+    //     }
+    //     return array
+    //   }
+    //   if (isObject(collection)) {
+    //     const object = Object(collection)
+    //     for (let propertyName in object) {
+    //       if (object.hasOwnProperty(propertyName)) {
+    //         const property = object[propertyName]
+    //         callback(property, propertyName, object)
+    //       }
+    //     }
+    //     return object
+    //   }
+    //   return collection
+    // }
 
   </script>
 
