@@ -265,6 +265,13 @@ limitations under the License.
 
           const newValue = changeRecord.value
           const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
+
+          if (!isNil(oldValue)) {
+            this._binderUnbind(oldValue, propertyPath)
+          }
+          if (!isNil(newValue)) {
+            this._binderBind(newValue, propertyPath)
+          }
         }
       }
 
@@ -301,7 +308,7 @@ limitations under the License.
       }
 
       /**
-       * Receives a bean property array change from the Dolphin server.
+       * Receives a bean property splice from the Dolphin server.
        *
        * @param {object} bean Bean with the spliced array property
        * @param {string} propertyName Property name of the spliced array

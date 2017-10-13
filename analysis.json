@@ -2992,7 +2992,7 @@
               "column": 6
             },
             "end": {
-              "line": 286,
+              "line": 275,
               "column": 7
             }
           },
@@ -3011,11 +3011,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 293,
+              "line": 282,
               "column": 6
             },
             "end": {
-              "line": 295,
+              "line": 284,
               "column": 7
             }
           },
@@ -3034,11 +3034,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 305,
+              "line": 294,
               "column": 6
             },
             "end": {
-              "line": 318,
+              "line": 307,
               "column": 7
             }
           },
@@ -3068,15 +3068,15 @@
         },
         {
           "name": "_onBeanPropertySpliced",
-          "description": "Receives a bean property array change from the Dolphin server.",
+          "description": "Receives a bean property splice from the Dolphin server.",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 329,
+              "line": 318,
               "column": 6
             },
             "end": {
-              "line": 344,
+              "line": 333,
               "column": 7
             }
           },
@@ -3115,11 +3115,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 357,
+              "line": 342,
               "column": 6
             },
             "end": {
-              "line": 375,
+              "line": 361,
               "column": 7
             }
           },
@@ -3158,11 +3158,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 380,
+              "line": 366,
               "column": 6
             },
             "end": {
-              "line": 390,
+              "line": 375,
               "column": 7
             }
           },
@@ -3182,11 +3182,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 395,
+              "line": 380,
               "column": 6
             },
             "end": {
-              "line": 405,
+              "line": 389,
               "column": 7
             }
           },
@@ -3206,11 +3206,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 410,
+              "line": 394,
               "column": 6
             },
             "end": {
-              "line": 412,
+              "line": 396,
               "column": 7
             }
           },
@@ -3227,11 +3227,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 417,
+              "line": 401,
               "column": 6
             },
             "end": {
-              "line": 423,
+              "line": 407,
               "column": 7
             }
           },
@@ -3251,11 +3251,11 @@
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 428,
+              "line": 412,
               "column": 6
             },
             "end": {
-              "line": 434,
+              "line": 418,
               "column": 7
             }
           },
@@ -3270,16 +3270,37 @@
           ]
         },
         {
+          "name": "_buildPropertyPath",
+          "description": "",
+          "privacy": "protected",
+          "sourceRange": {
+            "start": {
+              "line": 423,
+              "column": 6
+            },
+            "end": {
+              "line": 425,
+              "column": 7
+            }
+          },
+          "metadata": {},
+          "params": [
+            {
+              "name": "...propertyPathElements"
+            }
+          ]
+        },
+        {
           "name": "_slicePropertyPath",
           "description": "",
           "privacy": "protected",
           "sourceRange": {
             "start": {
-              "line": 439,
+              "line": 430,
               "column": 6
             },
             "end": {
-              "line": 442,
+              "line": 433,
               "column": 7
             }
           },
@@ -4005,7 +4026,7 @@
           "column": 4
         },
         "end": {
-          "line": 443,
+          "line": 434,
           "column": 5
         }
       },
