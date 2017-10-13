@@ -9,7 +9,9 @@
   },
   "license": "Apache-2.0",
   "scripts": {
-    "test": "./node_modules/.bin/wct --local chrome,firefox"
+    "build": "./node_modules/.bin/polymer build",
+    "lint": "./node_modules/.bin/polymer lint",
+    "test": "./node_modules/.bin/polymer test --local chrome,firefox"
   },
   "devDependencies": {
     "bower": "1.8.2",

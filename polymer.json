@@ -8,17 +8,24 @@
     "analysis.json",
     "LICENSE"
   ],
+  "builds": [
+    {
+      "preset": "es5-bundled",
+      "addServiceWorker": false,
+      "addPushManifest": false
+    },
+    {
+      "preset": "es6-bundled",
+      "addServiceWorker": false,
+      "addPushManifest": false
+    }
+  ],
   "lint": {
     "rules": [
       "polymer-2"
+    ],
+    "ignoreWarnings": [
+      "could-not-determine-behavior-name"
     ]
-  },
-  "builds": [
-    {
-      "preset": "es5-bundled"
-    },
-    {
-      "preset": "es6-bundled"
-    }
-  ]
+  }
 }
