@@ -165,8 +165,8 @@ limitations under the License.
        */
       _onControllerReady(controller) {
         this._controller = controller
-        this._onRootBeanChanged(this._controller.model)
         this.status = STATUS_READY
+        this._onRootBeanChanged(this._controller.model)
       }
 
       /**
@@ -224,6 +224,7 @@ limitations under the License.
        */
       _onModelChanged(changeRecord) {
         if (this.status !== STATUS_READY) { return }
+        // console.log("--", pretty(changeRecord))
 
         function hasArraySpliceRecords(changeRecord) {
           const { path, value, base } = changeRecord
@@ -236,9 +237,10 @@ limitations under the License.
           const rootProperty = changeRecord.base
           const propertyPath = this._slicePropertyPath(changeRecord.path, 1, -1)
 
-          const property = Polymer.Path.get(rootProperty, propertyPath)
-          const bean = Polymer.Path.get(rootProperty, this._slicePropertyPath(propertyPath, 0, -1))
+          const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
           const propertyName = this._slicePropertyPath(propertyPath, -1)
+          const bean = Polymer.Path.get(rootProperty, parentPropertyPath)
+          const property = Polymer.Path.get(rootProperty, propertyPath)
 
           const spliceRecords = changeRecord.value.indexSplices
           for (const spliceRecord of spliceRecords) {
@@ -255,13 +257,14 @@ limitations under the License.
         }
         // Change record for subproperty updates.
         else {
-          const rootProperty = changeRecord.base
-          const propertyPath = this._slicePropertyPath(changeRecord.path, 1)
+          const rootProperty = { model: changeRecord.base }
+          const propertyPath = changeRecord.path
 
           // model.<propertyPath>
-          const property = Polymer.Path.get(rootProperty, propertyPath)
-          const bean = Polymer.Path.get(rootProperty, this._slicePropertyPath(propertyPath, 0, -1))
+          const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
           const propertyName = this._slicePropertyPath(propertyPath, -1)
+          const bean = Polymer.Path.get(rootProperty, parentPropertyPath)
+          const property = Polymer.Path.get(rootProperty, propertyPath)
 
           const newValue = changeRecord.value
           const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
@@ -273,6 +276,8 @@ limitations under the License.
             this._binderBind(newValue, propertyPath)
           }
         }
+
+        // console.log("_beanRegistry", pretty(this._beanRegistry))
       }
 
       /**
@@ -422,7 +427,7 @@ limitations under the License.
        *
        */
       _buildPropertyPath(...propertyPathElements) {
-        return Polymer.Path.normalize(propertyPathElements)
+        return Polymer.Path.normalize(propertyPathElements.filter(it => it.length > 0))
       }
 
       /**
@@ -436,9 +441,18 @@ limitations under the License.
 
     window.customElements.define(DolphinController.is, DolphinController)
 
-    // function stringify(value, padding = " ") {
-    //   return JSON.stringify(changeRecord, null, padding)
-    // }
+    function pretty(value, padding = "  ") {
+      function replacer(key, value) {
+        if (value.constructor.name === "Map") {
+          return Array.from(value)
+        }
+        if (value.constructor.name === "Set") {
+          return Array.from(value)
+        }
+        return value
+      }
+      return JSON.stringify(value, replacer, padding)
+    }
 
     /**
      * True, if `value` is an object.
@@ -470,6 +484,7 @@ limitations under the License.
 
     function isEqual(a, b) {
       return a === b
+      // return Object.is(a, b)
     }
 
     /**

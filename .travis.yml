@@ -24,6 +24,6 @@ before_script:
 - bower update --force-latest
 
 script:
-- npm run-script build
-- npm run-script lint
-- npm run-script test
+- npm run build
+- npm run lint
+- npm run test
