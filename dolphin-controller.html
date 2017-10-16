@@ -71,7 +71,11 @@ limitations under the License.
            *
            * @type {Object}
            */
-          model: Object,
+          model: {
+            type: Object,
+            notify: true,
+            readOnly: false
+          },
 
           /**
            * If true, prevents creation of Dolphin controller when the element is attached
@@ -235,7 +239,7 @@ limitations under the License.
        */
       _onModelChanged(changeRecord) {
         if (this.status !== STATUS_READY) { return }
-        // console.log(pretty(changeRecord))
+        // console.log(pretty1(changeRecord))
 
         const handleBeanPropertyChanged = (rootProperty, propertyPath, newValue) => {
           const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
@@ -262,8 +266,8 @@ limitations under the License.
             }
           }
 
-          console.log("changed path:", pretty1(propertyPath))
-          console.log("registered paths:", pretty1(this._beanRegistry.values()))
+          // console.log("changed path:", pretty1(propertyPath))
+          // console.log("registered paths:", pretty1(this._beanRegistry.values()))
         }
 
         const handleBeanPropertySpliced = (rootProperty, propertyPath, spliceRecords) => {
@@ -278,8 +282,8 @@ limitations under the License.
             this._binderUpdateArray(items, propertyPath, startIndex, removedItems, addedCount)
           }
 
-          console.log("spliced path:", pretty1(propertyPath))
-          console.log("registered paths:", pretty1(this._beanRegistry.values()))
+          // console.log("spliced path:", pretty1(propertyPath))
+          // console.log("registered paths:", pretty1(this._beanRegistry.values()))
         }
 
         const hasSpliceRecords = (changeRecord) => {
@@ -317,6 +321,10 @@ limitations under the License.
        */
       _onRootBeanChanged(bean) {
         this.set("model", bean)
+        if (isObject(bean)) {
+          // this._binderBind(bean, "model")
+          this._registerPropertyPath(bean, "model")
+        }
       }
 
       /**
@@ -334,7 +342,8 @@ limitations under the License.
         const propertyPaths = this._queryPropertyPaths(bean)
         if (propertyPaths.size > 0) {
           // HERE: is it ok to fire property changes only for the first element?
-          const propertyPath = propertyPaths[0]
+          const beanPropertyPath = Array.from(propertyPaths)[0]
+          const propertyPath = this._buildPropertyPath(beanPropertyPath, propertyName)
           this.set(propertyPath, newValue)
         }
         else {
@@ -359,7 +368,8 @@ limitations under the License.
         const propertyPaths = this._queryPropertyPaths(bean)
         if (propertyPaths.size > 0) {
           // HERE: is it ok to fire property changes only for the first element?
-          const propertyPath = propertyPaths[0]
+          const beanPropertyPath = Array.from(propertyPaths)[0]
+          const propertyPath = this._buildPropertyPath(beanPropertyPath, propertyName)
           this.splice(propertyPath, startIndex, removedCount, ...addedItems)
         }
         else {
