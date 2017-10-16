@@ -138,7 +138,7 @@
 
           // and:
           // https://github.com/domenic/sinon-chai#assertions
-          // console.log("spy.args", pretty1(notifyBeanPropertyChangedSpy.args))
+          console.log("spy.args", pretty1(notifyBeanPropertyChangedSpy.args))
           expect(notifyBeanPropertyChangedSpy).to.have.been.calledWith(
             stringBean, "stringProp", "TWO")
           done()

@@ -262,8 +262,8 @@ limitations under the License.
             }
           }
 
-          // console.log("changed path:", pretty1(propertyPath))
-          // console.log("registered paths:", pretty1(this._beanRegistry.values()))
+          console.log("changed path:", pretty1(propertyPath))
+          console.log("registered paths:", pretty1(this._beanRegistry.values()))
         }
 
         const handleBeanPropertySpliced = (rootProperty, propertyPath, spliceRecords) => {
@@ -278,8 +278,8 @@ limitations under the License.
             this._binderUpdateArray(items, propertyPath, startIndex, removedItems, addedCount)
           }
 
-          // console.log("spliced path:", pretty1(propertyPath))
-          // console.log("registered paths:", pretty1(this._beanRegistry.values()))
+          console.log("spliced path:", pretty1(propertyPath))
+          console.log("registered paths:", pretty1(this._beanRegistry.values()))
         }
 
         const hasSpliceRecords = (changeRecord) => {
