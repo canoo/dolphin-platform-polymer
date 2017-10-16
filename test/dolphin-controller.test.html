@@ -13,7 +13,7 @@
 
 <test-fixture id="EmptyController">
   <template>
-    <dolphin-controller noauto></dolphin-controller>
+    <dolphin-controller no-create no-destroy></dolphin-controller>
   </template>
 </test-fixture>
 
@@ -28,6 +28,21 @@
 <!-- ------------------------------------------------------------------------------------------ -->
 
 <script>
+  // mocha.checkLeaks()
+
+  function pretty(value, padding = 2) {
+    return JSON.stringify(value, null, padding)
+  }
+
+  function pretty1(value) {
+    const string = pretty(value, 1)
+    return string.split("\n").map(it => it.trim()).join(" ")
+  }
+
+  function pretty0(value) {
+    return pretty(value, 0)
+  }
+
   function createClientContext(url = "http://localhost:8080/dolphin") {
     const factory = new dolphin.ClientContextFactory()
     const config = {}
@@ -62,31 +77,80 @@
   }
 
   suite("<dolphin-controller>", () => {
-    suite("bindings", () => {
+
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
+
+    suite.only("simple binding (of bean)", () => {
+      // fixtures:
+      let stringBean
+
       setup(() => {
         // setup:
+        stringBean = { stringProp: "ONE" }
         window.clientContext = createClientContextMock()
-        window.clientContext._model = {
-          arrayBean: {
-            arrayProp: [0, { id: 1 }, { id: 2 }, 3, 4, 5]
-          }
-        }
+        window.clientContext._model = stringBean
       })
 
-      test("binder update array", done => {
+      test("initial bean (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
 
         flush(() => {
-          controller.splice("model.arrayBean.arrayProp", 2, 2, ...[10, 11, 12])
-          controller.splice("model.arrayBean.arrayProp", 0, 10, ...[{ id: 13 }])
-          // controller.set("model.arrayBean.arrayProp", [{ id: 14 }])
+          // expect:
+          expect(controller.model).to.eql(stringBean)
+          expect(controller.model.stringProp).to.eql("ONE")
+          // TODO(hastebrot): expect notify bean property changed?
+          done()
+        })
+      })
+
+      test("changed bean property (from dolphin)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+
+        flush(() => {
+          // when:
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(controller.model).to.eql(stringBean)
+          expect(controller.model.stringProp).to.eql("TWO")
+          done()
+        })
+      })
+
+      test("changed bean property (from polymer)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertyChangedSpy = sinon.spy(
+          controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // when:
+          controller.set("model.stringProp", "TWO")
+
+          // then:
+          expect(controller.model).to.eql(stringBean)
+          expect(controller.model.stringProp).to.eql("TWO")
+
+          // and:
+          // https://github.com/domenic/sinon-chai#assertions
+          // console.log("spy.args", pretty1(notifyBeanPropertyChangedSpy.args))
+          expect(notifyBeanPropertyChangedSpy).to.have.been.calledWith(
+            stringBean, "stringProp", "TWO")
           done()
         })
       })
     })
 
-    suite("simple binding (array)", () => {
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
+
+    suite.only("simple binding (of array)", () => {
       // fixtures:
       let arrayBean
 
@@ -97,26 +161,26 @@
         window.clientContext._model = arrayBean
       })
 
-      test("set the initial value", done => {
+      test("initial bean (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
 
         flush(() => {
           // expect:
           expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 2, 3])
           done()
         })
       })
 
-      // https://github.com/domenic/sinon-chai#assertions
-      test("update array element addition (from dolphin)", done => {
+      test("spliced bean property (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
         const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
-          controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [90, 91])
+          controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [10, 11])
 
           // then:
           // expect(onModelChangedSpy).to.have.been.calledWith({
@@ -124,37 +188,38 @@
           //   value: { arrayProp: [1, 90, 91, 2, 3] },
           //   base: { arrayProp: [1, 90, 91, 2, 3] }
           // })
-          // console.log(JSON.stringify(onModelChangedSpy.args))
-          // console.log(JSON.stringify(onModelChangedSpy.getCall(0).args))
 
-          expect(controller.model).to.eql({ arrayProp: [1, 90, 91, 2, 3] })
+          expect(controller.model).to.eql({ arrayProp: [1, 10, 11, 2, 3] })
           done()
         })
       })
 
-      test("update array element removal (from dolphin)", done => {
+      test("spliced bean property (from polymer)", done => {
         // given:
         const controller = fixture("SimpleController")
         const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
-          controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [90, 91])
+          controller.splice("model.arrayProp", 1, 0, ...[10, 11])
+          // controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [10, 11])
 
           // then:
           // expect(onModelChangedSpy).to.have.been.calledWith({
           //   path: "model.arrayProp.slices"
           // })
-          // console.log(JSON.stringify(onModelChangedSpy.args))
-          // console.log(JSON.stringify(onModelChangedSpy.getCall(0).args))
 
-          expect(controller.model).to.eql({ arrayProp: [1, 90, 91, 2, 3] })
+          expect(controller.model).to.eql({ arrayProp: [1, 10, 11, 2, 3] })
           done()
         })
       })
     })
 
-    suite("bean registry", () => {
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
+
+    suite.skip("bean registry", () => {
       let controller
       setup(() => {
         // given:
@@ -231,6 +296,40 @@
           .to.equal("model.users")
       })
     })
+
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
+
+    suite.skip("bean registry bindings", () => {
+      setup(() => {
+        // setup:
+        window.clientContext = createClientContextMock()
+        window.clientContext._model = {
+          arrayBean: {
+            arrayProp: [0, { id: 1 }, { id: 2 }, 3, 4, 5]
+          }
+        }
+      })
+
+      test("binder update array", done => {
+        // TODO(hastebrot): isNil(bean) on _onModelChanged() makes problems.
+
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          controller.splice("model.arrayBean.arrayProp", 2, 2, ...[10, 11, 12])
+          controller.splice("model.arrayBean.arrayProp", 0, 10, ...[{ id: 13 }])
+          // controller.set("model.arrayBean.arrayProp", [{ id: 14 }])
+          done()
+        })
+      })
+    })
+
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
 
     suite("with client context", () => {
       setup(() => {
@@ -349,7 +448,6 @@
 
         // // https://www.polymer-project.org/2.0/docs/devguide/data-system#change-events
         // // https://www.polymer-project.org/2.0/docs/devguide/observers#array-observation
-        // // path, value, base = baseProperty
 
         // // then:
         // flush(() => {
@@ -362,6 +460,10 @@
         // })
       })
     })
+
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
 
     suite.skip("with client context mock", () => {
       setup(done => {

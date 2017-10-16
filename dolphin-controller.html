@@ -20,8 +20,8 @@ limitations under the License.
 <dom-module id="dolphin-controller">
 
   <script>
-    const STATUS_NOT_READY = "NOT-READY"
     const STATUS_READY = "READY"
+    const STATUS_NOT_READY = "NOT-READY"
 
     /**
      * The `dolphin-controller` element serves as a Dolphin controller.
@@ -31,9 +31,6 @@ limitations under the License.
      *   name="MovieController"
      *   model="{{movies}}"></dolphin-controller>
      * ~~~
-     *
-     * With `noauto` set to `true`, the element not automatically creates and destroys
-     * a Dolphin controller, when it is attached or detached from the DOM tree.
      *
      * @customElement
      * @polymer
@@ -52,15 +49,6 @@ limitations under the License.
           clientContext: {
             type: Object,
             value: () => window.clientContext
-          },
-
-          /**
-           * If false, automatically creates and destroys a Dolphin controller, when the
-           * element is attached or detached from the DOM tree.
-           */
-          noauto: {
-            type: Boolean,
-            value: false
           },
 
           /**
@@ -83,7 +71,25 @@ limitations under the License.
            *
            * @type {Object}
            */
-          model: Object
+          model: Object,
+
+          /**
+           * If true, prevents creation of Dolphin controller when the element is attached
+           * to the DOM tree.
+           */
+          noCreate: {
+            type: Boolean,
+            value: false
+          },
+
+          /**
+           * If true, prevents destruction of Dolphin controller when the element is detached
+           * from the DOM tree.
+           */
+          noDestroy: {
+            type: Boolean,
+            value: false
+          }
         }
       }
 
@@ -96,21 +102,21 @@ limitations under the License.
 
       constructor() {
         super()
-        this._beanRegistry = new Map()
+        this._initBeanRegistry()
       }
 
       connectedCallback() {
         super.connectedCallback()
-        if (!isTruthy(this.noauto)) {
-          this.create()
-        }
+
+        if (isTruthy(this.noCreate)) { return }
+        this.create()
       }
 
       disconnectedCallback() {
         super.disconnectedCallback()
-        if (!isTruthy(this.noauto)) {
-          this.destroy()
-        }
+
+        if (isTruthy(this.noDestroy)) { return }
+        this.destroy()
       }
 
       /**
@@ -121,7 +127,7 @@ limitations under the License.
 
         this._onControllerInitializing()
         this.clientContext.createController(this.name).then(controller => {
-          this._onControllerReady(controller)
+          this._onControllerCreated(controller)
           if (!isNil(controller.onDestroyed)) {
             controller.onDestroyed(() => {
               this._onControllerDestroyed(controller)
@@ -158,11 +164,11 @@ limitations under the License.
       }
 
       /**
-       * Called when the controller is ready.
+       * Called when the controller was created.
        *
        * @param {any} controller The controller
        */
-      _onControllerReady(controller) {
+      _onControllerCreated(controller) {
         this._controller = controller
         this.status = STATUS_READY
 
@@ -171,13 +177,15 @@ limitations under the License.
       }
 
       /**
-       * Called when the controller is destroyed.
+       * Called when the controller was destroyed.
        *
        * @param {any} controller The controller
        */
       _onControllerDestroyed(controller) {
         this._controller = null
         this.status = STATUS_NOT_READY
+
+        this._onRootBeanChanged(this._controller.model)
       }
 
       /**
@@ -200,6 +208,8 @@ limitations under the License.
        * @return {any} Old value
        */
       _notifyBeanPropertyChanged(bean, propertyName, newValue) {
+        if (this.status !== STATUS_READY) { return }
+
         return this._beanManager.notifyBeanChange(bean, propertyName, newValue)
       }
 
@@ -213,6 +223,8 @@ limitations under the License.
        * @param {number} addedCount Number of items that were added at this index
        */
       _notifyBeanPropertySpliced(bean, propertyName, startIndex, removedItems, addedCount) {
+        if (this.status !== STATUS_READY) { return }
+
         return this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
       }
 
@@ -231,26 +243,27 @@ limitations under the License.
           const bean = Polymer.Path.get(rootProperty, parentPropertyPath)
           const property = Polymer.Path.get(rootProperty, propertyPath)
 
-          // Ignore empty beans.
-          if (isNil(bean)) { return }
-
           // Ignore replacing an array using Polymer. This will cause stray beans in bean registry.
           if (isArray(property)) { return }
 
           // Ignore array.length change records from Polymer.
           if (propertyName === "length" && isArray(bean)) { return }
 
-          const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
+          // Ignore empty beans.
+          if (!isNil(bean)) {
+            const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
 
-          if (!isNil(oldValue)) {
-            this._binderUnbind(oldValue, propertyPath)
-          }
-          if (!isNil(newValue)) {
-            this._binderBind(newValue, propertyPath)
+            if (!isNil(oldValue)) {
+              this._binderUnbind(oldValue, propertyPath)
+            }
+
+            if (!isNil(newValue)) {
+              this._binderBind(newValue, propertyPath)
+            }
           }
 
-          // console.log("changed path:", pretty0(propertyPath))
-          // console.log("registered paths:", pretty0(Array.from(this._beanRegistry.values())))
+          console.log("changed path:", pretty1(propertyPath))
+          console.log("registered paths:", pretty1(this._beanRegistry.values()))
         }
 
         const handleBeanPropertySpliced = (rootProperty, propertyPath, spliceRecords) => {
@@ -260,36 +273,39 @@ limitations under the License.
           const property = Polymer.Path.get(rootProperty, propertyPath)
 
           for (const spliceRecord of spliceRecords) {
-            const items = spliceRecord.object
-            const startIndex = spliceRecord.index
-            const removedItems = spliceRecord.removed
-            const addedCount = spliceRecord.addedCount
-
+            const { items, startIndex, removedItems, addedCount } = spliceRecord
             this._notifyBeanPropertySpliced(bean, propertyName, startIndex, removedItems, addedCount)
             this._binderUpdateArray(items, propertyPath, startIndex, removedItems, addedCount)
           }
 
-          // console.log("changed path:", pretty0(propertyPath))
-          // console.log("registered paths:", pretty0(Array.from(this._beanRegistry.values())))
+          console.log("spliced path:", pretty1(propertyPath))
+          console.log("registered paths:", pretty1(this._beanRegistry.values()))
         }
 
         const hasSpliceRecords = (changeRecord) => {
-          const { path, value, base } = changeRecord
-          return value && value.indexSplices
+          const { value, path, base } = changeRecord
+          return value && !isNil(value.indexSplices)
         }
 
+        const toSpliceRecord = (indexSplice) => {
+          const { object, index, removed, addedCount } = indexSplice
+          return { items: object, startIndex: index, removedItems: removed, addedCount }
+        }
+
+        const newValue = changeRecord.value
+        // const rootProperty = changeRecord.base
+        // const propertyPath = this._slicePropertyPath(changeRecord.path, 1)
         const rootProperty = { model: changeRecord.base }
         const propertyPath = changeRecord.path
 
         // Change record for array splices.
         if (hasSpliceRecords(changeRecord)) {
           const splicePropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
-          const spliceRecords = changeRecord.value.indexSplices
+          const spliceRecords = newValue.indexSplices.map(it => toSpliceRecord(it))
           handleBeanPropertySpliced(rootProperty, splicePropertyPath, spliceRecords)
         }
         // Change record for subproperty updates.
         else {
-          const newValue = changeRecord.value
           handleBeanPropertyChanged(rootProperty, propertyPath, newValue)
         }
       }
@@ -312,7 +328,7 @@ limitations under the License.
        * @param {any} oldValue Old value
        */
       _onBeanPropertyChanged(bean, propertyName, newValue, oldValue) {
-        // HERE: is this object comparison right?
+        // TODO(hastebrot): Maybe use bean[propertyName] instead of oldValue?
         if (isEqual(newValue, oldValue)) { return }
 
         const propertyPaths = this._queryPropertyPaths(bean)
@@ -336,10 +352,9 @@ limitations under the License.
        * @param {any[]} addedItems Array of items that were added at this index
        */
       _onBeanPropertySpliced(bean, propertyName, startIndex, removedCount, addedItems) {
-        // HERE: is this object comparison right?
-        const newItems = bean[propertyName]
-        const oldItems = newItems.slice(startIndex, startIndex + removedCount)
-        if (isArrayEqual(newItems, oldItems)) { return }
+        const items = bean[propertyName]
+        const removedItems = items.slice(startIndex, startIndex + removedCount)
+        if (isArrayEqual(addedItems, removedItems)) { return }
 
         const propertyPaths = this._queryPropertyPaths(bean)
         if (propertyPaths.size > 0) {
@@ -389,9 +404,9 @@ limitations under the License.
 
         this._registerPropertyPath(bean, propertyPath)
 
-        forEach(bean, (subBean, propertyName) => {
-          const subPropertyPath = this._buildPropertyPath(propertyPath, propertyName)
-          this._binderBind(subBean, subPropertyPath)
+        forEach(bean, (childBean, propertyName) => {
+          const childPropertyPath = this._buildPropertyPath(propertyPath, propertyName)
+          this._binderBind(childBean, childPropertyPath)
         })
       }
 
@@ -404,10 +419,17 @@ limitations under the License.
 
         this._unregisterPropertyPath(bean, propertyPath)
 
-        forEach(bean, (subBean, propertyName) => {
-          const subPropertyPath = this._buildPropertyPath(propertyPath, propertyName)
-          this._binderUnbind(subBean, subPropertyPath)
+        forEach(bean, (childBean, propertyName) => {
+          const childPropertyPath = this._buildPropertyPath(propertyPath, propertyName)
+          this._binderUnbind(childBean, childPropertyPath)
         })
+      }
+
+      /**
+       *
+       */
+      _initBeanRegistry() {
+        this._beanRegistry = new Map()
       }
 
       /**
@@ -443,7 +465,10 @@ limitations under the License.
        *
        */
       _buildPropertyPath(...propertyPathElements) {
-        return Polymer.Path.normalize(propertyPathElements)
+        // TODO(hastebrot): Only remove first element if it is an empty string.
+        return Polymer.Path.normalize(
+          propertyPathElements.filter(it => !isEmptyString(it))
+        )
       }
 
       /**
@@ -451,7 +476,9 @@ limitations under the License.
        */
       _slicePropertyPath(propertyPath, start, end = undefined) {
         const propertyPathElements = Polymer.Path.split(propertyPath)
-        return Polymer.Path.normalize(propertyPathElements.slice(start, end))
+        return Polymer.Path.normalize(
+          propertyPathElements.slice(start, end)
+        )
       }
     }
 
@@ -459,19 +486,24 @@ limitations under the License.
 
     function pretty(value, padding = 2) {
       function replacer(key, value) {
-        if (value && value.constructor.name === "Map") {
-          return Array.from(value)
-        }
-        if (value && value.constructor.name === "Set") {
-          return Array.from(value)
+        if (value && value[Symbol.iterator] && !isArray(value)) {
+          const array = Array.from(value)
+          if (!isArrayEqual(array, value)) {
+            return array
+          }
         }
         return value
       }
       return JSON.stringify(value, replacer, padding)
     }
 
+    function pretty1(value) {
+      const string = pretty(value, 1)
+      return string.split("\n").map(it => it.trim()).join(" ")
+    }
+
     function pretty0(value) {
-       return pretty(value, 0)
+      return pretty(value, 0)
     }
 
     /**
@@ -502,6 +534,10 @@ limitations under the License.
       return !!value
     }
 
+    function isEmptyString(value) {
+      return value === ""
+    }
+
     function isEqual(a, b) {
       return a === b
       // return Object.is(a, b)
@@ -527,6 +563,9 @@ limitations under the License.
       return true
     }
 
+    /**
+     *
+     */
     function forEach(collection, callback) {
       Object.keys(collection).forEach(key =>
         callback(collection[key], key, collection)
