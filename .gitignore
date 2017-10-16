@@ -1,9 +1,12 @@
-# dependencies.
-bower_components/
-node_modules/
+# build files.
+build/
 
 # project files.
 .idea/
+
+# dependencies.
+bower_components/
+node_modules/
 
 # apple macos.
 *.DS_Store
