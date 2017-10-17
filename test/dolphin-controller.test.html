@@ -427,15 +427,46 @@
         })
       })
 
-      test("changed bean property of re-bound nested bean (from dolphin)", done => {
+      test("changed bean property of dolphin re-bound nested bean (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
         const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // and:
-          sinon.stub(controller._beanManager, "notifyBeanChange").returns(stringBean)
+          sinon.stub(controller._beanManager, "notifyBeanChange").onCall(0).returns(stringBean)
           controller._onBeanPropertyChanged(beanBean, "beanProp", otherStringBean, stringBean)
+
+          // when:
+          onModelChangedSpy.reset()
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(onModelChangedSpy).to.have.callCount(0)
+
+          // when:
+          onModelChangedSpy.reset()
+          controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
+
+          // then:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.beanProp.stringProp",
+            base: beanBean,
+            value: "OTHER_TWO"
+          })
+          done()
+        })
+      })
+
+      test("changed bean property of polymer re-bound nested bean (from dolphin)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+
+        flush(() => {
+          // and:
+          sinon.stub(controller._beanManager, "notifyBeanChange").onCall(0).returns(stringBean)
+          controller.set("model.beanProp", otherStringBean)
 
           // when:
           onModelChangedSpy.reset()
@@ -489,12 +520,12 @@
         const controller = fixture("SimpleController")
         window.clientContext._controller.invoke = sinon.stub()
           .withArgs("simpleAction", { numberParam: 1 })
-          .returns(Promise.resolve("simpleActionResult1"))
+          .returns(Promise.resolve("simpleActionResult"))
 
         flush(() => {
           // expect:
           controller.invoke("simpleAction", { numberParam: 1 }).then(result => {
-            expect(result).to.eql("simpleActionResult1")
+            expect(result).to.eql("simpleActionResult")
             done()
           })
         })
