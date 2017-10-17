@@ -118,6 +118,9 @@
           // then:
           expect(controller.model).to.eql(stringBean)
           expect(controller.model.stringProp).to.eql("TWO")
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.stringProp", value: "TWO", base: stringBean
+          })
           done()
         })
       })
@@ -138,7 +141,7 @@
 
           // and:
           // https://github.com/domenic/sinon-chai#assertions
-          console.log("spy.args", pretty1(notifyBeanPropertyChangedSpy.args))
+          // console.log("spy.args", pretty1(notifyBeanPropertyChangedSpy.args))
           expect(notifyBeanPropertyChangedSpy).to.have.been.calledWith(
             stringBean, "stringProp", "TWO")
           done()
@@ -331,7 +334,7 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite("with client context", () => {
+    suite.skip("with client context", () => {
       setup(() => {
         window.clientContext = createClientContextMock()
       })
