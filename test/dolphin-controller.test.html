@@ -118,6 +118,8 @@
           // then:
           expect(controller.model).to.eql(stringBean)
           expect(controller.model.stringProp).to.eql("TWO")
+
+          // and:
           expect(onModelChangedSpy).to.have.been.calledWith({
             path: "model.stringProp", value: "TWO", base: stringBean
           })
@@ -139,8 +141,6 @@
           expect(controller.model.stringProp).to.eql("TWO")
 
           // and:
-          // https://github.com/domenic/sinon-chai#assertions
-          // console.log("spy.args", pretty1(notifyBeanPropertyChangedSpy.args))
           expect(notifyBeanPropertyChangedSpy).to.have.been.calledWith(
             stringBean, "stringProp", "TWO")
           done()
@@ -159,6 +159,8 @@
       setup(() => {
         // setup:
         arrayBean = { arrayProp: [1, 2, 3, 4] }
+
+        // and:
         window.clientContext = createClientContextMock()
         window.clientContext._controller.model = arrayBean
       })
@@ -188,7 +190,7 @@
           expect(controller.model).to.eql(arrayBean)
           expect(controller.model.arrayProp).to.eql([1, 10, 11, 2, 3, 4])
 
-          // console.log("spy.args", pretty1(onModelChangedSpy.getCall(1).args))
+          // and:
           expect(onModelChangedSpy).to.have.been.calledWith({
             path: "model.arrayProp.splices",
             value: {
@@ -219,6 +221,7 @@
           expect(controller.model).to.eql(arrayBean)
           expect(controller.model.arrayProp).to.eql([1, 4])
 
+          // and:
           expect(onModelChangedSpy).to.have.been.calledWith({
             path: "model.arrayProp.splices",
             value: {
@@ -249,6 +252,7 @@
           expect(controller.model).to.eql(arrayBean)
           expect(controller.model.arrayProp).to.eql([1, 10, 11, 4])
 
+          // and:
           expect(onModelChangedSpy).to.have.been.calledWith({
             path: "model.arrayProp.splices",
             value: {
@@ -279,6 +283,7 @@
           expect(controller.model).to.eql(arrayBean)
           expect(controller.model.arrayProp).to.eql([1, 10, 11, 2, 3, 4])
 
+          // and:
           expect(notifyBeanPropertySplicedSpy).to.have.been.calledWith(
             arrayBean, "arrayProp", 1, [], 2
           )
@@ -299,6 +304,7 @@
           expect(controller.model).to.eql(arrayBean)
           expect(controller.model.arrayProp).to.eql([1, 4])
 
+          // and:
           expect(notifyBeanPropertySplicedSpy).to.have.been.calledWith(
             arrayBean, "arrayProp", 1, [2, 3], 0
           )
@@ -319,9 +325,67 @@
           expect(controller.model).to.eql(arrayBean)
           expect(controller.model.arrayProp).to.eql([1, 10, 11, 4])
 
+          // and:
           expect(notifyBeanPropertySplicedSpy).to.have.been.calledWith(
             arrayBean, "arrayProp", 1, [2, 3], 2
           )
+          done()
+        })
+      })
+    })
+
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
+
+    suite.only("deep binding (of nested bean in bean)", () => {
+      // fixtures:
+      let stringBean
+      let otherStringBean
+      let beanBean
+
+      setup(() => {
+        // setup:
+        stringBean = { stringProp: "ONE" }
+        otherStringBean = { stringProp: "TWO" }
+        beanBean = { beanProp: stringBean }
+
+        // and:
+        window.clientContext = createClientContextMock()
+        window.clientContext._controller.model = beanBean
+      })
+
+      test("initial bean (from dolphin)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          // expect:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(stringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("ONE")
+          done()
+        })
+      })
+
+      test("changed bean property (from dolphin)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+          controller._onBeanPropertyChanged(beanBean, "beanProp", otherStringBean, stringBean)
+
+          // then:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(otherStringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("TWO")
+
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.beanProp", value: otherStringBean, base: beanBean
+          })
           done()
         })
       })
@@ -376,7 +440,7 @@
     suite.skip("bean registry", () => {
       let controller
       setup(() => {
-        // given:
+        // setup:
         controller = fixture("EmptyController")
       })
 
@@ -384,12 +448,15 @@
       const barBean = { stringProp: "bar" }
 
       test("initialize", () => {
+        // expect:
         expect(controller._beanRegistry).to.eql(new Map())
       })
 
       test("query property paths", () => {
+        // given:
         controller._registerPropertyPath(fooBean, "model.selectedUser")
 
+        // expect:
         expect(controller._queryPropertyPaths(fooBean)).to.eql(
           new Set(["model.selectedUser"]))
         expect(controller._queryPropertyPaths(barBean)).to.eql(
@@ -397,15 +464,18 @@
       })
 
       test("register property path", () => {
+        // given:
         controller._registerPropertyPath(fooBean, "model.selectedUser")
         controller._registerPropertyPath(barBean, "model.users.0")
         controller._registerPropertyPath(fooBean, "model.users.1")
 
+        // expect:
         expect(controller._queryPropertyPaths(fooBean))
           .to.eql(new Set(["model.selectedUser", "model.users.1"]))
         expect(controller._queryPropertyPaths(barBean))
           .to.eql(new Set(["model.users.0"]))
 
+        // and:
         expect(controller._beanRegistry)
           .to.eql(new Map([
             [fooBean, new Set(["model.selectedUser", "model.users.1"])],
@@ -414,18 +484,22 @@
       })
 
       test("unregister property path", () => {
+        // given:
         controller._registerPropertyPath(fooBean, "model.selectedUser")
         controller._registerPropertyPath(barBean, "model.users.0")
         controller._registerPropertyPath(fooBean, "model.users.1")
 
+        // and:
         controller._unregisterPropertyPath(fooBean, "model.selectedUser")
         controller._unregisterPropertyPath(fooBean, "model.users.1")
 
+        // expect:
         expect(controller._queryPropertyPaths(fooBean))
           .to.eql(new Set())
         expect(controller._queryPropertyPaths(barBean))
           .to.eql(new Set(["model.users.0"]))
 
+        // and:
         expect(controller._beanRegistry)
           .to.eql(new Map([
             [barBean, new Set(["model.users.0"])]
@@ -433,6 +507,7 @@
       })
 
       test("slice property path", () => {
+        // expect:
         expect(controller._slicePropertyPath("model.users.1.firstName", 0, 1))
           .to.equal("model")
         expect(controller._slicePropertyPath("model.users.1.firstName", 1))
@@ -444,6 +519,7 @@
         expect(controller._slicePropertyPath("model.users.1.firstName", 1, -1))
           .to.equal("users.1")
 
+        // and:
         expect(controller._slicePropertyPath("model.users.1.firstName", -2))
           .to.equal("1.firstName")
         expect(controller._slicePropertyPath("model.users.1.firstName", 0, -2))
@@ -459,20 +535,19 @@
       setup(() => {
         // setup:
         window.clientContext = createClientContextMock()
-        window.clientContext._model = {
+        window.clientContext._controller.model = {
           arrayBean: {
             arrayProp: [0, { id: 1 }, { id: 2 }, 3, 4, 5]
           }
         }
       })
 
-      test("binder update array", done => {
-        // TODO(hastebrot): isNil(bean) on _onModelChanged() makes problems.
-
+      test("bind bean array", done => {
         // given:
         const controller = fixture("SimpleController")
 
         flush(() => {
+          // expect:
           controller.splice("model.arrayBean.arrayProp", 2, 2, ...[10, 11, 12])
           controller.splice("model.arrayBean.arrayProp", 0, 10, ...[{ id: 13 }])
           // controller.set("model.arrayBean.arrayProp", [{ id: 14 }])
@@ -485,88 +560,24 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite.skip("with client context", () => {
+    suite.skip("with client context mock", () => {
       setup(() => {
+        // setup:
         window.clientContext = createClientContextMock()
       })
 
-      test("set the initial value", done => {
-        // given:
-        const bean = { stringProp: "VALUE_1" }
-        window.clientContext.createController = (name) => {
-          return Promise.resolve({ model: bean, destroy: () => { } })
-        }
-
+      test("creates controller", done => {
         // when:
         const controller = fixture("SimpleController")
 
-        // then:
         flush(() => {
-          expect(controller.model).to.equal(bean)
-          expect(controller.model.stringProp).to.equal("VALUE_1")
-          done()
-        })
-      })
-
-      test("synchronize changes coming from Dolphin", done => {
-        // given:
-        const bean = { stringProp: "VALUE_1" }
-        window.clientContext._model = bean
-
-        // when:
-        const controller = fixture("EmptyController")
-
-        // then:
-        flush(() => {
-          controller._onBeanPropertyChanged(bean, "stringProp", "VALUE_2", "VALUE_1")
-          // sinon.assert.calledWithExactly(element.beanChangeObserver, { path: 'model.theProperty', value: 'VALUE_2', base: bean });
-          done()
-        })
-      })
-
-      test("create controller", done => {
-        // given:
-        const controller = fixture("EmptyController")
-        controller.name = "EmptyController"
-
-        // when:
-        controller.create()
-
-        // then:
-        flush(() => {
-          expect(controller.status).to.equal("READY")
-          done()
-        })
-      })
-
-      test("destroy controller", done => {
-        // given:
-        const controller = fixture("EmptyController")
-        controller.name = "EmptyController"
-        controller.create()
-
-        // when:
-        flush(() => {
-          controller.destroy()
-
           // then:
-          expect(controller.status).to.equal("NOT-READY")
-          done()
-        })
-      })
-
-      test("auto create controller", done => {
-        // when:
-        const controller = fixture("SimpleController")
-
-        // then:
-        flush(() => {
           expect(controller.status).to.equal("READY")
           done()
         })
       })
 
-      test("auto destroy controller", done => {
+      test("destroys controller", done => {
         // given:
         const controller = fixture("SimpleController")
 
@@ -580,80 +591,35 @@
         })
       })
 
-      test("change controller model", done => {
+      test("with create controller", done => {
         // given:
         const controller = fixture("EmptyController")
+        controller.name = "EmptyController"
 
         // when:
-        controller.set("model", { fakeArray: {}, realArray: [] })
-        controller.set("model.fakeArray.splices", "_splices")
-        controller.set("model.fakeArray.length", "_length")
-        controller.splice("model.realArray", 0, 0, ...[1, 3, 3, 7])
-
-        setTimeout(() => {
-          done()
-        }, 20)
-
-        // controller.set("model", { beanProp: "foo" })
-        // controller.set("model.beanProp", "bar")
-        // controller.set("model.arrayProp", [])
-        // controller.set("model.arrayProp", [1, 2, 3, 4, 5])
-        // controller.splice("model.arrayProp", 1, 3, ...[8, 9])
-
-        // // https://www.polymer-project.org/2.0/docs/devguide/data-system#change-events
-        // // https://www.polymer-project.org/2.0/docs/devguide/observers#array-observation
-
-        // // then:
-        // flush(() => {
-        //   expect(controller.model).to.eql(
-        //     { arrayProp: [1, 8, 9, 5], beanProp: "bar" }
-        //   )
-        //   controller.set("model.beanProp", null)
-        //   controller.set("model.arrayProp", null)
-        //   done()
-        // })
-      })
-    })
-
-    //----------------------------------------------------------------------------------------------
-    // SUITE.
-    //----------------------------------------------------------------------------------------------
-
-    suite.skip("with client context mock", () => {
-      setup(done => {
-        window.clientContext = createClientContext()
-        window.clientContext.onConnect().then(done)
-      })
-
-      teardown(done => {
-        window.clientContext.disconnect().then(done)
-      })
-
-      test("change valueProperty", done => {
-        const controller = fixture("EmptyController")
-        controller.name = "FooController"
         controller.create()
 
-        setTimeout(() => {
-          console.log("--- root bean:", controller.model, controller._controller.model)
+        flush(() => {
+          // then:
+          expect(controller.status).to.equal("READY")
+          done()
+        })
+      })
 
-          // bean change.
-          controller.model.valueProperty = "lorem ipsum dolor"
-          const newValue1 = controller.model
-          const oldValue1 = controller._notifyBeanPropertyChanged(newValue1, "valueProperty", "lorem ipsum dolor")
-          console.log("--- bean change:", newValue1, oldValue1)
+      test("with destroy controller", done => {
+        // given:
+        const controller = fixture("EmptyController")
+        controller.name = "EmptyController"
+        controller.create()
 
-          setTimeout(() => {
-            // bean change.
-            controller.model.valueProperty = "lorem ipsum dolor 2"
-            const newValue2 = controller.model
-            const oldValue2 = controller._notifyBeanPropertyChanged(newValue2, "valueProperty", "lorem ipsum dolor 2")
-            console.log("--- bean change:", newValue2, oldValue2)
+        flush(() => {
+          // when:
+          controller.destroy()
 
-            controller.destroy()
-            done()
-          }, 20)
-        }, 20)
+          // then:
+          expect(controller.status).to.equal("NOT-READY")
+          done()
+        })
       })
     })
 

@@ -504,7 +504,7 @@ limitations under the License.
       function replacer(key, value) {
         if (value && value[Symbol.iterator] && !isArray(value)) {
           const array = Array.from(value)
-          if (!isArrayEqual(array, value)) {
+          if (array && !isArrayEqual(array, value)) {
             return array
           }
         }
