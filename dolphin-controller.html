@@ -260,8 +260,8 @@ limitations under the License.
         const propertyPaths = this._queryPropertyPaths(bean)
         if (propertyPaths.size > 0) {
           // HERE: is it ok to fire property changes only for the first element?
-          const beanPropertyPath = Array.from(propertyPaths)[0]
-          const propertyPath = this._buildPropertyPath(beanPropertyPath, propertyName)
+          const parentPropertyPath = Array.from(propertyPaths)[0]
+          const propertyPath = this._buildPropertyPath(parentPropertyPath, propertyName)
           this.set(propertyPath, newValue)
         }
         else {
@@ -286,8 +286,8 @@ limitations under the License.
         const propertyPaths = this._queryPropertyPaths(bean)
         if (propertyPaths.size > 0) {
           // HERE: is it ok to fire property changes only for the first element?
-          const beanPropertyPath = Array.from(propertyPaths)[0]
-          const propertyPath = this._buildPropertyPath(beanPropertyPath, propertyName)
+          const parentPropertyPath = Array.from(propertyPaths)[0]
+          const propertyPath = this._buildPropertyPath(parentPropertyPath, propertyName)
           this.splice(propertyPath, startIndex, removedCount, ...addedItems)
         }
         else {
@@ -351,7 +351,7 @@ limitations under the License.
 
         const hasSpliceRecords = (changeRecord) => {
           const { value, path, base } = changeRecord
-          return value && !isNil(value.indexSplices)
+          return value && !isNil(value.indexSplices) && path.endsWith(".splices")
         }
 
         const toSpliceRecord = (indexSplice) => {
