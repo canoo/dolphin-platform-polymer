@@ -240,8 +240,7 @@ limitations under the License.
       _onRootBeanChanged(bean) {
         this.set("model", bean)
         if (isObject(bean)) {
-          this._registerPropertyPath(bean, "model")
-          // this._bindBean(bean, "model")
+          this._bindBean(bean, "model")
         }
       }
 
@@ -324,7 +323,7 @@ limitations under the License.
             const oldValue = this._notifyBeanPropertyChanged(bean, propertyName, newValue)
 
             if (!isNil(oldValue)) {
-              this._bindBean(oldValue, propertyPath)
+              this._unbindBean(oldValue, propertyPath)
             }
 
             if (!isNil(newValue)) {

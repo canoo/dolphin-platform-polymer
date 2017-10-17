@@ -121,7 +121,9 @@
 
           // and:
           expect(onModelChangedSpy).to.have.been.calledWith({
-            path: "model.stringProp", value: "TWO", base: stringBean
+            path: "model.stringProp",
+            base: stringBean,
+            value: "TWO"
           })
           done()
         })
@@ -142,7 +144,8 @@
 
           // and:
           expect(notifyBeanPropertyChangedSpy).to.have.been.calledWith(
-            stringBean, "stringProp", "TWO")
+            stringBean, "stringProp", "TWO"
+          )
           done()
         })
       })
@@ -193,6 +196,7 @@
           // and:
           expect(onModelChangedSpy).to.have.been.calledWith({
             path: "model.arrayProp.splices",
+            base: arrayBean,
             value: {
               indexSplices: [{
                 index: 1,
@@ -201,8 +205,7 @@
                 object: [1, 10, 11, 2, 3, 4],
                 type: "splice"
               }]
-            },
-            base: arrayBean
+            }
           })
           done()
         })
@@ -224,6 +227,7 @@
           // and:
           expect(onModelChangedSpy).to.have.been.calledWith({
             path: "model.arrayProp.splices",
+            base: arrayBean,
             value: {
               indexSplices: [{
                 index: 1,
@@ -232,8 +236,7 @@
                 object: [1, 4],
                 type: "splice"
               }]
-            },
-            base: arrayBean
+            }
           })
           done()
         })
@@ -255,6 +258,7 @@
           // and:
           expect(onModelChangedSpy).to.have.been.calledWith({
             path: "model.arrayProp.splices",
+            base: arrayBean,
             value: {
               indexSplices: [{
                 index: 1,
@@ -263,8 +267,7 @@
                 object: [1, 10, 11, 4],
                 type: "splice"
               }]
-            },
-            base: arrayBean
+            }
           })
           done()
         })
@@ -340,14 +343,14 @@
 
     suite.only("deep binding (of nested bean in bean)", () => {
       // fixtures:
+      let beanBean
       let stringBean
       let otherStringBean
-      let beanBean
 
       setup(() => {
         // setup:
         stringBean = { stringProp: "ONE" }
-        otherStringBean = { stringProp: "TWO" }
+        otherStringBean = { stringProp: "OTHER_ONE" }
         beanBean = { beanProp: stringBean }
 
         // and:
@@ -358,17 +361,25 @@
       test("initial bean (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
+        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // expect:
           expect(controller.model).to.eql(beanBean)
           expect(controller.model.beanProp).to.eql(stringBean)
           expect(controller.model.beanProp.stringProp).to.eql("ONE")
+
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model",
+            base: beanBean,
+            value: beanBean
+          })
           done()
         })
       })
 
-      test("changed bean property (from dolphin)", done => {
+      test("changed bean property of bean (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
 
@@ -380,11 +391,68 @@
           // then:
           expect(controller.model).to.eql(beanBean)
           expect(controller.model.beanProp).to.eql(otherStringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("OTHER_ONE")
+
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.beanProp",
+            base: beanBean,
+            value: otherStringBean
+          })
+          done()
+        })
+      })
+
+      test("changed bean property of nested bean (from dolphin)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(stringBean)
           expect(controller.model.beanProp.stringProp).to.eql("TWO")
 
           // and:
           expect(onModelChangedSpy).to.have.been.calledWith({
-            path: "model.beanProp", value: otherStringBean, base: beanBean
+            path: "model.beanProp.stringProp",
+            base: beanBean,
+            value: "TWO"
+          })
+          done()
+        })
+      })
+
+      test("changed bean property of re-bound nested bean (from dolphin)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+
+        flush(() => {
+          // and:
+          sinon.stub(controller._beanManager, "notifyBeanChange").returns(stringBean)
+          controller._onBeanPropertyChanged(beanBean, "beanProp", otherStringBean, stringBean)
+
+          // when:
+          onModelChangedSpy.reset()
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(onModelChangedSpy).to.have.callCount(0)
+
+          // when:
+          onModelChangedSpy.reset()
+          controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
+
+          // then:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.beanProp.stringProp",
+            base: beanBean,
+            value: "OTHER_TWO"
           })
           done()
         })
