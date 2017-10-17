@@ -50,8 +50,19 @@
   }
 
   function createClientContextMock() {
+    let onDestroyedCallback
     const clientContext = {
-      _model: null,
+      _controller: {
+        model: null,
+        destroy: () => {
+          if (onDestroyedCallback) {
+            onDestroyedCallback()
+          }
+        },
+        onDestroyed: (callback) => {
+          onDestroyedCallback = callback
+        }
+      },
       beanManager: {
         onBeanUpdate: () => null,
         onArrayUpdate: () => null,
@@ -59,18 +70,7 @@
         notifyArrayChange: () => null,
       },
       createController: (name) => {
-        let onDestroyedCallback
-        return Promise.resolve({
-          model: clientContext._model,
-          destroy: () => {
-            if (onDestroyedCallback) {
-              onDestroyedCallback()
-            }
-          },
-          onDestroyed: (callback) => {
-            onDestroyedCallback = callback
-          }
-        })
+        return Promise.resolve(clientContext._controller)
       }
     }
     return clientContext
@@ -90,7 +90,7 @@
         // setup:
         stringBean = { stringProp: "ONE" }
         window.clientContext = createClientContextMock()
-        window.clientContext._model = stringBean
+        window.clientContext._controller.model = stringBean
       })
 
       test("initial bean (from dolphin)", done => {
@@ -109,10 +109,10 @@
       test("changed bean property (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
           controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
 
           // then:
@@ -128,11 +128,10 @@
       test("changed bean property (from polymer)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const notifyBeanPropertyChangedSpy = sinon.spy(
-          controller, "_notifyBeanPropertyChanged")
 
         flush(() => {
           // when:
+          const notifyBeanPropertyChangedSpy = sinon.spy(controller, "_notifyBeanPropertyChanged")
           controller.set("model.stringProp", "TWO")
 
           // then:
@@ -153,7 +152,7 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite.only("simple binding (of array)", () => {
+    suite("simple binding (of array)", () => {
       // fixtures:
       let arrayBean
 
@@ -161,7 +160,7 @@
         // setup:
         arrayBean = { arrayProp: [1, 2, 3, 4] }
         window.clientContext = createClientContextMock()
-        window.clientContext._model = arrayBean
+        window.clientContext._controller.model = arrayBean
       })
 
       test("initial bean (from dolphin)", done => {
@@ -179,10 +178,10 @@
       test("spliced bean property with added items (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
           controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [10, 11])
 
           // then:
@@ -210,10 +209,10 @@
       test("spliced bean property with removed items (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
           controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 2, [])
 
           // then:
@@ -240,10 +239,10 @@
       test("spliced bean property with replaced items (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
           controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 2, [10, 11])
 
           // then:
@@ -270,11 +269,10 @@
       test("spliced bean property with added items (from polymer)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const notifyBeanPropertySplicedSpy = sinon.spy(
-          controller, "_notifyBeanPropertySpliced")
 
         flush(() => {
           // when:
+          const notifyBeanPropertySplicedSpy = sinon.spy(controller, "_notifyBeanPropertySpliced")
           controller.splice("model.arrayProp", 1, 0, ...[10, 11])
 
           // then:
@@ -291,11 +289,10 @@
       test("spliced bean property with removed items (from polymer)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const notifyBeanPropertySplicedSpy = sinon.spy(
-          controller, "_notifyBeanPropertySpliced")
 
         flush(() => {
           // when:
+          const notifyBeanPropertySplicedSpy = sinon.spy(controller, "_notifyBeanPropertySpliced")
           controller.splice("model.arrayProp", 1, 2, ...[])
 
           // then:
@@ -312,11 +309,10 @@
       test("spliced bean property with replaced items (from polymer)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const notifyBeanPropertySplicedSpy = sinon.spy(
-          controller, "_notifyBeanPropertySpliced")
 
         flush(() => {
           // when:
+          const notifyBeanPropertySplicedSpy = sinon.spy(controller, "_notifyBeanPropertySpliced")
           controller.splice("model.arrayProp", 1, 2, ...[10, 11])
 
           // then:
@@ -327,6 +323,48 @@
             arrayBean, "arrayProp", 1, [2, 3], 2
           )
           done()
+        })
+      })
+    })
+
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
+
+    suite("dolphin action (simple invoke)", () => {
+      setup(() => {
+        // setup:
+        window.clientContext = createClientContextMock()
+      })
+
+      test("invoke action without parameters", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        window.clientContext._controller.invoke = sinon.stub()
+          .returns(Promise.resolve("simpleActionResult"))
+
+        flush(() => {
+          // expect:
+          controller.invoke("simpleAction").then(result => {
+            expect(result).to.eql("simpleActionResult")
+            done()
+          })
+        })
+      })
+
+      test("invoke action with named parameters", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        window.clientContext._controller.invoke = sinon.stub()
+          .withArgs("simpleAction", { numberParam: 1 })
+          .returns(Promise.resolve("simpleActionResult1"))
+
+        flush(() => {
+          // expect:
+          controller.invoke("simpleAction", { numberParam: 1 }).then(result => {
+            expect(result).to.eql("simpleActionResult1")
+            done()
+          })
         })
       })
     })

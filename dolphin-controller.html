@@ -156,7 +156,7 @@ limitations under the License.
        * @param {any[]} params Array of params for the action
        */
       invoke(name, params) {
-        this._controller.invoke(name, params)
+        return this._controller.invoke(name, params)
       }
 
       /**
