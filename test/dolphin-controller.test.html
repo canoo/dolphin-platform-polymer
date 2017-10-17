@@ -82,7 +82,7 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite.only("simple binding (of bean)", () => {
+    suite("simple binding (of bean)", () => {
       // fixtures:
       let stringBean
 
@@ -159,7 +159,7 @@
 
       setup(() => {
         // setup:
-        arrayBean = { arrayProp: [1, 2, 3] }
+        arrayBean = { arrayProp: [1, 2, 3, 4] }
         window.clientContext = createClientContextMock()
         window.clientContext._model = arrayBean
       })
@@ -171,12 +171,12 @@
         flush(() => {
           // expect:
           expect(controller.model).to.eql(arrayBean)
-          expect(controller.model.arrayProp).to.eql([1, 2, 3])
+          expect(controller.model.arrayProp).to.eql([1, 2, 3, 4])
           done()
         })
       })
 
-      test("spliced bean property (from dolphin)", done => {
+      test("spliced bean property with added items (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
         const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
@@ -186,33 +186,146 @@
           controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [10, 11])
 
           // then:
-          // expect(onModelChangedSpy).to.have.been.calledWith({
-          //   path: "model.arrayProp.slices",
-          //   value: { arrayProp: [1, 90, 91, 2, 3] },
-          //   base: { arrayProp: [1, 90, 91, 2, 3] }
-          // })
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 10, 11, 2, 3, 4])
 
-          expect(controller.model).to.eql({ arrayProp: [1, 10, 11, 2, 3] })
+          // console.log("spy.args", pretty1(onModelChangedSpy.getCall(1).args))
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.arrayProp.splices",
+            value: {
+              indexSplices: [{
+                index: 1,
+                addedCount: 2,
+                removed: [],
+                object: [1, 10, 11, 2, 3, 4],
+                type: "splice"
+              }]
+            },
+            base: arrayBean
+          })
           done()
         })
       })
 
-      test("spliced bean property (from polymer)", done => {
+      test("spliced bean property with removed items (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
         const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
-          controller.splice("model.arrayProp", 1, 0, ...[10, 11])
-          // controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [10, 11])
+          controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 2, [])
 
           // then:
-          // expect(onModelChangedSpy).to.have.been.calledWith({
-          //   path: "model.arrayProp.slices"
-          // })
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 4])
 
-          expect(controller.model).to.eql({ arrayProp: [1, 10, 11, 2, 3] })
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.arrayProp.splices",
+            value: {
+              indexSplices: [{
+                index: 1,
+                addedCount: 0,
+                removed: [2, 3],
+                object: [1, 4],
+                type: "splice"
+              }]
+            },
+            base: arrayBean
+          })
+          done()
+        })
+      })
+
+      test("spliced bean property with replaced items (from dolphin)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+
+        flush(() => {
+          // when:
+          controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 2, [10, 11])
+
+          // then:
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 10, 11, 4])
+
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.arrayProp.splices",
+            value: {
+              indexSplices: [{
+                index: 1,
+                addedCount: 2,
+                removed: [2, 3],
+                object: [1, 10, 11, 4],
+                type: "splice"
+              }]
+            },
+            base: arrayBean
+          })
+          done()
+        })
+      })
+
+      test("spliced bean property with added items (from polymer)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertySplicedSpy = sinon.spy(
+          controller, "_notifyBeanPropertySpliced")
+
+        flush(() => {
+          // when:
+          controller.splice("model.arrayProp", 1, 0, ...[10, 11])
+
+          // then:
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 10, 11, 2, 3, 4])
+
+          expect(notifyBeanPropertySplicedSpy).to.have.been.calledWith(
+            arrayBean, "arrayProp", 1, [], 2
+          )
+          done()
+        })
+      })
+
+      test("spliced bean property with removed items (from polymer)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertySplicedSpy = sinon.spy(
+          controller, "_notifyBeanPropertySpliced")
+
+        flush(() => {
+          // when:
+          controller.splice("model.arrayProp", 1, 2, ...[])
+
+          // then:
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 4])
+
+          expect(notifyBeanPropertySplicedSpy).to.have.been.calledWith(
+            arrayBean, "arrayProp", 1, [2, 3], 0
+          )
+          done()
+        })
+      })
+
+      test("spliced bean property with replaced items (from polymer)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertySplicedSpy = sinon.spy(
+          controller, "_notifyBeanPropertySpliced")
+
+        flush(() => {
+          // when:
+          controller.splice("model.arrayProp", 1, 2, ...[10, 11])
+
+          // then:
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 10, 11, 4])
+
+          expect(notifyBeanPropertySplicedSpy).to.have.been.calledWith(
+            arrayBean, "arrayProp", 1, [2, 3], 2
+          )
           done()
         })
       })

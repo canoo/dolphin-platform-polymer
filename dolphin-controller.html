@@ -304,6 +304,9 @@ limitations under the License.
         if (this.status !== STATUS_READY) { return }
         // console.log(pretty1(changeRecord))
 
+        /**
+         * Handles a bean property change.
+         */
         const handleBeanPropertyChanged = (rootProperty, propertyPath, newValue) => {
           const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
           const propertyName = this._slicePropertyPath(propertyPath, -1)
@@ -333,6 +336,9 @@ limitations under the License.
           // console.log("registered paths:", pretty1(this._beanRegistry.values()))
         }
 
+        /**
+         * Handles a bean property splice.
+         */
         const handleBeanPropertySpliced = (rootProperty, propertyPath, spliceRecords) => {
           const parentPropertyPath = this._slicePropertyPath(propertyPath, 0, -1)
           const propertyName = this._slicePropertyPath(propertyPath, -1)
