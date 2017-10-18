@@ -2,9 +2,9 @@
 <!-- IMPORTS.
 <!-- ------------------------------------------------------------------------------------------ -->
 
-<script src="../bower_components/webcomponentsjs/webcomponents-loader.js"></script>
-<script src="../bower_components/web-component-tester/browser.js"></script>
-<script src="../bower_components/dolphin-platform-js/dist/dolphin-platform.js"></script>
+<script src="../../webcomponentsjs/webcomponents-loader.js"></script>
+<script src="../../web-component-tester/browser.js"></script>
+<script src="../../dolphin-platform-js/dist/dolphin-platform.js"></script>
 <link rel="import" href="../dolphin-controller.html">
 
 <!-- ------------------------------------------------------------------------------------------ -->
@@ -50,8 +50,19 @@
   }
 
   function createClientContextMock() {
+    let onDestroyedCallback
     const clientContext = {
-      _model: null,
+      _controller: {
+        model: null,
+        destroy: () => {
+          if (onDestroyedCallback) {
+            onDestroyedCallback()
+          }
+        },
+        onDestroyed: (callback) => {
+          onDestroyedCallback = callback
+        }
+      },
       beanManager: {
         onBeanUpdate: () => null,
         onArrayUpdate: () => null,
@@ -59,18 +70,7 @@
         notifyArrayChange: () => null,
       },
       createController: (name) => {
-        let onDestroyedCallback
-        return Promise.resolve({
-          model: clientContext._model,
-          destroy: () => {
-            if (onDestroyedCallback) {
-              onDestroyedCallback()
-            }
-          },
-          onDestroyed: (callback) => {
-            onDestroyedCallback = callback
-          }
-        })
+        return Promise.resolve(clientContext._controller)
       }
     }
     return clientContext
@@ -82,7 +82,7 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite.only("simple binding (of bean)", () => {
+    suite("simple binding (of bean)", () => {
       // fixtures:
       let stringBean
 
@@ -90,7 +90,7 @@
         // setup:
         stringBean = { stringProp: "ONE" }
         window.clientContext = createClientContextMock()
-        window.clientContext._model = stringBean
+        window.clientContext._controller.model = stringBean
       })
 
       test("initial bean (from dolphin)", done => {
@@ -109,15 +109,22 @@
       test("changed bean property (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
           controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
 
           // then:
           expect(controller.model).to.eql(stringBean)
           expect(controller.model.stringProp).to.eql("TWO")
+
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.stringProp",
+            base: stringBean,
+            value: "TWO"
+          })
           done()
         })
       })
@@ -125,11 +132,10 @@
       test("changed bean property (from polymer)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const notifyBeanPropertyChangedSpy = sinon.spy(
-          controller, "_notifyBeanPropertyChanged")
 
         flush(() => {
           // when:
+          const notifyBeanPropertyChangedSpy = sinon.spy(controller, "_notifyBeanPropertyChanged")
           controller.set("model.stringProp", "TWO")
 
           // then:
@@ -137,10 +143,9 @@
           expect(controller.model.stringProp).to.eql("TWO")
 
           // and:
-          // https://github.com/domenic/sinon-chai#assertions
-          // console.log("spy.args", pretty1(notifyBeanPropertyChangedSpy.args))
           expect(notifyBeanPropertyChangedSpy).to.have.been.calledWith(
-            stringBean, "stringProp", "TWO")
+            stringBean, "stringProp", "TWO"
+          )
           done()
         })
       })
@@ -150,15 +155,17 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite.only("simple binding (of array)", () => {
+    suite("simple binding (of array)", () => {
       // fixtures:
       let arrayBean
 
       setup(() => {
         // setup:
-        arrayBean = { arrayProp: [1, 2, 3] }
+        arrayBean = { arrayProp: [1, 2, 3, 4] }
+
+        // and:
         window.clientContext = createClientContextMock()
-        window.clientContext._model = arrayBean
+        window.clientContext._controller.model = arrayBean
       })
 
       test("initial bean (from dolphin)", done => {
@@ -168,48 +175,163 @@
         flush(() => {
           // expect:
           expect(controller.model).to.eql(arrayBean)
-          expect(controller.model.arrayProp).to.eql([1, 2, 3])
+          expect(controller.model.arrayProp).to.eql([1, 2, 3, 4])
           done()
         })
       })
 
-      test("spliced bean property (from dolphin)", done => {
+      test("spliced bean property with added items (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
           controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [10, 11])
 
           // then:
-          // expect(onModelChangedSpy).to.have.been.calledWith({
-          //   path: "model.arrayProp.slices",
-          //   value: { arrayProp: [1, 90, 91, 2, 3] },
-          //   base: { arrayProp: [1, 90, 91, 2, 3] }
-          // })
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 10, 11, 2, 3, 4])
 
-          expect(controller.model).to.eql({ arrayProp: [1, 10, 11, 2, 3] })
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.arrayProp.splices",
+            base: arrayBean,
+            value: {
+              indexSplices: [{
+                index: 1,
+                addedCount: 2,
+                removed: [],
+                object: [1, 10, 11, 2, 3, 4],
+                type: "splice"
+              }]
+            }
+          })
           done()
         })
       })
 
-      test("spliced bean property (from polymer)", done => {
+      test("spliced bean property with removed items (from dolphin)", done => {
         // given:
         const controller = fixture("SimpleController")
-        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
 
         flush(() => {
           // when:
-          controller.splice("model.arrayProp", 1, 0, ...[10, 11])
-          // controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 0, [10, 11])
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+          controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 2, [])
 
           // then:
-          // expect(onModelChangedSpy).to.have.been.calledWith({
-          //   path: "model.arrayProp.slices"
-          // })
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 4])
 
-          expect(controller.model).to.eql({ arrayProp: [1, 10, 11, 2, 3] })
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.arrayProp.splices",
+            base: arrayBean,
+            value: {
+              indexSplices: [{
+                index: 1,
+                addedCount: 0,
+                removed: [2, 3],
+                object: [1, 4],
+                type: "splice"
+              }]
+            }
+          })
+          done()
+        })
+      })
+
+      test("spliced bean property with replaced items (from dolphin)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+          controller._onBeanPropertySpliced(arrayBean, "arrayProp", 1, 2, [10, 11])
+
+          // then:
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 10, 11, 4])
+
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.arrayProp.splices",
+            base: arrayBean,
+            value: {
+              indexSplices: [{
+                index: 1,
+                addedCount: 2,
+                removed: [2, 3],
+                object: [1, 10, 11, 4],
+                type: "splice"
+              }]
+            }
+          })
+          done()
+        })
+      })
+
+      test("spliced bean property with added items (from polymer)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          // when:
+          const notifyBeanPropertySplicedSpy = sinon.spy(controller, "_notifyBeanPropertySpliced")
+          controller.splice("model.arrayProp", 1, 0, ...[10, 11])
+
+          // then:
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 10, 11, 2, 3, 4])
+
+          // and:
+          expect(notifyBeanPropertySplicedSpy).to.have.been.calledWith(
+            arrayBean, "arrayProp", 1, [], 2
+          )
+          done()
+        })
+      })
+
+      test("spliced bean property with removed items (from polymer)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          // when:
+          const notifyBeanPropertySplicedSpy = sinon.spy(controller, "_notifyBeanPropertySpliced")
+          controller.splice("model.arrayProp", 1, 2, ...[])
+
+          // then:
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 4])
+
+          // and:
+          expect(notifyBeanPropertySplicedSpy).to.have.been.calledWith(
+            arrayBean, "arrayProp", 1, [2, 3], 0
+          )
+          done()
+        })
+      })
+
+      test("spliced bean property with replaced items (from polymer)", done => {
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          // when:
+          const notifyBeanPropertySplicedSpy = sinon.spy(controller, "_notifyBeanPropertySpliced")
+          controller.splice("model.arrayProp", 1, 2, ...[10, 11])
+
+          // then:
+          expect(controller.model).to.eql(arrayBean)
+          expect(controller.model.arrayProp).to.eql([1, 10, 11, 4])
+
+          // and:
+          expect(notifyBeanPropertySplicedSpy).to.have.been.calledWith(
+            arrayBean, "arrayProp", 1, [2, 3], 2
+          )
           done()
         })
       })
@@ -219,10 +341,316 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite.skip("bean registry", () => {
+    suite("deep binding (of nested bean in bean)", () => {
+      // fixtures:
+      let beanBean
+      let stringBean
+      let otherStringBean
+
+      setup(() => {
+        // setup:
+        stringBean = { stringProp: "ONE" }
+        otherStringBean = { stringProp: "OTHER_ONE" }
+        beanBean = { beanProp: stringBean }
+
+        // and:
+        window.clientContext = createClientContextMock()
+        window.clientContext._controller.model = beanBean
+      })
+
+      test("from dolphin: changed root bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+
+        flush(() => {
+          // expect:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(stringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("ONE")
+
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model",
+            base: beanBean,
+            value: beanBean
+          })
+          done()
+        })
+      })
+
+      test("from dolphin: changed bean property of bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+          controller._onBeanPropertyChanged(beanBean, "beanProp", otherStringBean, stringBean)
+
+          // then:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(otherStringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("OTHER_ONE")
+
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.beanProp",
+            base: beanBean,
+            value: otherStringBean
+          })
+          done()
+        })
+      })
+
+      test("from dolphin: changed bean property of nested bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+
+        flush(() => {
+          // when:
+          const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(stringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("TWO")
+
+          // and:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.beanProp.stringProp",
+            base: beanBean,
+            value: "TWO"
+          })
+          done()
+        })
+      })
+
+      test("from dolphin: changed bean property of dolphin re-bound nested bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // and:
+          notifyBeanPropertyChangedStub.returns(stringBean)
+          controller._onBeanPropertyChanged(beanBean, "beanProp", otherStringBean, stringBean)
+
+          // when:
+          onModelChangedSpy.reset()
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(onModelChangedSpy).to.have.callCount(0)
+
+          // when:
+          onModelChangedSpy.reset()
+          notifyBeanPropertyChangedStub.returns("OTHER_ONE")
+          controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
+
+          // then:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.beanProp.stringProp",
+            base: beanBean,
+            value: "OTHER_TWO"
+          })
+          done()
+        })
+      })
+
+      test("from dolphin: changed bean property of polymer re-bound nested bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // and:
+          notifyBeanPropertyChangedStub.returns(stringBean)
+          controller.set("model.beanProp", otherStringBean)
+
+          // when:
+          onModelChangedSpy.reset()
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(onModelChangedSpy).to.have.callCount(0)
+
+          // when:
+          onModelChangedSpy.reset()
+          notifyBeanPropertyChangedStub.returns("OTHER_ONE")
+          controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
+
+          // then:
+          expect(onModelChangedSpy).to.have.been.calledWith({
+            path: "model.beanProp.stringProp",
+            base: beanBean,
+            value: "OTHER_TWO"
+          })
+          done()
+        })
+      })
+
+      // HERE:
+      test("from polymer: changed bean property of bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // when:
+          notifyBeanPropertyChangedStub.returns(stringBean)
+          controller.set("model.beanProp", otherStringBean)
+
+          // then:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(otherStringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("OTHER_ONE")
+
+          // and:
+          expect(notifyBeanPropertyChangedStub).to.have.been.calledWith(
+            beanBean, "beanProp", otherStringBean
+          )
+          done()
+        })
+      })
+
+      test("from polymer: changed bean property of nested bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // when:
+          notifyBeanPropertyChangedStub.returns("ONE")
+          controller.set("model.beanProp.stringProp", "TWO")
+
+          // then:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(stringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("TWO")
+
+          // and:
+          expect(notifyBeanPropertyChangedStub).to.have.been.calledWith(
+            stringBean, "stringProp", "TWO"
+          )
+          done()
+        })
+      })
+
+      test("from polymer: changed bean property of dolphin re-bound nested bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // and:
+          notifyBeanPropertyChangedStub.returns(stringBean)
+          controller._onBeanPropertyChanged(beanBean, "beanProp", otherStringBean, stringBean)
+
+          // when:
+          notifyBeanPropertyChangedStub.reset()
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(notifyBeanPropertyChangedStub).to.have.callCount(0)
+
+          // when:
+          notifyBeanPropertyChangedStub.reset()
+          notifyBeanPropertyChangedStub.returns("OTHER_ONE")
+          controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
+
+          // then:
+          expect(notifyBeanPropertyChangedStub).to.have.been.calledWith(
+            otherStringBean, "stringProp", "OTHER_TWO"
+          )
+          done()
+        })
+      })
+
+      test("from polymer: changed bean property of polymer re-bound nested bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // and:
+          notifyBeanPropertyChangedStub.returns(stringBean)
+          controller.set("model.beanProp", otherStringBean)
+
+          // when:
+          notifyBeanPropertyChangedStub.reset()
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(notifyBeanPropertyChangedStub).to.have.callCount(0)
+
+          // when:
+          notifyBeanPropertyChangedStub.reset()
+          notifyBeanPropertyChangedStub.returns("OTHER_ONE")
+          controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
+
+          // then:
+          expect(notifyBeanPropertyChangedStub).to.have.been.calledWith(
+            otherStringBean, "stringProp", "OTHER_TWO"
+          )
+          done()
+        })
+      })
+    })
+
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
+
+    suite("dolphin action (simple invoke)", () => {
+      setup(() => {
+        // setup:
+        window.clientContext = createClientContextMock()
+      })
+
+      test("invoke action without parameters", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        window.clientContext._controller.invoke = sinon.stub()
+          .returns(Promise.resolve("simpleActionResult"))
+
+        flush(() => {
+          // expect:
+          controller.invoke("simpleAction").then(result => {
+            expect(result).to.eql("simpleActionResult")
+            done()
+          })
+        })
+      })
+
+      test("invoke action with named parameters", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        window.clientContext._controller.invoke = sinon.stub()
+          .withArgs("simpleAction", { numberParam: 1 })
+          .returns(Promise.resolve("simpleActionResult"))
+
+        flush(() => {
+          // expect:
+          controller.invoke("simpleAction", { numberParam: 1 }).then(result => {
+            expect(result).to.eql("simpleActionResult")
+            done()
+          })
+        })
+      })
+    })
+
+    //----------------------------------------------------------------------------------------------
+    // SUITE.
+    //----------------------------------------------------------------------------------------------
+
+    suite("bean registry", () => {
       let controller
       setup(() => {
-        // given:
+        // setup:
         controller = fixture("EmptyController")
       })
 
@@ -230,12 +658,15 @@
       const barBean = { stringProp: "bar" }
 
       test("initialize", () => {
+        // expect:
         expect(controller._beanRegistry).to.eql(new Map())
       })
 
       test("query property paths", () => {
+        // given:
         controller._registerPropertyPath(fooBean, "model.selectedUser")
 
+        // expect:
         expect(controller._queryPropertyPaths(fooBean)).to.eql(
           new Set(["model.selectedUser"]))
         expect(controller._queryPropertyPaths(barBean)).to.eql(
@@ -243,15 +674,18 @@
       })
 
       test("register property path", () => {
+        // given:
         controller._registerPropertyPath(fooBean, "model.selectedUser")
         controller._registerPropertyPath(barBean, "model.users.0")
         controller._registerPropertyPath(fooBean, "model.users.1")
 
+        // expect:
         expect(controller._queryPropertyPaths(fooBean))
           .to.eql(new Set(["model.selectedUser", "model.users.1"]))
         expect(controller._queryPropertyPaths(barBean))
           .to.eql(new Set(["model.users.0"]))
 
+        // and:
         expect(controller._beanRegistry)
           .to.eql(new Map([
             [fooBean, new Set(["model.selectedUser", "model.users.1"])],
@@ -260,18 +694,22 @@
       })
 
       test("unregister property path", () => {
+        // given:
         controller._registerPropertyPath(fooBean, "model.selectedUser")
         controller._registerPropertyPath(barBean, "model.users.0")
         controller._registerPropertyPath(fooBean, "model.users.1")
 
+        // and:
         controller._unregisterPropertyPath(fooBean, "model.selectedUser")
         controller._unregisterPropertyPath(fooBean, "model.users.1")
 
+        // expect:
         expect(controller._queryPropertyPaths(fooBean))
           .to.eql(new Set())
         expect(controller._queryPropertyPaths(barBean))
           .to.eql(new Set(["model.users.0"]))
 
+        // and:
         expect(controller._beanRegistry)
           .to.eql(new Map([
             [barBean, new Set(["model.users.0"])]
@@ -279,6 +717,7 @@
       })
 
       test("slice property path", () => {
+        // expect:
         expect(controller._slicePropertyPath("model.users.1.firstName", 0, 1))
           .to.equal("model")
         expect(controller._slicePropertyPath("model.users.1.firstName", 1))
@@ -290,6 +729,7 @@
         expect(controller._slicePropertyPath("model.users.1.firstName", 1, -1))
           .to.equal("users.1")
 
+        // and:
         expect(controller._slicePropertyPath("model.users.1.firstName", -2))
           .to.equal("1.firstName")
         expect(controller._slicePropertyPath("model.users.1.firstName", 0, -2))
@@ -305,20 +745,19 @@
       setup(() => {
         // setup:
         window.clientContext = createClientContextMock()
-        window.clientContext._model = {
+        window.clientContext._controller.model = {
           arrayBean: {
             arrayProp: [0, { id: 1 }, { id: 2 }, 3, 4, 5]
           }
         }
       })
 
-      test("binder update array", done => {
-        // TODO(hastebrot): isNil(bean) on _onModelChanged() makes problems.
-
+      test("bind bean array", done => {
         // given:
         const controller = fixture("SimpleController")
 
         flush(() => {
+          // expect:
           controller.splice("model.arrayBean.arrayProp", 2, 2, ...[10, 11, 12])
           controller.splice("model.arrayBean.arrayProp", 0, 10, ...[{ id: 13 }])
           // controller.set("model.arrayBean.arrayProp", [{ id: 14 }])
@@ -331,88 +770,24 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite("with client context", () => {
+    suite.skip("with client context mock", () => {
       setup(() => {
+        // setup:
         window.clientContext = createClientContextMock()
       })
 
-      test("set the initial value", done => {
-        // given:
-        const bean = { stringProp: "VALUE_1" }
-        window.clientContext.createController = (name) => {
-          return Promise.resolve({ model: bean, destroy: () => { } })
-        }
-
+      test("creates controller", done => {
         // when:
         const controller = fixture("SimpleController")
 
-        // then:
         flush(() => {
-          expect(controller.model).to.equal(bean)
-          expect(controller.model.stringProp).to.equal("VALUE_1")
-          done()
-        })
-      })
-
-      test("synchronize changes coming from Dolphin", done => {
-        // given:
-        const bean = { stringProp: "VALUE_1" }
-        window.clientContext._model = bean
-
-        // when:
-        const controller = fixture("EmptyController")
-
-        // then:
-        flush(() => {
-          controller._onBeanPropertyChanged(bean, "stringProp", "VALUE_2", "VALUE_1")
-          // sinon.assert.calledWithExactly(element.beanChangeObserver, { path: 'model.theProperty', value: 'VALUE_2', base: bean });
-          done()
-        })
-      })
-
-      test("create controller", done => {
-        // given:
-        const controller = fixture("EmptyController")
-        controller.name = "EmptyController"
-
-        // when:
-        controller.create()
-
-        // then:
-        flush(() => {
-          expect(controller.status).to.equal("READY")
-          done()
-        })
-      })
-
-      test("destroy controller", done => {
-        // given:
-        const controller = fixture("EmptyController")
-        controller.name = "EmptyController"
-        controller.create()
-
-        // when:
-        flush(() => {
-          controller.destroy()
-
           // then:
-          expect(controller.status).to.equal("NOT-READY")
-          done()
-        })
-      })
-
-      test("auto create controller", done => {
-        // when:
-        const controller = fixture("SimpleController")
-
-        // then:
-        flush(() => {
           expect(controller.status).to.equal("READY")
           done()
         })
       })
 
-      test("auto destroy controller", done => {
+      test("destroys controller", done => {
         // given:
         const controller = fixture("SimpleController")
 
@@ -426,80 +801,35 @@
         })
       })
 
-      test("change controller model", done => {
+      test("with create controller", done => {
         // given:
         const controller = fixture("EmptyController")
+        controller.name = "EmptyController"
 
         // when:
-        controller.set("model", { fakeArray: {}, realArray: [] })
-        controller.set("model.fakeArray.splices", "_splices")
-        controller.set("model.fakeArray.length", "_length")
-        controller.splice("model.realArray", 0, 0, ...[1, 3, 3, 7])
-
-        setTimeout(() => {
-          done()
-        }, 20)
-
-        // controller.set("model", { beanProp: "foo" })
-        // controller.set("model.beanProp", "bar")
-        // controller.set("model.arrayProp", [])
-        // controller.set("model.arrayProp", [1, 2, 3, 4, 5])
-        // controller.splice("model.arrayProp", 1, 3, ...[8, 9])
-
-        // // https://www.polymer-project.org/2.0/docs/devguide/data-system#change-events
-        // // https://www.polymer-project.org/2.0/docs/devguide/observers#array-observation
-
-        // // then:
-        // flush(() => {
-        //   expect(controller.model).to.eql(
-        //     { arrayProp: [1, 8, 9, 5], beanProp: "bar" }
-        //   )
-        //   controller.set("model.beanProp", null)
-        //   controller.set("model.arrayProp", null)
-        //   done()
-        // })
-      })
-    })
-
-    //----------------------------------------------------------------------------------------------
-    // SUITE.
-    //----------------------------------------------------------------------------------------------
-
-    suite.skip("with client context mock", () => {
-      setup(done => {
-        window.clientContext = createClientContext()
-        window.clientContext.onConnect().then(done)
-      })
-
-      teardown(done => {
-        window.clientContext.disconnect().then(done)
-      })
-
-      test("change valueProperty", done => {
-        const controller = fixture("EmptyController")
-        controller.name = "FooController"
         controller.create()
 
-        setTimeout(() => {
-          console.log("--- root bean:", controller.model, controller._controller.model)
+        flush(() => {
+          // then:
+          expect(controller.status).to.equal("READY")
+          done()
+        })
+      })
 
-          // bean change.
-          controller.model.valueProperty = "lorem ipsum dolor"
-          const newValue1 = controller.model
-          const oldValue1 = controller._notifyBeanPropertyChanged(newValue1, "valueProperty", "lorem ipsum dolor")
-          console.log("--- bean change:", newValue1, oldValue1)
+      test("with destroy controller", done => {
+        // given:
+        const controller = fixture("EmptyController")
+        controller.name = "EmptyController"
+        controller.create()
 
-          setTimeout(() => {
-            // bean change.
-            controller.model.valueProperty = "lorem ipsum dolor 2"
-            const newValue2 = controller.model
-            const oldValue2 = controller._notifyBeanPropertyChanged(newValue2, "valueProperty", "lorem ipsum dolor 2")
-            console.log("--- bean change:", newValue2, oldValue2)
+        flush(() => {
+          // when:
+          controller.destroy()
 
-            controller.destroy()
-            done()
-          }, 20)
-        }, 20)
+          // then:
+          expect(controller.status).to.equal("NOT-READY")
+          done()
+        })
       })
     })
 
