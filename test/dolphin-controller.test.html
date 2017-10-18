@@ -341,7 +341,7 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite.only("deep binding (of nested bean in bean)", () => {
+    suite("deep binding (of nested bean in bean)", () => {
       // fixtures:
       let beanBean
       let stringBean
@@ -358,7 +358,7 @@
         window.clientContext._controller.model = beanBean
       })
 
-      test("initial bean (from dolphin)", done => {
+      test("from dolphin: changed root bean", done => {
         // given:
         const controller = fixture("SimpleController")
         const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
@@ -379,7 +379,7 @@
         })
       })
 
-      test("changed bean property of bean (from dolphin)", done => {
+      test("from dolphin: changed bean property of bean", done => {
         // given:
         const controller = fixture("SimpleController")
 
@@ -403,7 +403,7 @@
         })
       })
 
-      test("changed bean property of nested bean (from dolphin)", done => {
+      test("from dolphin: changed bean property of nested bean", done => {
         // given:
         const controller = fixture("SimpleController")
 
@@ -427,14 +427,15 @@
         })
       })
 
-      test("changed bean property of dolphin re-bound nested bean (from dolphin)", done => {
+      test("from dolphin: changed bean property of dolphin re-bound nested bean", done => {
         // given:
         const controller = fixture("SimpleController")
         const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
 
         flush(() => {
           // and:
-          sinon.stub(controller._beanManager, "notifyBeanChange").onCall(0).returns(stringBean)
+          notifyBeanPropertyChangedStub.returns(stringBean)
           controller._onBeanPropertyChanged(beanBean, "beanProp", otherStringBean, stringBean)
 
           // when:
@@ -446,6 +447,7 @@
 
           // when:
           onModelChangedSpy.reset()
+          notifyBeanPropertyChangedStub.returns("OTHER_ONE")
           controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
 
           // then:
@@ -458,14 +460,15 @@
         })
       })
 
-      test("changed bean property of polymer re-bound nested bean (from dolphin)", done => {
+      test("from dolphin: changed bean property of polymer re-bound nested bean", done => {
         // given:
         const controller = fixture("SimpleController")
         const onModelChangedSpy = sinon.spy(controller, "_onModelChanged")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
 
         flush(() => {
           // and:
-          sinon.stub(controller._beanManager, "notifyBeanChange").onCall(0).returns(stringBean)
+          notifyBeanPropertyChangedStub.returns(stringBean)
           controller.set("model.beanProp", otherStringBean)
 
           // when:
@@ -477,6 +480,7 @@
 
           // when:
           onModelChangedSpy.reset()
+          notifyBeanPropertyChangedStub.returns("OTHER_ONE")
           controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
 
           // then:
@@ -485,6 +489,113 @@
             base: beanBean,
             value: "OTHER_TWO"
           })
+          done()
+        })
+      })
+
+      // HERE:
+      test("from polymer: changed bean property of bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // when:
+          notifyBeanPropertyChangedStub.returns(stringBean)
+          controller.set("model.beanProp", otherStringBean)
+
+          // then:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(otherStringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("OTHER_ONE")
+
+          // and:
+          expect(notifyBeanPropertyChangedStub).to.have.been.calledWith(
+            beanBean, "beanProp", otherStringBean
+          )
+          done()
+        })
+      })
+
+      test("from polymer: changed bean property of nested bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // when:
+          notifyBeanPropertyChangedStub.returns("ONE")
+          controller.set("model.beanProp.stringProp", "TWO")
+
+          // then:
+          expect(controller.model).to.eql(beanBean)
+          expect(controller.model.beanProp).to.eql(stringBean)
+          expect(controller.model.beanProp.stringProp).to.eql("TWO")
+
+          // and:
+          expect(notifyBeanPropertyChangedStub).to.have.been.calledWith(
+            stringBean, "stringProp", "TWO"
+          )
+          done()
+        })
+      })
+
+      test("from polymer: changed bean property of dolphin re-bound nested bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // and:
+          notifyBeanPropertyChangedStub.returns(stringBean)
+          controller._onBeanPropertyChanged(beanBean, "beanProp", otherStringBean, stringBean)
+
+          // when:
+          notifyBeanPropertyChangedStub.reset()
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(notifyBeanPropertyChangedStub).to.have.callCount(0)
+
+          // when:
+          notifyBeanPropertyChangedStub.reset()
+          notifyBeanPropertyChangedStub.returns("OTHER_ONE")
+          controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
+
+          // then:
+          expect(notifyBeanPropertyChangedStub).to.have.been.calledWith(
+            otherStringBean, "stringProp", "OTHER_TWO"
+          )
+          done()
+        })
+      })
+
+      test("from polymer: changed bean property of polymer re-bound nested bean", done => {
+        // given:
+        const controller = fixture("SimpleController")
+        const notifyBeanPropertyChangedStub = sinon.stub(controller, "_notifyBeanPropertyChanged")
+
+        flush(() => {
+          // and:
+          notifyBeanPropertyChangedStub.returns(stringBean)
+          controller.set("model.beanProp", otherStringBean)
+
+          // when:
+          notifyBeanPropertyChangedStub.reset()
+          controller._onBeanPropertyChanged(stringBean, "stringProp", "TWO", "ONE")
+
+          // then:
+          expect(notifyBeanPropertyChangedStub).to.have.callCount(0)
+
+          // when:
+          notifyBeanPropertyChangedStub.reset()
+          notifyBeanPropertyChangedStub.returns("OTHER_ONE")
+          controller._onBeanPropertyChanged(otherStringBean, "stringProp", "OTHER_TWO", "OTHER_ONE")
+
+          // then:
+          expect(notifyBeanPropertyChangedStub).to.have.been.calledWith(
+            otherStringBean, "stringProp", "OTHER_TWO"
+          )
           done()
         })
       })
@@ -536,7 +647,7 @@
     // SUITE.
     //----------------------------------------------------------------------------------------------
 
-    suite.skip("bean registry", () => {
+    suite("bean registry", () => {
       let controller
       setup(() => {
         // setup:
