@@ -21,16 +21,19 @@
   ],
   "ignore": [
     "**/.*",
+    "declarations",
+    "demo",
     "test",
-    "package.json"
+    "package.json",
+    "package-lock.json"
   ],
   "dependencies": {
-    "core.js": "2.5.1",
     "dolphin-platform-js": "0.18.0",
-    "lodash": "4.17.4",
     "polymer": "2.1.1"
   },
   "devDependencies": {
+    "core.js": "2.5.1",
+    "lodash": "4.17.4",
     "iron-component-page": "3.0.1",
     "web-component-tester": "6.3.0",
     "webcomponentsjs": "webcomponents/webcomponentsjs#1.0.14",
