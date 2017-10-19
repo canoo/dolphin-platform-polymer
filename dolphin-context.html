@@ -1,0 +1,108 @@
+<!--
+@license
+Copyright 2017 Canoo Engineering AG.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<script src="../dolphin-platform-js/dist/dolphin-platform.js"></script>
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../paper-toast/paper-toast.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-styles/paper-styles.html">
+
+<dom-module id="dolphin-context">
+
+  <template>
+    <style>
+      .yellow-button {
+        text-transform: none;
+        color: #eeff41;
+      }
+    </style>
+
+    <paper-toast id="successToast" duration="3000" class="fit-bottom" text="[[lastSuccess]]">
+    </paper-toast>
+
+    <paper-toast id="errorToast" duration="0" class="fit-bottom" text="[[lastError]]">
+      <paper-button class="yellow-button" onclick="errorToast.toggle()">
+        Reconnect
+      </paper-button>
+    </paper-toast>
+  </template>
+
+  <script>
+
+    /**
+     * @customElement
+     * @polymer
+     */
+    class DolphinContext extends Polymer.Element {
+      static get is() {
+        return "dolphin-context"
+      }
+
+      static get properties() {
+        return {
+          endpointUrl: String,
+          lastSuccess: String,
+          lastError: String
+        }
+      }
+
+      connectedCallback() {
+        super.connectedCallback()
+        const clientContext = this._connectDolphinClient()
+      }
+
+      _connectDolphinClient(url = "http://localhost:8080/dolphin") {
+        const factory = new dolphin.ClientContextFactory()
+        const clientContext = factory.create(url, {
+          errorHandler: error => {
+            this.notifyFail("(dolphin create error): " + error)
+          }
+        })
+        clientContext.onConnect()
+          .then(() => {
+            this._notifyOk("(dolphin connect): " + clientContext.isConnected)
+            clientContext.once("error", error => {
+              this._notifyFail("(dolphin polling error): " + error.message)
+              clientContext.off("error")
+              clientContext.disconnect().then(() => {
+                this._notifyOk("(dolphin disconnect): " + clientContext.isConnected)
+              })
+            })
+          })
+          .catch(error => {
+            this._notifyFail("(dolphin connect error): " + error)
+          })
+        return clientContext
+      }
+
+      _notifyOk(message) {
+        console.log("ok", message)
+        this.lastSuccess = message
+        this.$.successToast.opened = true
+      }
+
+      _notifyFail(message) {
+        console.log("fail", message)
+        this.lastError = message
+        this.$.errorToast.opened = true
+      }
+    }
+
+    window.customElements.define(DolphinContext.is, DolphinContext)
+  </script>
+
+</dom-module>
