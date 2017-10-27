@@ -1,0 +1,42 @@
+{
+  "entrypoint": "index.html",
+  "sources": [
+    "dolphin-controller.html",
+    "index.html"
+  ],
+  "extraDependencies": [
+    "analysis.json",
+    "LICENSE"
+  ],
+  "builds": [
+    {
+      "preset": "es5-bundled",
+      "addServiceWorker": false,
+      "addPushManifest": false,
+      "bundle": {
+        "stripComments": true
+      },
+      "css": {
+        "minify": false
+      },
+      "html": {
+        "minify": false
+      },
+      "js": {
+        "compile": true,
+        "minify": false
+      }
+    },
+    {
+      "preset": "es6-bundled",
+      "addServiceWorker": false,
+      "addPushManifest": false
+    }
+  ],
+  "lint": {
+    "rules": [
+      "polymer-2"
+    ],
+    "ignoreWarnings": []
+  }
+}
