@@ -28,21 +28,21 @@
     "package-lock.json"
   ],
   "dependencies": {
+    "core.js": "2.5.1",
     "dolphin-platform-js": "0.18.0",
-    "polymer": "2.1.1"
+    "polymer": "2.2.0"
   },
   "devDependencies": {
-    "core.js": "2.5.1",
     "lodash": "4.17.4",
     "iron-component-page": "3.0.1",
     "web-component-tester": "6.3.0",
-    "webcomponentsjs": "webcomponents/webcomponentsjs#1.0.14",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#1.0.17",
     "mocha": "3.5.3",
     "chai": "4.1.2",
     "sinon": "4.0.1"
   },
   "resolutions": {
-    "polymer": "2.1.1",
+    "polymer": "2.2.0",
     "lodash": "4.17.4",
     "chai": "4.1.2"
   }

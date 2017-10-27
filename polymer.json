@@ -12,7 +12,20 @@
     {
       "preset": "es5-bundled",
       "addServiceWorker": false,
-      "addPushManifest": false
+      "addPushManifest": false,
+      "bundle": {
+        "stripComments": true
+      },
+      "css": {
+        "minify": false
+      },
+      "html": {
+        "minify": false
+      },
+      "js": {
+        "compile": true,
+        "minify": false
+      }
     },
     {
       "preset": "es6-bundled",
