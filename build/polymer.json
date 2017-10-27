@@ -1,0 +1,61 @@
+{
+  "entrypoint": "index.html",
+  "fragments": [],
+  "sources": [
+    "dolphin-controller.html",
+    "index.html",
+    "index.html"
+  ],
+  "extraDependencies": [
+    "bower_components/webcomponentsjs/*.js",
+    "analysis.json",
+    "LICENSE"
+  ],
+  "builds": [
+    {
+      "name": "es5-bundled",
+      "js": {
+        "minify": false,
+        "compile": true
+      },
+      "css": {
+        "minify": false
+      },
+      "html": {
+        "minify": false
+      },
+      "bundle": {
+        "stripComments": true
+      },
+      "addServiceWorker": false,
+      "addPushManifest": false,
+      "preset": "es5-bundled"
+    },
+    {
+      "name": "es6-bundled",
+      "browserCapabilities": [
+        "es2015"
+      ],
+      "js": {
+        "minify": true,
+        "compile": false
+      },
+      "css": {
+        "minify": true
+      },
+      "html": {
+        "minify": true
+      },
+      "bundle": true,
+      "addServiceWorker": false,
+      "addPushManifest": false,
+      "preset": "es6-bundled"
+    }
+  ],
+  "lint": {
+    "rules": [
+      "polymer-2"
+    ],
+    "ignoreWarnings": []
+  }
+}
