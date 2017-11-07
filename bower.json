@@ -1,6 +1,6 @@
 {
   "name": "dolphin-platform-polymer",
-  "version": "0.19.0",
+  "version": "1.0.0-CR.1",
   "description": "The Dolphin Platform framework implements the presentation model pattern and provides a modern way to create enterprise applications.",
   "keywords": [
     "Dolphin Platform"
@@ -29,7 +29,7 @@
   ],
   "dependencies": {
     "core.js": "2.5.1",
-    "dolphin-platform-js": "0.19.0",
+    "dolphin-platform-js": "1.0.0-CR.1",
     "polymer": "2.2.0"
   },
   "devDependencies": {

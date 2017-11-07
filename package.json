@@ -1,6 +1,6 @@
 {
   "name": "dolphin-platform-polymer",
-  "version": "0.19.0",
+  "version": "1.0.0-CR.1",
   "description": "Polymer Client of the Dolphin Platform",
   "author": "Michael Heinrichs <michael.heinrichs@canoo.com>",
   "repository": {

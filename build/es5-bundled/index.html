@@ -28226,6 +28226,7 @@ var Prism = function () {
 
 	var _ = _self.Prism = {
 		manual: _self.Prism && _self.Prism.manual,
+		disableWorkerMessageHandler: _self.Prism && _self.Prism.disableWorkerMessageHandler,
 		util: {
 			encode: function encode(tokens) {
 				if (tokens instanceof Token) {
@@ -28393,11 +28394,13 @@ var Prism = function () {
 			// Set language on the element, if not present
 			element.className = element.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
 
-			// Set language on the parent, for styling
-			parent = element.parentNode;
+			if (element.parentNode) {
+				// Set language on the parent, for styling
+				parent = element.parentNode;
 
-			if (/pre/i.test(parent.nodeName)) {
-				parent.className = parent.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
+				if (/pre/i.test(parent.nodeName)) {
+					parent.className = parent.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
+				}
 			}
 
 			var code = element.textContent;
@@ -28665,10 +28668,6 @@ var Prism = function () {
 			parent: parent
 		};
 
-		if (env.type == 'comment') {
-			env.attributes['spellcheck'] = 'true';
-		}
-
 		if (o.alias) {
 			var aliases = _.util.type(o.alias) === 'Array' ? o.alias : [o.alias];
 			Array.prototype.push.apply(env.classes, aliases);
@@ -28688,18 +28687,21 @@ var Prism = function () {
 			// in Node.js
 			return _self.Prism;
 		}
-		// In worker
-		_self.addEventListener('message', function (evt) {
-			var message = JSON.parse(evt.data),
-			    lang = message.language,
-			    code = message.code,
-			    immediateClose = message.immediateClose;
 
-			_self.postMessage(_.highlight(code, _.languages[lang], lang));
-			if (immediateClose) {
-				_self.close();
-			}
-		}, false);
+		if (!_.disableWorkerMessageHandler) {
+			// In worker
+			_self.addEventListener('message', function (evt) {
+				var message = JSON.parse(evt.data),
+				    lang = message.language,
+				    code = message.code,
+				    immediateClose = message.immediateClose;
+
+				_self.postMessage(_.highlight(code, _.languages[lang], lang));
+				if (immediateClose) {
+					_self.close();
+				}
+			}, false);
+		}
 
 		return _self.Prism;
 	}
@@ -28745,7 +28747,7 @@ Prism.languages.markup = {
 	'doctype': /<!DOCTYPE[\s\S]+?>/i,
 	'cdata': /<!\[CDATA\[[\s\S]*?]]>/i,
 	'tag': {
-		pattern: /<\/?(?!\d)[^\s>\/=$<]+(?:\s+[^\s>\/=]+(?:=(?:("|')(?:\\\1|\\?(?!\1)[\s\S])*\1|[^\s'">=]+))?)*\s*\/?>/i,
+		pattern: /<\/?(?!\d)[^\s>\/=$<]+(?:\s+[^\s>\/=]+(?:=(?:("|')(?:\\[\s\S]|(?!\1)[^\\])*\1|[^\s'">=]+))?)*\s*\/?>/i,
 		inside: {
 			'tag': {
 				pattern: /^<\/?[^\s>\/]+/i,
@@ -28755,9 +28757,12 @@ Prism.languages.markup = {
 				}
 			},
 			'attr-value': {
-				pattern: /=(?:('|")[\s\S]*?(\1)|[^\s>]+)/i,
+				pattern: /=(?:("|')(?:\\[\s\S]|(?!\1)[^\\])*\1|[^\s'">=]+)/i,
 				inside: {
-					'punctuation': /[=>"']/
+					'punctuation': [/^=/, {
+						pattern: /(^|[^\\])["']/,
+						lookbehind: true
+					}]
 				}
 			},
 			'punctuation': /\/?>/,
@@ -28795,19 +28800,19 @@ Prism.languages.svg = Prism.languages.markup;
 Prism.languages.css = {
 	'comment': /\/\*[\s\S]*?\*\//,
 	'atrule': {
-		pattern: /@[\w-]+?.*?(;|(?=\s*\{))/i,
+		pattern: /@[\w-]+?.*?(?:;|(?=\s*\{))/i,
 		inside: {
 			'rule': /@[\w-]+/
 			// See rest below
 		}
 	},
-	'url': /url\((?:(["'])(\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1|.*?)\)/i,
-	'selector': /[^\{\}\s][^\{\};]*?(?=\s*\{)/,
+	'url': /url\((?:(["'])(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1|.*?)\)/i,
+	'selector': /[^{}\s][^{};]*?(?=\s*\{)/,
 	'string': {
-		pattern: /("|')(\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
+		pattern: /("|')(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
 		greedy: true
 	},
-	'property': /(\b|\B)[\w-]+(?=\s*:)/i,
+	'property': /[\w-]+(?=\s*:)/i,
 	'important': /\B!important\b/i,
 	'function': /[-a-z0-9]+(?=\()/i,
 	'punctuation': /[(){};:]/
@@ -28827,7 +28832,7 @@ if (Prism.languages.markup) {
 
 	Prism.languages.insertBefore('inside', 'attr-value', {
 		'style-attr': {
-			pattern: /\s*style=("|').*?\1/i,
+			pattern: /\s*style=("|')(?:\\[\s\S]|(?!\1)[^\\])*\1/i,
 			inside: {
 				'attr-name': {
 					pattern: /^\s*style/i,
@@ -28857,18 +28862,18 @@ Prism.languages.clike = {
 		lookbehind: true
 	}],
 	'string': {
-		pattern: /(["'])(\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
+		pattern: /(["'])(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
 		greedy: true
 	},
 	'class-name': {
-		pattern: /((?:\b(?:class|interface|extends|implements|trait|instanceof|new)\s+)|(?:catch\s+\())[a-z0-9_\.\\]+/i,
+		pattern: /((?:\b(?:class|interface|extends|implements|trait|instanceof|new)\s+)|(?:catch\s+\())[\w.\\]+/i,
 		lookbehind: true,
 		inside: {
-			punctuation: /(\.|\\)/
+			punctuation: /[.\\]/
 		}
 	},
-	'keyword': /\b(if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
-	'boolean': /\b(true|false)\b/,
+	'keyword': /\b(?:if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
+	'boolean': /\b(?:true|false)\b/,
 	'function': /[a-z0-9_]+(?=\()/i,
 	'number': /\b-?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)\b/i,
 	'operator': /--?|\+\+?|!=?=?|<=?|>=?|==?=?|&&?|\|\|?|\?|\*|\/|~|\^|%/,
@@ -28880,8 +28885,8 @@ Prism.languages.clike = {
 ********************************************** */
 
 Prism.languages.javascript = Prism.languages.extend('clike', {
-	'keyword': /\b(as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)\b/,
-	'number': /\b-?(0[xX][\dA-Fa-f]+|0[bB][01]+|0[oO][0-7]+|\d*\.?\d+([Ee][+-]?\d+)?|NaN|Infinity)\b/,
+	'keyword': /\b(?:as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)\b/,
+	'number': /\b-?(?:0[xX][\dA-Fa-f]+|0[bB][01]+|0[oO][0-7]+|\d*\.?\d+(?:[Ee][+-]?\d+)?|NaN|Infinity)\b/,
 	// Allow for all non-ASCII characters (See http://stackoverflow.com/a/2008444)
 	'function': /[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*(?=\s*\()/i,
 	'operator': /-[-=]?|\+[+=]?|!=?=?|<<?=?|>>?>?=?|=(?:==?|>)?|&[&=]?|\|[|=]?|\*\*?=?|\/=?|~|\^=?|%=?|\?|\.{3}/
@@ -28902,7 +28907,7 @@ Prism.languages.insertBefore('javascript', 'keyword', {
 
 Prism.languages.insertBefore('javascript', 'string', {
 	'template-string': {
-		pattern: /`(?:\\\\|\\?[^\\])*?`/,
+		pattern: /`(?:\\[\s\S]|[^\\`])*`/,
 		greedy: true,
 		inside: {
 			'interpolation': {
@@ -34544,6 +34549,366 @@ Polymer.IronOverlayManagerClass.prototype = {
 Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><script>
 (function () {
   'use strict';
+  /**
+   * Used to calculate the scroll direction during touch events.
+   * @type {!Object}
+   */
+
+  var lastTouchPosition = {
+    pageX: 0,
+    pageY: 0
+  };
+  /**
+   * Used to avoid computing event.path and filter scrollable nodes (better perf).
+   * @type {?EventTarget}
+   */
+  var lastRootTarget = null;
+  /**
+   * @type {!Array<Node>}
+   */
+  var lastScrollableNodes = [];
+  /**
+   * @type {!Array<string>}
+   */
+  var scrollEvents = [
+  // Modern `wheel` event for mouse wheel scrolling:
+  'wheel',
+  // Older, non-standard `mousewheel` event for some FF:
+  'mousewheel',
+  // IE:
+  'DOMMouseScroll',
+  // Touch enabled devices
+  'touchstart', 'touchmove'];
+
+  /**
+   * The IronScrollManager is intended to provide a central source
+   * of authority and control over which elements in a document are currently
+   * allowed to scroll.
+   */
+
+  Polymer.IronScrollManager = {
+
+    /**
+     * The current element that defines the DOM boundaries of the
+     * scroll lock. This is always the most recently locking element.
+     */
+    get currentLockingElement() {
+      return this._lockingElements[this._lockingElements.length - 1];
+    },
+
+    /**
+     * Returns true if the provided element is "scroll locked", which is to
+     * say that it cannot be scrolled via pointer or keyboard interactions.
+     *
+     * @param {HTMLElement} element An HTML element instance which may or may
+     * not be scroll locked.
+     */
+    elementIsScrollLocked: function elementIsScrollLocked(element) {
+      var currentLockingElement = this.currentLockingElement;
+
+      if (currentLockingElement === undefined) return false;
+
+      var scrollLocked;
+
+      if (this._hasCachedLockedElement(element)) {
+        return true;
+      }
+
+      if (this._hasCachedUnlockedElement(element)) {
+        return false;
+      }
+
+      scrollLocked = !!currentLockingElement && currentLockingElement !== element && !this._composedTreeContains(currentLockingElement, element);
+
+      if (scrollLocked) {
+        this._lockedElementCache.push(element);
+      } else {
+        this._unlockedElementCache.push(element);
+      }
+
+      return scrollLocked;
+    },
+
+    /**
+     * Push an element onto the current scroll lock stack. The most recently
+     * pushed element and its children will be considered scrollable. All
+     * other elements will not be scrollable.
+     *
+     * Scroll locking is implemented as a stack so that cases such as
+     * dropdowns within dropdowns are handled well.
+     *
+     * @param {HTMLElement} element The element that should lock scroll.
+     */
+    pushScrollLock: function pushScrollLock(element) {
+      // Prevent pushing the same element twice
+      if (this._lockingElements.indexOf(element) >= 0) {
+        return;
+      }
+
+      if (this._lockingElements.length === 0) {
+        this._lockScrollInteractions();
+      }
+
+      this._lockingElements.push(element);
+
+      this._lockedElementCache = [];
+      this._unlockedElementCache = [];
+    },
+
+    /**
+     * Remove an element from the scroll lock stack. The element being
+     * removed does not need to be the most recently pushed element. However,
+     * the scroll lock constraints only change when the most recently pushed
+     * element is removed.
+     *
+     * @param {HTMLElement} element The element to remove from the scroll
+     * lock stack.
+     */
+    removeScrollLock: function removeScrollLock(element) {
+      var index = this._lockingElements.indexOf(element);
+
+      if (index === -1) {
+        return;
+      }
+
+      this._lockingElements.splice(index, 1);
+
+      this._lockedElementCache = [];
+      this._unlockedElementCache = [];
+
+      if (this._lockingElements.length === 0) {
+        this._unlockScrollInteractions();
+      }
+    },
+
+    _lockingElements: [],
+
+    _lockedElementCache: null,
+
+    _unlockedElementCache: null,
+
+    _hasCachedLockedElement: function _hasCachedLockedElement(element) {
+      return this._lockedElementCache.indexOf(element) > -1;
+    },
+
+    _hasCachedUnlockedElement: function _hasCachedUnlockedElement(element) {
+      return this._unlockedElementCache.indexOf(element) > -1;
+    },
+
+    _composedTreeContains: function _composedTreeContains(element, child) {
+      // NOTE(cdata): This method iterates over content elements and their
+      // corresponding distributed nodes to implement a contains-like method
+      // that pierces through the composed tree of the ShadowDOM. Results of
+      // this operation are cached (elsewhere) on a per-scroll-lock basis, to
+      // guard against potentially expensive lookups happening repeatedly as
+      // a user scrolls / touchmoves.
+      var contentElements;
+      var distributedNodes;
+      var contentIndex;
+      var nodeIndex;
+
+      if (element.contains(child)) {
+        return true;
+      }
+
+      contentElements = Polymer.dom(element).querySelectorAll('content,slot');
+
+      for (contentIndex = 0; contentIndex < contentElements.length; ++contentIndex) {
+
+        distributedNodes = Polymer.dom(contentElements[contentIndex]).getDistributedNodes();
+
+        for (nodeIndex = 0; nodeIndex < distributedNodes.length; ++nodeIndex) {
+          // Polymer 2.x returns slot.assignedNodes which can contain text nodes.
+          if (distributedNodes[nodeIndex].nodeType !== Node.ELEMENT_NODE) continue;
+
+          if (this._composedTreeContains(distributedNodes[nodeIndex], child)) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    },
+
+    _scrollInteractionHandler: function _scrollInteractionHandler(event) {
+      // Avoid canceling an event with cancelable=false, e.g. scrolling is in
+      // progress and cannot be interrupted.
+      if (event.cancelable && this._shouldPreventScrolling(event)) {
+        event.preventDefault();
+      }
+      // If event has targetTouches (touch event), update last touch position.
+      if (event.targetTouches) {
+        var touch = event.targetTouches[0];
+        lastTouchPosition.pageX = touch.pageX;
+        lastTouchPosition.pageY = touch.pageY;
+      }
+    },
+
+    _lockScrollInteractions: function _lockScrollInteractions() {
+      this._boundScrollHandler = this._boundScrollHandler || this._scrollInteractionHandler.bind(this);
+      for (var i = 0, l = scrollEvents.length; i < l; i++) {
+        // NOTE: browsers that don't support objects as third arg will
+        // interpret it as boolean, hence useCapture = true in this case. 
+        document.addEventListener(scrollEvents[i], this._boundScrollHandler, {
+          capture: true,
+          passive: false
+        });
+      }
+    },
+
+    _unlockScrollInteractions: function _unlockScrollInteractions() {
+      for (var i = 0, l = scrollEvents.length; i < l; i++) {
+        // NOTE: browsers that don't support objects as third arg will
+        // interpret it as boolean, hence useCapture = true in this case.
+        document.removeEventListener(scrollEvents[i], this._boundScrollHandler, {
+          capture: true,
+          passive: false
+        });
+      }
+    },
+
+    /**
+     * Returns true if the event causes scroll outside the current locking
+     * element, e.g. pointer/keyboard interactions, or scroll "leaking"
+     * outside the locking element when it is already at its scroll boundaries.
+     * @param {!Event} event
+     * @return {boolean}
+     * @private
+     */
+    _shouldPreventScrolling: function _shouldPreventScrolling(event) {
+
+      // Update if root target changed. For touch events, ensure we don't
+      // update during touchmove.
+      var target = Polymer.dom(event).rootTarget;
+      if (event.type !== 'touchmove' && lastRootTarget !== target) {
+        lastRootTarget = target;
+        lastScrollableNodes = this._getScrollableNodes(Polymer.dom(event).path);
+      }
+
+      // Prevent event if no scrollable nodes.
+      if (!lastScrollableNodes.length) {
+        return true;
+      }
+      // Don't prevent touchstart event inside the locking element when it has
+      // scrollable nodes.
+      if (event.type === 'touchstart') {
+        return false;
+      }
+      // Get deltaX/Y.
+      var info = this._getScrollInfo(event);
+      // Prevent if there is no child that can scroll.
+      return !this._getScrollingNode(lastScrollableNodes, info.deltaX, info.deltaY);
+    },
+
+    /**
+     * Returns an array of scrollable nodes up to the current locking element,
+     * which is included too if scrollable.
+     * @param {!Array<Node>} nodes
+     * @return {Array<Node>} scrollables
+     * @private
+     */
+    _getScrollableNodes: function _getScrollableNodes(nodes) {
+      var scrollables = [];
+      var lockingIndex = nodes.indexOf(this.currentLockingElement);
+      // Loop from root target to locking element (included).
+      for (var i = 0; i <= lockingIndex; i++) {
+        // Skip non-Element nodes.
+        if (nodes[i].nodeType !== Node.ELEMENT_NODE) {
+          continue;
+        }
+        var node = /** @type {!Element} */nodes[i];
+        // Check inline style before checking computed style.
+        var style = node.style;
+        if (style.overflow !== 'scroll' && style.overflow !== 'auto') {
+          style = window.getComputedStyle(node);
+        }
+        if (style.overflow === 'scroll' || style.overflow === 'auto') {
+          scrollables.push(node);
+        }
+      }
+      return scrollables;
+    },
+
+    /**
+     * Returns the node that is scrolling. If there is no scrolling,
+     * returns undefined.
+     * @param {!Array<Node>} nodes
+     * @param {number} deltaX Scroll delta on the x-axis
+     * @param {number} deltaY Scroll delta on the y-axis
+     * @return {Node|undefined}
+     * @private
+     */
+    _getScrollingNode: function _getScrollingNode(nodes, deltaX, deltaY) {
+      // No scroll.
+      if (!deltaX && !deltaY) {
+        return;
+      }
+      // Check only one axis according to where there is more scroll.
+      // Prefer vertical to horizontal.
+      var verticalScroll = Math.abs(deltaY) >= Math.abs(deltaX);
+      for (var i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        var canScroll = false;
+        if (verticalScroll) {
+          // delta < 0 is scroll up, delta > 0 is scroll down.
+          canScroll = deltaY < 0 ? node.scrollTop > 0 : node.scrollTop < node.scrollHeight - node.clientHeight;
+        } else {
+          // delta < 0 is scroll left, delta > 0 is scroll right.
+          canScroll = deltaX < 0 ? node.scrollLeft > 0 : node.scrollLeft < node.scrollWidth - node.clientWidth;
+        }
+        if (canScroll) {
+          return node;
+        }
+      }
+    },
+
+    /**
+     * Returns scroll `deltaX` and `deltaY`.
+     * @param {!Event} event The scroll event
+     * @return {{deltaX: number, deltaY: number}} Object containing the
+     * x-axis scroll delta (positive: scroll right, negative: scroll left,
+     * 0: no scroll), and the y-axis scroll delta (positive: scroll down,
+     * negative: scroll up, 0: no scroll).
+     * @private
+     */
+    _getScrollInfo: function _getScrollInfo(event) {
+      var info = {
+        deltaX: event.deltaX,
+        deltaY: event.deltaY
+      };
+      // Already available.
+      if ('deltaX' in event) {}
+      // do nothing, values are already good.
+
+      // Safari has scroll info in `wheelDeltaX/Y`.
+      else if ('wheelDeltaX' in event && 'wheelDeltaY' in event) {
+          info.deltaX = -event.wheelDeltaX;
+          info.deltaY = -event.wheelDeltaY;
+        }
+        // IE10 has only vertical scroll info in `wheelDelta`.
+        else if ('wheelDelta' in event) {
+            info.deltaX = 0;
+            info.deltaY = -event.wheelDelta;
+          }
+          // Firefox has scroll info in `detail` and `axis`.
+          else if ('axis' in event) {
+              info.deltaX = event.axis === 1 ? event.detail : 0;
+              info.deltaY = event.axis === 2 ? event.detail : 0;
+            }
+            // On mobile devices, calculate scroll direction.
+            else if (event.targetTouches) {
+                var touch = event.targetTouches[0];
+                // Touch moves from right to left => scrolling goes right.
+                info.deltaX = lastTouchPosition.pageX - touch.pageX;
+                // Touch moves from down to up => scrolling goes down.
+                info.deltaY = lastTouchPosition.pageY - touch.pageY;
+              }
+      return info;
+    }
+  };
+})();</script><script>
+(function () {
+  'use strict';
 
   var p = Element.prototype;
   var matches = p.matches || p.matchesSelector || p.mozMatchesSelector || p.msMatchesSelector || p.oMatchesSelector || p.webkitMatchesSelector;
@@ -34843,6 +35208,17 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
       },
 
       /**
+       * Determines which action to perform when scroll outside an opened overlay happens.
+       * Possible values:
+       * lock - blocks scrolling from happening,
+       * refit - computes the new position on the overlay
+       * cancel - causes the overlay to close
+       */
+      scrollAction: {
+        type: String
+      },
+
+      /**
        * Shortcut to access to the overlay manager.
        * @private
        * @type {Polymer.IronOverlayManagerClass}
@@ -34865,6 +35241,8 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
     listeners: {
       'iron-resize': '_onIronResize'
     },
+
+    observers: ['__updateScrollObservers(isAttached, opened, scrollAction)'],
 
     /**
      * The backdrop element.
@@ -34904,10 +35282,13 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
       this.__shouldRemoveTabIndex = false;
       // Used for wrapping the focus on TAB / Shift+TAB.
       this.__firstFocusableNode = this.__lastFocusableNode = null;
-      // Used by __onNextAnimationFrame to cancel any previous callback.
-      this.__raf = null;
+      // Used by to keep track of the RAF callbacks.
+      this.__rafs = {};
       // Focused node before overlay gets opened. Can be restored on close.
       this.__restoreFocusNode = null;
+      // Scroll info to be restored.
+      this.__scrollTop = this.__scrollLeft = null;
+      this.__onCaptureScroll = this.__onCaptureScroll.bind(this);
       this._ensureSetup();
     },
 
@@ -34922,10 +35303,12 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
     detached: function detached() {
       Polymer.dom(this).unobserveNodes(this._observer);
       this._observer = null;
-      if (this.__raf) {
-        window.cancelAnimationFrame(this.__raf);
-        this.__raf = null;
+      for (var cb in this.__rafs) {
+        if (this.__rafs[cb] !== null) {
+          cancelAnimationFrame(this.__rafs[cb]);
+        }
       }
+      this.__rafs = {};
       this._manager.removeOverlay(this);
 
       // We got detached while animating, ensure we show/hide the overlay
@@ -35016,8 +35399,8 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
 
       this.__isAnimating = true;
 
-      // Use requestAnimationFrame for non-blocking rendering.
-      this.__onNextAnimationFrame(this.__openedChanged);
+      // Deraf for non-blocking rendering.
+      this.__deraf('__openedChanged', this.__openedChanged);
     },
 
     _canceledChanged: function _canceledChanged() {
@@ -35254,7 +35637,7 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
      */
     _onIronResize: function _onIronResize() {
       if (this.opened && !this.__isAnimating) {
-        this.__onNextAnimationFrame(this.refit);
+        this.__deraf('refit', this.refit);
       }
     },
 
@@ -35307,22 +35690,105 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
     },
 
     /**
-     * Executes a callback on the next animation frame, overriding any previous
-     * callback awaiting for the next animation frame. e.g.
-     * `__onNextAnimationFrame(callback1) && __onNextAnimationFrame(callback2)`;
-     * `callback1` will never be invoked.
-     * @param {!Function} callback Its `this` parameter is the overlay itself.
+     * Debounces the execution of a callback to the next animation frame.
+     * @param {!string} jobname
+     * @param {!Function} callback Always bound to `this`
      * @private
      */
-    __onNextAnimationFrame: function __onNextAnimationFrame(callback) {
-      if (this.__raf) {
-        window.cancelAnimationFrame(this.__raf);
+    __deraf: function __deraf(jobname, callback) {
+      var rafs = this.__rafs;
+      if (rafs[jobname] !== null) {
+        cancelAnimationFrame(rafs[jobname]);
       }
-      var self = this;
-      this.__raf = window.requestAnimationFrame(function nextAnimationFrame() {
-        self.__raf = null;
-        callback.call(self);
-      });
+      rafs[jobname] = requestAnimationFrame(function nextAnimationFrame() {
+        rafs[jobname] = null;
+        callback.call(this);
+      }.bind(this));
+    },
+
+    /**
+     * @param {boolean} isAttached
+     * @param {boolean} opened
+     * @param {string=} scrollAction
+     * @private
+     */
+    __updateScrollObservers: function __updateScrollObservers(isAttached, opened, scrollAction) {
+      if (!isAttached || !opened || !this.__isValidScrollAction(scrollAction)) {
+        Polymer.IronScrollManager.removeScrollLock(this);
+        document.removeEventListener('scroll', this.__onCaptureScroll, {
+          passive: true
+        });
+      } else {
+        if (scrollAction === 'lock') {
+          this.__saveScrollPosition();
+          Polymer.IronScrollManager.pushScrollLock(this);
+        }
+        document.addEventListener('scroll', this.__onCaptureScroll, {
+          passive: true
+        });
+      }
+    },
+
+    /**
+     * @param {string=} scrollAction
+     * @return {boolean}
+     * @private
+     */
+    __isValidScrollAction: function __isValidScrollAction(scrollAction) {
+      return scrollAction === 'lock' || scrollAction === 'refit' || scrollAction === 'cancel';
+    },
+
+    /**
+     * @private
+     */
+    __onCaptureScroll: function __onCaptureScroll(event) {
+      if (this.__isAnimating) {
+        return;
+      }
+      switch (this.scrollAction) {
+        case 'lock':
+          // NOTE: scrolling might happen if a scroll event is not cancellable, or if
+          // user pressed keys that cause scrolling (they're not prevented in order not to
+          // break a11y features like navigate with arrow keys).
+          this.__restoreScrollPosition();
+          break;
+        case 'refit':
+          this.__deraf('refit', this.refit);
+          break;
+        case 'cancel':
+          this.cancel(event);
+          break;
+      }
+    },
+
+    /**
+     * Memoizes the scroll position of the outside scrolling element.
+     * @private
+     */
+    __saveScrollPosition: function __saveScrollPosition() {
+      if (document.scrollingElement) {
+        this.__scrollTop = document.scrollingElement.scrollTop;
+        this.__scrollLeft = document.scrollingElement.scrollLeft;
+      } else {
+        // Since we don't know if is the body or html, get max.
+        this.__scrollTop = Math.max(document.documentElement.scrollTop, document.body.scrollTop);
+        this.__scrollLeft = Math.max(document.documentElement.scrollLeft, document.body.scrollLeft);
+      }
+    },
+
+    /**
+     * Resets the scroll position of the outside scrolling element.
+     * @private
+     */
+    __restoreScrollPosition: function __restoreScrollPosition() {
+      if (document.scrollingElement) {
+        document.scrollingElement.scrollTop = this.__scrollTop;
+        document.scrollingElement.scrollLeft = this.__scrollLeft;
+      } else {
+        // Since we don't know if is the body or html, set both.
+        document.documentElement.scrollTop = document.body.scrollTop = this.__scrollTop;
+        document.documentElement.scrollLeft = document.body.scrollLeft = this.__scrollLeft;
+      }
     }
 
   };
