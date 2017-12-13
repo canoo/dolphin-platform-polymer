@@ -178,6 +178,8 @@ limitations under the License.
 
         // `this._controller.model` and `this.model` will refer to the same object.
         this._onRootBeanChanged(this._controller.model)
+        
+        this.dispatchEvent(new CustomEvent("on-controller-created"))
       }
 
       /**
@@ -190,6 +192,8 @@ limitations under the License.
 
         this._controller = null
         this.status = STATUS_NOT_READY
+        
+        this.dispatchEvent(new CustomEvent("on-controller-destroyed"))
       }
 
       /**
