@@ -8466,36 +8466,36 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     this.end = this.start = 0;this.rules = this.parent = this.previous = null;this.cssText = this.parsedCssText = "";this.atRule = !1;this.type = 0;this.parsedSelector = this.selector = this.keyframesName = "";
   }
   function p(a) {
-    a = a.replace(aa, "").replace(ba, "");var b = q,
-        c = a,
-        d = new n();d.start = 0;d.end = c.length;for (var e = d, f = 0, h = c.length; f < h; f++) {
-      if ("{" === c[f]) {
+    a = a.replace(aa, "").replace(ba, "");var c = q,
+        b = a,
+        d = new n();d.start = 0;d.end = b.length;for (var e = d, f = 0, h = b.length; f < h; f++) {
+      if ("{" === b[f]) {
         e.rules || (e.rules = []);var g = e,
             m = g.rules[g.rules.length - 1] || null;e = new n();e.start = f + 1;e.parent = g;e.previous = m;g.rules.push(e);
-      } else "}" === c[f] && (e.end = f + 1, e = e.parent || d);
-    }return b(d, a);
+      } else "}" === b[f] && (e.end = f + 1, e = e.parent || d);
+    }return c(d, a);
   }
-  function q(a, b) {
-    var c = b.substring(a.start, a.end - 1);a.parsedCssText = a.cssText = c.trim();a.parent && (c = b.substring(a.previous ? a.previous.end : a.parent.start, a.start - 1), c = ca(c), c = c.replace(r, " "), c = c.substring(c.lastIndexOf(";") + 1), c = a.parsedSelector = a.selector = c.trim(), a.atRule = 0 === c.indexOf("@"), a.atRule ? 0 === c.indexOf("@media") ? a.type = t : c.match(da) && (a.type = u, a.keyframesName = a.selector.split(r).pop()) : a.type = 0 === c.indexOf("--") ? v : x);if (c = a.rules) for (var d = 0, e = c.length, f; d < e && (f = c[d]); d++) {
-      q(f, b);
+  function q(a, c) {
+    var b = c.substring(a.start, a.end - 1);a.parsedCssText = a.cssText = b.trim();a.parent && (b = c.substring(a.previous ? a.previous.end : a.parent.start, a.start - 1), b = ca(b), b = b.replace(r, " "), b = b.substring(b.lastIndexOf(";") + 1), b = a.parsedSelector = a.selector = b.trim(), a.atRule = 0 === b.indexOf("@"), a.atRule ? 0 === b.indexOf("@media") ? a.type = t : b.match(da) && (a.type = u, a.keyframesName = a.selector.split(r).pop()) : a.type = 0 === b.indexOf("--") ? v : x);if (b = a.rules) for (var d = 0, e = b.length, f; d < e && (f = b[d]); d++) {
+      q(f, c);
     }return a;
   }
   function ca(a) {
-    return a.replace(/\\([0-9a-f]{1,6})\s/gi, function (a, c) {
-      a = c;for (c = 6 - a.length; c--;) {
+    return a.replace(/\\([0-9a-f]{1,6})\s/gi, function (a, b) {
+      a = b;for (b = 6 - a.length; b--;) {
         a = "0" + a;
       }return "\\" + a;
     });
   }
-  function y(a, b, c) {
-    c = void 0 === c ? "" : c;var d = "";if (a.cssText || a.rules) {
+  function y(a, c, b) {
+    b = void 0 === b ? "" : b;var d = "";if (a.cssText || a.rules) {
       var e = a.rules,
           f;if (f = e) f = e[0], f = !(f && f.selector && 0 === f.selector.indexOf("--"));if (f) {
         f = 0;for (var h = e.length, g; f < h && (g = e[f]); f++) {
-          d = y(g, b, d);
+          d = y(g, c, d);
         }
-      } else b ? b = a.cssText : (b = a.cssText, b = b.replace(ea, "").replace(fa, ""), b = b.replace(ha, "").replace(ia, "")), (d = b.trim()) && (d = "  " + d + "\n");
-    }d && (a.selector && (c += a.selector + " {\n"), c += d, a.selector && (c += "}\n\n"));return c;
+      } else c ? c = a.cssText : (c = a.cssText, c = c.replace(ea, "").replace(fa, ""), c = c.replace(ha, "").replace(ia, "")), (d = c.trim()) && (d = "  " + d + "\n");
+    }d && (a.selector && (b += a.selector + " {\n"), b += d, a.selector && (b += "}\n\n"));return b;
   }
   var x = 1,
       u = 7,
@@ -8513,118 +8513,126 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   }function z(a) {
     return a._applyShimCurrentVersion === a._applyShimNextVersion;
   }function la(a) {
-    a._applyShimValidatingVersion = a._applyShimNextVersion;a.a || (a.a = !0, ja.then(function () {
-      a._applyShimCurrentVersion = a._applyShimNextVersion;a.a = !1;
+    a._applyShimValidatingVersion = a._applyShimNextVersion;a.b || (a.b = !0, ja.then(function () {
+      a._applyShimCurrentVersion = a._applyShimNextVersion;a.b = !1;
     }));
   };var A = !(window.ShadyDOM && window.ShadyDOM.inUse),
       B;function C(a) {
     B = a && a.shimcssproperties ? !1 : A || !(navigator.userAgent.match(/AppleWebKit\/601|Edge\/15/) || !window.CSS || !CSS.supports || !CSS.supports("box-shadow", "0 0 0 var(--foo)"));
-  }window.ShadyCSS && void 0 !== window.ShadyCSS.nativeCss ? B = window.ShadyCSS.nativeCss : window.ShadyCSS ? (C(window.ShadyCSS), window.ShadyCSS = void 0) : C(window.WebComponents && window.WebComponents.flags);var E = B;var F = /(?:^|[;\s{]\s*)(--[\w-]*?)\s*:\s*(?:((?:'(?:\\'|.)*?'|"(?:\\"|.)*?"|\([^)]*?\)|[^};{])+)|\{([^}]*)\}(?:(?=[;\s}])|$))/gi,
+  }window.ShadyCSS && void 0 !== window.ShadyCSS.nativeCss ? B = window.ShadyCSS.nativeCss : window.ShadyCSS ? (C(window.ShadyCSS), window.ShadyCSS = void 0) : C(window.WebComponents && window.WebComponents.flags);var D = B;var F = /(?:^|[;\s{]\s*)(--[\w-]*?)\s*:\s*(?:((?:'(?:\\'|.)*?'|"(?:\\"|.)*?"|\([^)]*?\)|[^};{])+)|\{([^}]*)\}(?:(?=[;\s}])|$))/gi,
       G = /(?:^|\W+)@apply\s*\(?([^);\n]*)\)?/gi,
-      ma = /@media\s(.*)/;function H(a) {
-    if (!a) return "";"string" === typeof a && (a = p(a));return y(a, E);
-  }function I(a) {
+      ma = /@media\s(.*)/;var H = new Set();function I(a) {
+    if (!a) return "";"string" === typeof a && (a = p(a));return y(a, D);
+  }function J(a) {
     !a.__cssRules && a.textContent && (a.__cssRules = p(a.textContent));return a.__cssRules || null;
-  }function J(a, b, c, d) {
+  }function K(a, c, b, d) {
     if (a) {
       var e = !1,
           f = a.type;if (d && f === t) {
         var h = a.selector.match(ma);h && (window.matchMedia(h[1]).matches || (e = !0));
-      }f === x ? b(a) : c && f === u ? c(a) : f === v && (e = !0);if ((a = a.rules) && !e) {
+      }f === x ? c(a) : b && f === u ? b(a) : f === v && (e = !0);if ((a = a.rules) && !e) {
         e = 0;f = a.length;for (var g; e < f && (g = a[e]); e++) {
-          J(g, b, c, d);
+          K(g, c, b, d);
         }
       }
     }
   }
-  function K(a, b) {
-    var c = a.indexOf("var(");if (-1 === c) return b(a, "", "", "");a: {
-      var d = 0;var e = c + 3;for (var f = a.length; e < f; e++) {
+  function L(a, c) {
+    var b = a.indexOf("var(");if (-1 === b) return c(a, "", "", "");a: {
+      var d = 0;var e = b + 3;for (var f = a.length; e < f; e++) {
         if ("(" === a[e]) d++;else if (")" === a[e] && 0 === --d) break a;
       }e = -1;
-    }d = a.substring(c + 4, e);c = a.substring(0, c);a = K(a.substring(e + 1), b);e = d.indexOf(",");return -1 === e ? b(c, d.trim(), "", a) : b(c, d.substring(0, e).trim(), d.substring(e + 1).trim(), a);
+    }d = a.substring(b + 4, e);b = a.substring(0, b);a = L(a.substring(e + 1), c);e = d.indexOf(",");return -1 === e ? c(b, d.trim(), "", a) : c(b, d.substring(0, e).trim(), d.substring(e + 1).trim(), a);
   };var na = /;\s*/m,
-      oa = /^\s*(initial)|(inherit)\s*$/;function L() {
+      oa = /^\s*(initial)|(inherit)\s*$/;function M() {
     this.a = {};
-  }L.prototype.set = function (a, b) {
-    a = a.trim();this.a[a] = { h: b, i: {} };
-  };L.prototype.get = function (a) {
+  }M.prototype.set = function (a, c) {
+    a = a.trim();this.a[a] = { h: c, i: {} };
+  };M.prototype.get = function (a) {
     a = a.trim();return this.a[a] || null;
-  };var M = null;function N() {
-    this.b = this.c = null;this.a = new L();
-  }N.prototype.o = function (a) {
+  };var N = null;function O() {
+    this.b = this.c = null;this.a = new M();
+  }O.prototype.o = function (a) {
     a = G.test(a) || F.test(a);G.lastIndex = 0;F.lastIndex = 0;return a;
-  };N.prototype.m = function (a, b) {
-    a = a.content.querySelector("style");var c = null;a && (c = this.j(a, b));return c;
   };
-  N.prototype.j = function (a, b) {
-    b = void 0 === b ? "" : b;var c = I(a);this.l(c, b);a.textContent = H(c);return c;
-  };N.prototype.f = function (a) {
-    var b = this,
-        c = I(a);J(c, function (a) {
-      ":root" === a.selector && (a.selector = "html");b.g(a);
-    });a.textContent = H(c);return c;
-  };N.prototype.l = function (a, b) {
-    var c = this;this.c = b;J(a, function (a) {
-      c.g(a);
+  O.prototype.m = function (a, c) {
+    if (void 0 === a.a) {
+      var b = [];for (var d = a.content.querySelectorAll("style"), e = 0; e < d.length; e++) {
+        var f = d[e];if (f.hasAttribute("shady-unscoped")) {
+          if (!A) {
+            var h = f.textContent;H.has(h) || (H.add(h), h = f.cloneNode(!0), document.head.appendChild(h));f.parentNode.removeChild(f);
+          }
+        } else b.push(f.textContent), f.parentNode.removeChild(f);
+      }(b = b.join("").trim()) ? (d = document.createElement("style"), d.textContent = b, a.content.insertBefore(d, a.content.firstChild), b = d) : b = null;a.a = b;
+    }return (a = a.a) ? this.j(a, c) : null;
+  };O.prototype.j = function (a, c) {
+    c = void 0 === c ? "" : c;var b = J(a);this.l(b, c);a.textContent = I(b);return b;
+  };O.prototype.f = function (a) {
+    var c = this,
+        b = J(a);K(b, function (a) {
+      ":root" === a.selector && (a.selector = "html");c.g(a);
+    });a.textContent = I(b);return b;
+  };O.prototype.l = function (a, c) {
+    var b = this;this.c = c;K(a, function (a) {
+      b.g(a);
     });this.c = null;
-  };N.prototype.g = function (a) {
+  };O.prototype.g = function (a) {
     a.cssText = pa(this, a.parsedCssText);":root" === a.selector && (a.selector = ":host > *");
   };
-  function pa(a, b) {
-    b = b.replace(F, function (b, d, e, f) {
-      return qa(a, b, d, e, f);
-    });return O(a, b);
-  }function O(a, b) {
-    for (var c; c = G.exec(b);) {
-      var d = c[0],
-          e = c[1];c = c.index;var f = b.slice(0, c + d.indexOf("@apply"));b = b.slice(c + d.length);var h = P(a, f);d = void 0;var g = a;e = e.replace(na, "");var m = [];var l = g.a.get(e);l || (g.a.set(e, {}), l = g.a.get(e));if (l) for (d in g.c && (l.i[g.c] = !0), l.h) {
+  function pa(a, c) {
+    c = c.replace(F, function (b, c, e, f) {
+      return qa(a, b, c, e, f);
+    });return P(a, c);
+  }function P(a, c) {
+    for (var b; b = G.exec(c);) {
+      var d = b[0],
+          e = b[1];b = b.index;var f = c.slice(0, b + d.indexOf("@apply"));c = c.slice(b + d.length);var h = Q(a, f);d = void 0;var g = a;e = e.replace(na, "");var m = [];var l = g.a.get(e);l || (g.a.set(e, {}), l = g.a.get(e));if (l) for (d in g.c && (l.i[g.c] = !0), l.h) {
         g = h && h[d], l = [d, ": var(", e, "_-_", d], g && l.push(",", g), l.push(")"), m.push(l.join(""));
-      }d = m.join("; ");b = "" + f + d + b;G.lastIndex = c + d.length;
-    }return b;
+      }d = m.join("; ");c = "" + f + d + c;G.lastIndex = b + d.length;
+    }return c;
   }
-  function P(a, b) {
-    b = b.split(";");for (var c, d, e = {}, f = 0, h; f < b.length; f++) {
-      if (c = b[f]) if (h = c.split(":"), 1 < h.length) {
-        c = h[0].trim();var g = a;d = c;h = h.slice(1).join(":");var m = oa.exec(h);m && (m[1] ? (g.b || (g.b = document.createElement("meta"), g.b.setAttribute("apply-shim-measure", ""), g.b.style.all = "initial", document.head.appendChild(g.b)), d = window.getComputedStyle(g.b).getPropertyValue(d)) : d = "apply-shim-inherit", h = d);d = h;e[c] = d;
+  function Q(a, c) {
+    c = c.split(";");for (var b, d, e = {}, f = 0, h; f < c.length; f++) {
+      if (b = c[f]) if (h = b.split(":"), 1 < h.length) {
+        b = h[0].trim();var g = a;d = b;h = h.slice(1).join(":");var m = oa.exec(h);m && (m[1] ? (g.b || (g.b = document.createElement("meta"), g.b.setAttribute("apply-shim-measure", ""), g.b.style.all = "initial", document.head.appendChild(g.b)), d = window.getComputedStyle(g.b).getPropertyValue(d)) : d = "apply-shim-inherit", h = d);d = h;e[b] = d;
       }
     }return e;
-  }function ra(a, b) {
-    if (M) for (var c in b.i) {
-      c !== a.c && M(c);
+  }function ra(a, c) {
+    if (N) for (var b in c.i) {
+      b !== a.c && N(b);
     }
   }
-  function qa(a, b, c, d, e) {
-    d && K(d, function (b, c) {
-      c && a.a.get(c) && (e = "@apply " + c + ";");
-    });if (!e) return b;var f = O(a, e),
-        h = b.slice(0, b.indexOf("--")),
-        g = f = P(a, f),
-        m = a.a.get(c),
-        l = m && m.h;l ? g = Object.assign(Object.create(l), f) : a.a.set(c, g);var X = [],
+  function qa(a, c, b, d, e) {
+    d && L(d, function (c, b) {
+      b && a.a.get(b) && (e = "@apply " + b + ";");
+    });if (!e) return c;var f = P(a, e),
+        h = c.slice(0, c.indexOf("--")),
+        g = f = Q(a, f),
+        m = a.a.get(b),
+        l = m && m.h;l ? g = Object.assign(Object.create(l), f) : a.a.set(b, g);var Y = [],
         w,
-        Y = !1;for (w in g) {
-      var D = f[w];void 0 === D && (D = "initial");!l || w in l || (Y = !0);X.push("" + c + "_-_" + w + ": " + D);
-    }Y && ra(a, m);m && (m.h = g);d && (h = b + ";" + h);return "" + h + X.join("; ") + ";";
-  }N.prototype.detectMixin = N.prototype.o;N.prototype.transformStyle = N.prototype.j;
-  N.prototype.transformCustomStyle = N.prototype.f;N.prototype.transformRules = N.prototype.l;N.prototype.transformRule = N.prototype.g;N.prototype.transformTemplate = N.prototype.m;N.prototype._separator = "_-_";Object.defineProperty(N.prototype, "invalidCallback", { get: function get() {
-      return M;
+        Z = !1;for (w in g) {
+      var E = f[w];void 0 === E && (E = "initial");!l || w in l || (Z = !0);Y.push("" + b + "_-_" + w + ": " + E);
+    }Z && ra(a, m);m && (m.h = g);d && (h = c + ";" + h);return "" + h + Y.join("; ") + ";";
+  }O.prototype.detectMixin = O.prototype.o;O.prototype.transformStyle = O.prototype.j;
+  O.prototype.transformCustomStyle = O.prototype.f;O.prototype.transformRules = O.prototype.l;O.prototype.transformRule = O.prototype.g;O.prototype.transformTemplate = O.prototype.m;O.prototype._separator = "_-_";Object.defineProperty(O.prototype, "invalidCallback", { get: function get() {
+      return N;
     }, set: function set(a) {
-      M = a;
-    } });var Q = null,
-      R = window.HTMLImports && window.HTMLImports.whenReady || null,
-      S;function sa(a) {
+      N = a;
+    } });var R = null,
+      sa = window.HTMLImports && window.HTMLImports.whenReady || null,
+      S;function ta(a) {
     requestAnimationFrame(function () {
-      R ? R(a) : (Q || (Q = new Promise(function (a) {
+      sa ? sa(a) : (R || (R = new Promise(function (a) {
         S = a;
       }), "complete" === document.readyState ? S() : document.addEventListener("readystatechange", function () {
         "complete" === document.readyState && S();
-      })), Q.then(function () {
+      })), R.then(function () {
         a && a();
       }));
     });
-  };var T = new N();function U() {
-    var a = this;this.a = null;sa(function () {
+  };var T = new O();function U() {
+    var a = this;this.a = null;ta(function () {
       V(a);
     });T.invalidCallback = ka;
   }function V(a) {
@@ -8635,47 +8643,47 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         a.a.enqueued && W(a);
       });
     }));
-  }U.prototype.prepareTemplate = function (a, b) {
-    V(this);k[b] = a;b = T.m(a, b);a._styleAst = b;
+  }U.prototype.prepareTemplate = function (a, c) {
+    V(this);k[c] = a;c = T.m(a, c);a._styleAst = c;
   };
   function W(a) {
     V(a);if (a.a) {
-      var b = a.a.processStyles();if (a.a.enqueued) {
-        for (var c = 0; c < b.length; c++) {
-          var d = a.a.getStyleForCustomStyle(b[c]);d && T.f(d);
+      var c = a.a.processStyles();if (a.a.enqueued) {
+        for (var b = 0; b < c.length; b++) {
+          var d = a.a.getStyleForCustomStyle(c[b]);d && T.f(d);
         }a.a.enqueued = !1;
       }
     }
-  }U.prototype.styleSubtree = function (a, b) {
-    V(this);if (b) for (var c in b) {
-      null === c ? a.style.removeProperty(c) : a.style.setProperty(c, b[c]);
-    }if (a.shadowRoot) for (this.styleElement(a), a = a.shadowRoot.children || a.shadowRoot.childNodes, b = 0; b < a.length; b++) {
-      this.styleSubtree(a[b]);
-    } else for (a = a.children || a.childNodes, b = 0; b < a.length; b++) {
-      this.styleSubtree(a[b]);
+  }U.prototype.styleSubtree = function (a, c) {
+    V(this);if (c) for (var b in c) {
+      null === b ? a.style.removeProperty(b) : a.style.setProperty(b, c[b]);
+    }if (a.shadowRoot) for (this.styleElement(a), a = a.shadowRoot.children || a.shadowRoot.childNodes, c = 0; c < a.length; c++) {
+      this.styleSubtree(a[c]);
+    } else for (a = a.children || a.childNodes, c = 0; c < a.length; c++) {
+      this.styleSubtree(a[c]);
     }
   };
   U.prototype.styleElement = function (a) {
-    V(this);var b = a.localName,
-        c;b ? -1 < b.indexOf("-") ? c = b : c = a.getAttribute && a.getAttribute("is") || "" : c = a.is;if ((b = k[c]) && !z(b)) {
-      if (z(b) || b._applyShimValidatingVersion !== b._applyShimNextVersion) this.prepareTemplate(b, c), la(b);if (a = a.shadowRoot) if (a = a.querySelector("style")) a.__cssRules = b._styleAst, a.textContent = H(b._styleAst);
+    V(this);var c = a.localName,
+        b;c ? -1 < c.indexOf("-") ? b = c : b = a.getAttribute && a.getAttribute("is") || "" : b = a.is;if ((c = k[b]) && !z(c)) {
+      if (z(c) || c._applyShimValidatingVersion !== c._applyShimNextVersion) this.prepareTemplate(c, b), la(c);if (a = a.shadowRoot) if (a = a.querySelector("style")) a.__cssRules = c._styleAst, a.textContent = I(c._styleAst);
     }
   };U.prototype.styleDocument = function (a) {
     V(this);this.styleSubtree(document.body, a);
   };
   if (!window.ShadyCSS || !window.ShadyCSS.ScopingShim) {
-    var Z = new U(),
-        ta = window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;window.ShadyCSS = { prepareTemplate: function prepareTemplate(a, b) {
-        W(Z);Z.prepareTemplate(a, b);
-      }, styleSubtree: function styleSubtree(a, b) {
-        W(Z);Z.styleSubtree(a, b);
+    var X = new U(),
+        ua = window.ShadyCSS && window.ShadyCSS.CustomStyleInterface;window.ShadyCSS = { prepareTemplate: function prepareTemplate(a, c) {
+        W(X);X.prepareTemplate(a, c);
+      }, styleSubtree: function styleSubtree(a, c) {
+        W(X);X.styleSubtree(a, c);
       }, styleElement: function styleElement(a) {
-        W(Z);Z.styleElement(a);
+        W(X);X.styleElement(a);
       }, styleDocument: function styleDocument(a) {
-        W(Z);Z.styleDocument(a);
-      }, getComputedStyleValue: function getComputedStyleValue(a, b) {
-        return (a = window.getComputedStyle(a).getPropertyValue(b)) ? a.trim() : "";
-      }, nativeCss: E, nativeShadow: A };ta && (window.ShadyCSS.CustomStyleInterface = ta);
+        W(X);X.styleDocument(a);
+      }, getComputedStyleValue: function getComputedStyleValue(a, c) {
+        return (a = window.getComputedStyle(a).getPropertyValue(c)) ? a.trim() : "";
+      }, nativeCss: D, nativeShadow: A };ua && (window.ShadyCSS.CustomStyleInterface = ua);
   }window.ShadyCSS.ApplyShim = T;
 }).call(this);
 
@@ -24649,8 +24657,8 @@ Polymer({
      * if there is an error before the `xhr` completes.
      * The resolve callback is called with the original request as an argument.
      * By default, the reject callback is called with an `Error` as an argument.
-     * If `rejectWithRequest` is true, the reject callback is called with an 
-     * object with two keys: `request`, the original request, and `error`, the 
+     * If `rejectWithRequest` is true, the reject callback is called with an
+     * object with two keys: `request`, the original request, and `error`, the
      * error object.
      *
      * @type {Promise}
@@ -24830,7 +24838,8 @@ Polymer({
     }.bind(this));
 
     this.url = options.url;
-    xhr.open(options.method || 'GET', options.url, options.async !== false);
+    var isXHRAsync = options.async !== false;
+    xhr.open(options.method || 'GET', options.url, isXHRAsync);
 
     var acceptType = {
       'json': 'application/json',
@@ -24856,10 +24865,8 @@ Polymer({
       xhr.setRequestHeader(requestHeader, headers[requestHeader]);
     }, this);
 
-    if (options.async !== false) {
-      if (options.async) {
-        xhr.timeout = options.timeout;
-      }
+    if (isXHRAsync) {
+      xhr.timeout = options.timeout;
 
       var handleAs = options.handleAs;
 
@@ -27517,7 +27524,7 @@ Polymer({
       } catch (e) {
         return '';
       }
-      if (prot.indexOf('javascript:') === 0 || prot.indexOf('vbscript:') === 0) {
+      if (prot.indexOf('javascript:') === 0 || prot.indexOf('vbscript:') === 0 || prot.indexOf('data:') === 0) {
         return '';
       }
     }
@@ -28128,6 +28135,14 @@ Polymer({
     this.fire('marked-render-complete', {}, { composed: true });
   },
 
+  /**
+   * Fired when the content is being processed and before it is rendered.
+   * Provides an opportunity to highlight code blocks based on the programming language used. This
+   * is also known as syntax highlighting. One example would be to use a prebuilt syntax
+   * highlighting library, e.g with [highlightjs](https://highlightjs.org/).
+   *
+   * @event syntax-highlight
+   */
   _highlight: function _highlight(code, lang) {
     var event = this.fire('syntax-highlight', { code: code, lang: lang }, { composed: true });
     return event.detail.code || code;
@@ -28226,6 +28241,7 @@ var Prism = function () {
 
 	var _ = _self.Prism = {
 		manual: _self.Prism && _self.Prism.manual,
+		disableWorkerMessageHandler: _self.Prism && _self.Prism.disableWorkerMessageHandler,
 		util: {
 			encode: function encode(tokens) {
 				if (tokens instanceof Token) {
@@ -28361,6 +28377,10 @@ var Prism = function () {
 		plugins: {},
 
 		highlightAll: function highlightAll(async, callback) {
+			_.highlightAllUnder(document, async, callback);
+		},
+
+		highlightAllUnder: function highlightAllUnder(container, async, callback) {
 			var env = {
 				callback: callback,
 				selector: 'code[class*="language-"], [class*="language-"] code, code[class*="lang-"], [class*="lang-"] code'
@@ -28368,7 +28388,7 @@ var Prism = function () {
 
 			_.hooks.run("before-highlightall", env);
 
-			var elements = env.elements || document.querySelectorAll(env.selector);
+			var elements = env.elements || container.querySelectorAll(env.selector);
 
 			for (var i = 0, element; element = elements[i++];) {
 				_.highlightElement(element, async === true, env.callback);
@@ -28393,11 +28413,13 @@ var Prism = function () {
 			// Set language on the element, if not present
 			element.className = element.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
 
-			// Set language on the parent, for styling
-			parent = element.parentNode;
+			if (element.parentNode) {
+				// Set language on the parent, for styling
+				parent = element.parentNode;
 
-			if (/pre/i.test(parent.nodeName)) {
-				parent.className = parent.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
+				if (/pre/i.test(parent.nodeName)) {
+					parent.className = parent.className.replace(lang, '').replace(/\s+/g, ' ') + ' language-' + language;
+				}
 			}
 
 			var code = element.textContent;
@@ -28665,10 +28687,6 @@ var Prism = function () {
 			parent: parent
 		};
 
-		if (env.type == 'comment') {
-			env.attributes['spellcheck'] = 'true';
-		}
-
 		if (o.alias) {
 			var aliases = _.util.type(o.alias) === 'Array' ? o.alias : [o.alias];
 			Array.prototype.push.apply(env.classes, aliases);
@@ -28688,18 +28706,21 @@ var Prism = function () {
 			// in Node.js
 			return _self.Prism;
 		}
-		// In worker
-		_self.addEventListener('message', function (evt) {
-			var message = JSON.parse(evt.data),
-			    lang = message.language,
-			    code = message.code,
-			    immediateClose = message.immediateClose;
 
-			_self.postMessage(_.highlight(code, _.languages[lang], lang));
-			if (immediateClose) {
-				_self.close();
-			}
-		}, false);
+		if (!_.disableWorkerMessageHandler) {
+			// In worker
+			_self.addEventListener('message', function (evt) {
+				var message = JSON.parse(evt.data),
+				    lang = message.language,
+				    code = message.code,
+				    immediateClose = message.immediateClose;
+
+				_self.postMessage(_.highlight(code, _.languages[lang], lang));
+				if (immediateClose) {
+					_self.close();
+				}
+			}, false);
+		}
 
 		return _self.Prism;
 	}
@@ -28745,7 +28766,7 @@ Prism.languages.markup = {
 	'doctype': /<!DOCTYPE[\s\S]+?>/i,
 	'cdata': /<!\[CDATA\[[\s\S]*?]]>/i,
 	'tag': {
-		pattern: /<\/?(?!\d)[^\s>\/=$<]+(?:\s+[^\s>\/=]+(?:=(?:("|')(?:\\\1|\\?(?!\1)[\s\S])*\1|[^\s'">=]+))?)*\s*\/?>/i,
+		pattern: /<\/?(?!\d)[^\s>\/=$<]+(?:\s+[^\s>\/=]+(?:=(?:("|')(?:\\[\s\S]|(?!\1)[^\\])*\1|[^\s'">=]+))?)*\s*\/?>/i,
 		inside: {
 			'tag': {
 				pattern: /^<\/?[^\s>\/]+/i,
@@ -28755,9 +28776,12 @@ Prism.languages.markup = {
 				}
 			},
 			'attr-value': {
-				pattern: /=(?:('|")[\s\S]*?(\1)|[^\s>]+)/i,
+				pattern: /=(?:("|')(?:\\[\s\S]|(?!\1)[^\\])*\1|[^\s'">=]+)/i,
 				inside: {
-					'punctuation': /[=>"']/
+					'punctuation': [/^=/, {
+						pattern: /(^|[^\\])["']/,
+						lookbehind: true
+					}]
 				}
 			},
 			'punctuation': /\/?>/,
@@ -28795,19 +28819,19 @@ Prism.languages.svg = Prism.languages.markup;
 Prism.languages.css = {
 	'comment': /\/\*[\s\S]*?\*\//,
 	'atrule': {
-		pattern: /@[\w-]+?.*?(;|(?=\s*\{))/i,
+		pattern: /@[\w-]+?.*?(?:;|(?=\s*\{))/i,
 		inside: {
 			'rule': /@[\w-]+/
 			// See rest below
 		}
 	},
-	'url': /url\((?:(["'])(\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1|.*?)\)/i,
-	'selector': /[^\{\}\s][^\{\};]*?(?=\s*\{)/,
+	'url': /url\((?:(["'])(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1|.*?)\)/i,
+	'selector': /[^{}\s][^{};]*?(?=\s*\{)/,
 	'string': {
-		pattern: /("|')(\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
+		pattern: /("|')(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
 		greedy: true
 	},
-	'property': /(\b|\B)[\w-]+(?=\s*:)/i,
+	'property': /[-_a-z\xA0-\uFFFF][-\w\xA0-\uFFFF]*(?=\s*:)/i,
 	'important': /\B!important\b/i,
 	'function': /[-a-z0-9]+(?=\()/i,
 	'punctuation': /[(){};:]/
@@ -28821,13 +28845,14 @@ if (Prism.languages.markup) {
 			pattern: /(<style[\s\S]*?>)[\s\S]*?(?=<\/style>)/i,
 			lookbehind: true,
 			inside: Prism.languages.css,
-			alias: 'language-css'
+			alias: 'language-css',
+			greedy: true
 		}
 	});
 
 	Prism.languages.insertBefore('inside', 'attr-value', {
 		'style-attr': {
-			pattern: /\s*style=("|').*?\1/i,
+			pattern: /\s*style=("|')(?:\\[\s\S]|(?!\1)[^\\])*\1/i,
 			inside: {
 				'attr-name': {
 					pattern: /^\s*style/i,
@@ -28857,18 +28882,18 @@ Prism.languages.clike = {
 		lookbehind: true
 	}],
 	'string': {
-		pattern: /(["'])(\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
+		pattern: /(["'])(?:\\(?:\r\n|[\s\S])|(?!\1)[^\\\r\n])*\1/,
 		greedy: true
 	},
 	'class-name': {
-		pattern: /((?:\b(?:class|interface|extends|implements|trait|instanceof|new)\s+)|(?:catch\s+\())[a-z0-9_\.\\]+/i,
+		pattern: /((?:\b(?:class|interface|extends|implements|trait|instanceof|new)\s+)|(?:catch\s+\())[\w.\\]+/i,
 		lookbehind: true,
 		inside: {
-			punctuation: /(\.|\\)/
+			punctuation: /[.\\]/
 		}
 	},
-	'keyword': /\b(if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
-	'boolean': /\b(true|false)\b/,
+	'keyword': /\b(?:if|else|while|do|for|return|in|instanceof|function|new|try|throw|catch|finally|null|break|continue)\b/,
+	'boolean': /\b(?:true|false)\b/,
 	'function': /[a-z0-9_]+(?=\()/i,
 	'number': /\b-?(?:0x[\da-f]+|\d*\.?\d+(?:e[+-]?\d+)?)\b/i,
 	'operator': /--?|\+\+?|!=?=?|<=?|>=?|==?=?|&&?|\|\|?|\?|\*|\/|~|\^|%/,
@@ -28880,10 +28905,10 @@ Prism.languages.clike = {
 ********************************************** */
 
 Prism.languages.javascript = Prism.languages.extend('clike', {
-	'keyword': /\b(as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)\b/,
-	'number': /\b-?(0[xX][\dA-Fa-f]+|0[bB][01]+|0[oO][0-7]+|\d*\.?\d+([Ee][+-]?\d+)?|NaN|Infinity)\b/,
+	'keyword': /\b(?:as|async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|enum|export|extends|finally|for|from|function|get|if|implements|import|in|instanceof|interface|let|new|null|of|package|private|protected|public|return|set|static|super|switch|this|throw|try|typeof|var|void|while|with|yield)\b/,
+	'number': /\b-?(?:0[xX][\dA-Fa-f]+|0[bB][01]+|0[oO][0-7]+|\d*\.?\d+(?:[Ee][+-]?\d+)?|NaN|Infinity)\b/,
 	// Allow for all non-ASCII characters (See http://stackoverflow.com/a/2008444)
-	'function': /[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*(?=\s*\()/i,
+	'function': /[_$a-z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\s*\()/i,
 	'operator': /-[-=]?|\+[+=]?|!=?=?|<<?=?|>>?>?=?|=(?:==?|>)?|&[&=]?|\|[|=]?|\*\*?=?|\/=?|~|\^=?|%=?|\?|\.{3}/
 });
 
@@ -28895,14 +28920,14 @@ Prism.languages.insertBefore('javascript', 'keyword', {
 	},
 	// This must be declared before keyword because we use "function" inside the look-forward
 	'function-variable': {
-		pattern: /[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*(?=\s*=\s*(?:function\b|(?:\([^()]*\)|[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*)\s*=>))/i,
+		pattern: /[_$a-z\xA0-\uFFFF][$\w\xA0-\uFFFF]*(?=\s*=\s*(?:function\b|(?:\([^()]*\)|[_$a-z\xA0-\uFFFF][$\w\xA0-\uFFFF]*)\s*=>))/i,
 		alias: 'function'
 	}
 });
 
 Prism.languages.insertBefore('javascript', 'string', {
 	'template-string': {
-		pattern: /`(?:\\\\|\\?[^\\])*?`/,
+		pattern: /`(?:\\[\s\S]|[^\\`])*`/,
 		greedy: true,
 		inside: {
 			'interpolation': {
@@ -28926,7 +28951,8 @@ if (Prism.languages.markup) {
 			pattern: /(<script[\s\S]*?>)[\s\S]*?(?=<\/script>)/i,
 			lookbehind: true,
 			inside: Prism.languages.javascript,
-			alias: 'language-javascript'
+			alias: 'language-javascript',
+			greedy: true
 		}
 	});
 }
@@ -34544,6 +34570,366 @@ Polymer.IronOverlayManagerClass.prototype = {
 Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><script>
 (function () {
   'use strict';
+  /**
+   * Used to calculate the scroll direction during touch events.
+   * @type {!Object}
+   */
+
+  var lastTouchPosition = {
+    pageX: 0,
+    pageY: 0
+  };
+  /**
+   * Used to avoid computing event.path and filter scrollable nodes (better perf).
+   * @type {?EventTarget}
+   */
+  var lastRootTarget = null;
+  /**
+   * @type {!Array<Node>}
+   */
+  var lastScrollableNodes = [];
+  /**
+   * @type {!Array<string>}
+   */
+  var scrollEvents = [
+  // Modern `wheel` event for mouse wheel scrolling:
+  'wheel',
+  // Older, non-standard `mousewheel` event for some FF:
+  'mousewheel',
+  // IE:
+  'DOMMouseScroll',
+  // Touch enabled devices
+  'touchstart', 'touchmove'];
+
+  /**
+   * The IronScrollManager is intended to provide a central source
+   * of authority and control over which elements in a document are currently
+   * allowed to scroll.
+   */
+
+  Polymer.IronScrollManager = {
+
+    /**
+     * The current element that defines the DOM boundaries of the
+     * scroll lock. This is always the most recently locking element.
+     */
+    get currentLockingElement() {
+      return this._lockingElements[this._lockingElements.length - 1];
+    },
+
+    /**
+     * Returns true if the provided element is "scroll locked", which is to
+     * say that it cannot be scrolled via pointer or keyboard interactions.
+     *
+     * @param {HTMLElement} element An HTML element instance which may or may
+     * not be scroll locked.
+     */
+    elementIsScrollLocked: function elementIsScrollLocked(element) {
+      var currentLockingElement = this.currentLockingElement;
+
+      if (currentLockingElement === undefined) return false;
+
+      var scrollLocked;
+
+      if (this._hasCachedLockedElement(element)) {
+        return true;
+      }
+
+      if (this._hasCachedUnlockedElement(element)) {
+        return false;
+      }
+
+      scrollLocked = !!currentLockingElement && currentLockingElement !== element && !this._composedTreeContains(currentLockingElement, element);
+
+      if (scrollLocked) {
+        this._lockedElementCache.push(element);
+      } else {
+        this._unlockedElementCache.push(element);
+      }
+
+      return scrollLocked;
+    },
+
+    /**
+     * Push an element onto the current scroll lock stack. The most recently
+     * pushed element and its children will be considered scrollable. All
+     * other elements will not be scrollable.
+     *
+     * Scroll locking is implemented as a stack so that cases such as
+     * dropdowns within dropdowns are handled well.
+     *
+     * @param {HTMLElement} element The element that should lock scroll.
+     */
+    pushScrollLock: function pushScrollLock(element) {
+      // Prevent pushing the same element twice
+      if (this._lockingElements.indexOf(element) >= 0) {
+        return;
+      }
+
+      if (this._lockingElements.length === 0) {
+        this._lockScrollInteractions();
+      }
+
+      this._lockingElements.push(element);
+
+      this._lockedElementCache = [];
+      this._unlockedElementCache = [];
+    },
+
+    /**
+     * Remove an element from the scroll lock stack. The element being
+     * removed does not need to be the most recently pushed element. However,
+     * the scroll lock constraints only change when the most recently pushed
+     * element is removed.
+     *
+     * @param {HTMLElement} element The element to remove from the scroll
+     * lock stack.
+     */
+    removeScrollLock: function removeScrollLock(element) {
+      var index = this._lockingElements.indexOf(element);
+
+      if (index === -1) {
+        return;
+      }
+
+      this._lockingElements.splice(index, 1);
+
+      this._lockedElementCache = [];
+      this._unlockedElementCache = [];
+
+      if (this._lockingElements.length === 0) {
+        this._unlockScrollInteractions();
+      }
+    },
+
+    _lockingElements: [],
+
+    _lockedElementCache: null,
+
+    _unlockedElementCache: null,
+
+    _hasCachedLockedElement: function _hasCachedLockedElement(element) {
+      return this._lockedElementCache.indexOf(element) > -1;
+    },
+
+    _hasCachedUnlockedElement: function _hasCachedUnlockedElement(element) {
+      return this._unlockedElementCache.indexOf(element) > -1;
+    },
+
+    _composedTreeContains: function _composedTreeContains(element, child) {
+      // NOTE(cdata): This method iterates over content elements and their
+      // corresponding distributed nodes to implement a contains-like method
+      // that pierces through the composed tree of the ShadowDOM. Results of
+      // this operation are cached (elsewhere) on a per-scroll-lock basis, to
+      // guard against potentially expensive lookups happening repeatedly as
+      // a user scrolls / touchmoves.
+      var contentElements;
+      var distributedNodes;
+      var contentIndex;
+      var nodeIndex;
+
+      if (element.contains(child)) {
+        return true;
+      }
+
+      contentElements = Polymer.dom(element).querySelectorAll('content,slot');
+
+      for (contentIndex = 0; contentIndex < contentElements.length; ++contentIndex) {
+
+        distributedNodes = Polymer.dom(contentElements[contentIndex]).getDistributedNodes();
+
+        for (nodeIndex = 0; nodeIndex < distributedNodes.length; ++nodeIndex) {
+          // Polymer 2.x returns slot.assignedNodes which can contain text nodes.
+          if (distributedNodes[nodeIndex].nodeType !== Node.ELEMENT_NODE) continue;
+
+          if (this._composedTreeContains(distributedNodes[nodeIndex], child)) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    },
+
+    _scrollInteractionHandler: function _scrollInteractionHandler(event) {
+      // Avoid canceling an event with cancelable=false, e.g. scrolling is in
+      // progress and cannot be interrupted.
+      if (event.cancelable && this._shouldPreventScrolling(event)) {
+        event.preventDefault();
+      }
+      // If event has targetTouches (touch event), update last touch position.
+      if (event.targetTouches) {
+        var touch = event.targetTouches[0];
+        lastTouchPosition.pageX = touch.pageX;
+        lastTouchPosition.pageY = touch.pageY;
+      }
+    },
+
+    _lockScrollInteractions: function _lockScrollInteractions() {
+      this._boundScrollHandler = this._boundScrollHandler || this._scrollInteractionHandler.bind(this);
+      for (var i = 0, l = scrollEvents.length; i < l; i++) {
+        // NOTE: browsers that don't support objects as third arg will
+        // interpret it as boolean, hence useCapture = true in this case. 
+        document.addEventListener(scrollEvents[i], this._boundScrollHandler, {
+          capture: true,
+          passive: false
+        });
+      }
+    },
+
+    _unlockScrollInteractions: function _unlockScrollInteractions() {
+      for (var i = 0, l = scrollEvents.length; i < l; i++) {
+        // NOTE: browsers that don't support objects as third arg will
+        // interpret it as boolean, hence useCapture = true in this case.
+        document.removeEventListener(scrollEvents[i], this._boundScrollHandler, {
+          capture: true,
+          passive: false
+        });
+      }
+    },
+
+    /**
+     * Returns true if the event causes scroll outside the current locking
+     * element, e.g. pointer/keyboard interactions, or scroll "leaking"
+     * outside the locking element when it is already at its scroll boundaries.
+     * @param {!Event} event
+     * @return {boolean}
+     * @private
+     */
+    _shouldPreventScrolling: function _shouldPreventScrolling(event) {
+
+      // Update if root target changed. For touch events, ensure we don't
+      // update during touchmove.
+      var target = Polymer.dom(event).rootTarget;
+      if (event.type !== 'touchmove' && lastRootTarget !== target) {
+        lastRootTarget = target;
+        lastScrollableNodes = this._getScrollableNodes(Polymer.dom(event).path);
+      }
+
+      // Prevent event if no scrollable nodes.
+      if (!lastScrollableNodes.length) {
+        return true;
+      }
+      // Don't prevent touchstart event inside the locking element when it has
+      // scrollable nodes.
+      if (event.type === 'touchstart') {
+        return false;
+      }
+      // Get deltaX/Y.
+      var info = this._getScrollInfo(event);
+      // Prevent if there is no child that can scroll.
+      return !this._getScrollingNode(lastScrollableNodes, info.deltaX, info.deltaY);
+    },
+
+    /**
+     * Returns an array of scrollable nodes up to the current locking element,
+     * which is included too if scrollable.
+     * @param {!Array<Node>} nodes
+     * @return {Array<Node>} scrollables
+     * @private
+     */
+    _getScrollableNodes: function _getScrollableNodes(nodes) {
+      var scrollables = [];
+      var lockingIndex = nodes.indexOf(this.currentLockingElement);
+      // Loop from root target to locking element (included).
+      for (var i = 0; i <= lockingIndex; i++) {
+        // Skip non-Element nodes.
+        if (nodes[i].nodeType !== Node.ELEMENT_NODE) {
+          continue;
+        }
+        var node = /** @type {!Element} */nodes[i];
+        // Check inline style before checking computed style.
+        var style = node.style;
+        if (style.overflow !== 'scroll' && style.overflow !== 'auto') {
+          style = window.getComputedStyle(node);
+        }
+        if (style.overflow === 'scroll' || style.overflow === 'auto') {
+          scrollables.push(node);
+        }
+      }
+      return scrollables;
+    },
+
+    /**
+     * Returns the node that is scrolling. If there is no scrolling,
+     * returns undefined.
+     * @param {!Array<Node>} nodes
+     * @param {number} deltaX Scroll delta on the x-axis
+     * @param {number} deltaY Scroll delta on the y-axis
+     * @return {Node|undefined}
+     * @private
+     */
+    _getScrollingNode: function _getScrollingNode(nodes, deltaX, deltaY) {
+      // No scroll.
+      if (!deltaX && !deltaY) {
+        return;
+      }
+      // Check only one axis according to where there is more scroll.
+      // Prefer vertical to horizontal.
+      var verticalScroll = Math.abs(deltaY) >= Math.abs(deltaX);
+      for (var i = 0; i < nodes.length; i++) {
+        var node = nodes[i];
+        var canScroll = false;
+        if (verticalScroll) {
+          // delta < 0 is scroll up, delta > 0 is scroll down.
+          canScroll = deltaY < 0 ? node.scrollTop > 0 : node.scrollTop < node.scrollHeight - node.clientHeight;
+        } else {
+          // delta < 0 is scroll left, delta > 0 is scroll right.
+          canScroll = deltaX < 0 ? node.scrollLeft > 0 : node.scrollLeft < node.scrollWidth - node.clientWidth;
+        }
+        if (canScroll) {
+          return node;
+        }
+      }
+    },
+
+    /**
+     * Returns scroll `deltaX` and `deltaY`.
+     * @param {!Event} event The scroll event
+     * @return {{deltaX: number, deltaY: number}} Object containing the
+     * x-axis scroll delta (positive: scroll right, negative: scroll left,
+     * 0: no scroll), and the y-axis scroll delta (positive: scroll down,
+     * negative: scroll up, 0: no scroll).
+     * @private
+     */
+    _getScrollInfo: function _getScrollInfo(event) {
+      var info = {
+        deltaX: event.deltaX,
+        deltaY: event.deltaY
+      };
+      // Already available.
+      if ('deltaX' in event) {}
+      // do nothing, values are already good.
+
+      // Safari has scroll info in `wheelDeltaX/Y`.
+      else if ('wheelDeltaX' in event && 'wheelDeltaY' in event) {
+          info.deltaX = -event.wheelDeltaX;
+          info.deltaY = -event.wheelDeltaY;
+        }
+        // IE10 has only vertical scroll info in `wheelDelta`.
+        else if ('wheelDelta' in event) {
+            info.deltaX = 0;
+            info.deltaY = -event.wheelDelta;
+          }
+          // Firefox has scroll info in `detail` and `axis`.
+          else if ('axis' in event) {
+              info.deltaX = event.axis === 1 ? event.detail : 0;
+              info.deltaY = event.axis === 2 ? event.detail : 0;
+            }
+            // On mobile devices, calculate scroll direction.
+            else if (event.targetTouches) {
+                var touch = event.targetTouches[0];
+                // Touch moves from right to left => scrolling goes right.
+                info.deltaX = lastTouchPosition.pageX - touch.pageX;
+                // Touch moves from down to up => scrolling goes down.
+                info.deltaY = lastTouchPosition.pageY - touch.pageY;
+              }
+      return info;
+    }
+  };
+})();</script><script>
+(function () {
+  'use strict';
 
   var p = Element.prototype;
   var matches = p.matches || p.matchesSelector || p.mozMatchesSelector || p.msMatchesSelector || p.oMatchesSelector || p.webkitMatchesSelector;
@@ -34843,6 +35229,17 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
       },
 
       /**
+       * Determines which action to perform when scroll outside an opened overlay happens.
+       * Possible values:
+       * lock - blocks scrolling from happening,
+       * refit - computes the new position on the overlay
+       * cancel - causes the overlay to close
+       */
+      scrollAction: {
+        type: String
+      },
+
+      /**
        * Shortcut to access to the overlay manager.
        * @private
        * @type {Polymer.IronOverlayManagerClass}
@@ -34865,6 +35262,8 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
     listeners: {
       'iron-resize': '_onIronResize'
     },
+
+    observers: ['__updateScrollObservers(isAttached, opened, scrollAction)'],
 
     /**
      * The backdrop element.
@@ -34904,10 +35303,15 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
       this.__shouldRemoveTabIndex = false;
       // Used for wrapping the focus on TAB / Shift+TAB.
       this.__firstFocusableNode = this.__lastFocusableNode = null;
-      // Used by __onNextAnimationFrame to cancel any previous callback.
-      this.__raf = null;
+      // Used by to keep track of the RAF callbacks.
+      this.__rafs = {};
       // Focused node before overlay gets opened. Can be restored on close.
       this.__restoreFocusNode = null;
+      // Scroll info to be restored.
+      this.__scrollTop = this.__scrollLeft = null;
+      this.__onCaptureScroll = this.__onCaptureScroll.bind(this);
+      // Root nodes hosting the overlay, used to listen for scroll events on them.
+      this.__rootNodes = null;
       this._ensureSetup();
     },
 
@@ -34922,10 +35326,12 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
     detached: function detached() {
       Polymer.dom(this).unobserveNodes(this._observer);
       this._observer = null;
-      if (this.__raf) {
-        window.cancelAnimationFrame(this.__raf);
-        this.__raf = null;
+      for (var cb in this.__rafs) {
+        if (this.__rafs[cb] !== null) {
+          cancelAnimationFrame(this.__rafs[cb]);
+        }
       }
+      this.__rafs = {};
       this._manager.removeOverlay(this);
 
       // We got detached while animating, ensure we show/hide the overlay
@@ -35016,8 +35422,8 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
 
       this.__isAnimating = true;
 
-      // Use requestAnimationFrame for non-blocking rendering.
-      this.__onNextAnimationFrame(this.__openedChanged);
+      // Deraf for non-blocking rendering.
+      this.__deraf('__openedChanged', this.__openedChanged);
     },
 
     _canceledChanged: function _canceledChanged() {
@@ -35254,7 +35660,7 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
      */
     _onIronResize: function _onIronResize() {
       if (this.opened && !this.__isAnimating) {
-        this.__onNextAnimationFrame(this.refit);
+        this.__deraf('refit', this.refit);
       }
     },
 
@@ -35307,22 +35713,149 @@ Polymer.IronOverlayManager = new Polymer.IronOverlayManagerClass();</script><scr
     },
 
     /**
-     * Executes a callback on the next animation frame, overriding any previous
-     * callback awaiting for the next animation frame. e.g.
-     * `__onNextAnimationFrame(callback1) && __onNextAnimationFrame(callback2)`;
-     * `callback1` will never be invoked.
-     * @param {!Function} callback Its `this` parameter is the overlay itself.
+     * Debounces the execution of a callback to the next animation frame.
+     * @param {!string} jobname
+     * @param {!Function} callback Always bound to `this`
      * @private
      */
-    __onNextAnimationFrame: function __onNextAnimationFrame(callback) {
-      if (this.__raf) {
-        window.cancelAnimationFrame(this.__raf);
+    __deraf: function __deraf(jobname, callback) {
+      var rafs = this.__rafs;
+      if (rafs[jobname] !== null) {
+        cancelAnimationFrame(rafs[jobname]);
       }
-      var self = this;
-      this.__raf = window.requestAnimationFrame(function nextAnimationFrame() {
-        self.__raf = null;
-        callback.call(self);
-      });
+      rafs[jobname] = requestAnimationFrame(function nextAnimationFrame() {
+        rafs[jobname] = null;
+        callback.call(this);
+      }.bind(this));
+    },
+
+    /**
+     * @param {boolean} isAttached
+     * @param {boolean} opened
+     * @param {string=} scrollAction
+     * @private
+     */
+    __updateScrollObservers: function __updateScrollObservers(isAttached, opened, scrollAction) {
+      if (!isAttached || !opened || !this.__isValidScrollAction(scrollAction)) {
+        Polymer.IronScrollManager.removeScrollLock(this);
+        this.__removeScrollListeners();
+      } else {
+        if (scrollAction === 'lock') {
+          this.__saveScrollPosition();
+          Polymer.IronScrollManager.pushScrollLock(this);
+        }
+        this.__addScrollListeners();
+      }
+    },
+
+    /**
+     * @private
+     */
+    __addScrollListeners: function __addScrollListeners() {
+      if (!this.__rootNodes) {
+        this.__rootNodes = [];
+        // Listen for scroll events in all shadowRoots hosting this overlay only
+        // when in native ShadowDOM.
+        if ('attachShadow' in Element.prototype && 'getRootNode' in Element.prototype) {
+          var node = this;
+          while (node) {
+            if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE && node.host) {
+              this.__rootNodes.push(node);
+            }
+            node = node.host || node.assignedSlot || node.parentNode;
+          }
+        }
+        this.__rootNodes.push(document);
+      }
+      this.__rootNodes.forEach(function (el) {
+        el.addEventListener('scroll', this.__onCaptureScroll, {
+          capture: true,
+          passive: true
+        });
+      }, this);
+    },
+
+    /**
+     * @private
+     */
+    __removeScrollListeners: function __removeScrollListeners() {
+      if (this.__rootNodes) {
+        this.__rootNodes.forEach(function (el) {
+          el.removeEventListener('scroll', this.__onCaptureScroll, {
+            capture: true,
+            passive: true
+          });
+        }, this);
+      }
+      if (!this.isAttached) {
+        this.__rootNodes = null;
+      }
+    },
+
+    /**
+     * @param {string=} scrollAction
+     * @return {boolean}
+     * @private
+     */
+    __isValidScrollAction: function __isValidScrollAction(scrollAction) {
+      return scrollAction === 'lock' || scrollAction === 'refit' || scrollAction === 'cancel';
+    },
+
+    /**
+     * @private
+     */
+    __onCaptureScroll: function __onCaptureScroll(event) {
+      if (this.__isAnimating) {
+        return;
+      }
+      // Check if scroll outside the overlay.
+      if (Polymer.dom(event).path.indexOf(this) >= 0) {
+        return;
+      }
+      switch (this.scrollAction) {
+        case 'lock':
+          // NOTE: scrolling might happen if a scroll event is not cancellable, or if
+          // user pressed keys that cause scrolling (they're not prevented in order not to
+          // break a11y features like navigate with arrow keys).
+          this.__restoreScrollPosition();
+          break;
+        case 'refit':
+          this.__deraf('refit', this.refit);
+          break;
+        case 'cancel':
+          this.cancel(event);
+          break;
+      }
+    },
+
+    /**
+     * Memoizes the scroll position of the outside scrolling element.
+     * @private
+     */
+    __saveScrollPosition: function __saveScrollPosition() {
+      if (document.scrollingElement) {
+        this.__scrollTop = document.scrollingElement.scrollTop;
+        this.__scrollLeft = document.scrollingElement.scrollLeft;
+      } else {
+        // Since we don't know if is the body or html, get max.
+        this.__scrollTop = Math.max(document.documentElement.scrollTop, document.body.scrollTop);
+        this.__scrollLeft = Math.max(document.documentElement.scrollLeft, document.body.scrollLeft);
+      }
+    },
+
+    /**
+     * Resets the scroll position of the outside scrolling element.
+     * @private
+     */
+    __restoreScrollPosition: function __restoreScrollPosition() {
+      if (document.scrollingElement) {
+        document.scrollingElement.scrollTop = this.__scrollTop;
+        document.scrollingElement.scrollLeft = this.__scrollLeft;
+      } else {
+        // Since we don't know if is the body or html, set both.
+        document.documentElement.scrollTop = document.body.scrollTop = this.__scrollTop;
+        document.documentElement.scrollLeft = document.body.scrollLeft = this.__scrollLeft;
+      }
     }
 
   };
