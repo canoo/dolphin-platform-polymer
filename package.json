@@ -9,7 +9,7 @@
   },
   "license": "Apache-2.0",
   "scripts": {
-    "install-all": "npm install && ./node_modules/.bin/bower install --force-latest",
+    "install-all": "npm install && ./node_modules/.bin/bower install",
     "browser": "npm run serve & npm run watch",
     "build": "./node_modules/.bin/polymer build",
     "eslint": "./node_modules/.bin/eslint . --ext js,html --ignore-path .gitignore",
