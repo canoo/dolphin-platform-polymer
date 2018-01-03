@@ -9,6 +9,7 @@
   },
   "license": "Apache-2.0",
   "scripts": {
+    "install-all": "npm install && ./node_modules/.bin/bower install",
     "browser": "npm run serve & npm run watch",
     "build": "./node_modules/.bin/polymer build",
     "eslint": "./node_modules/.bin/eslint . --ext js,html --ignore-path .gitignore",
@@ -18,7 +19,7 @@
     "watch": "./node_modules/.bin/browser-sync start --port 3000 --proxy 'localhost:9090' --no-ui --files '*.html, demo/*.html, test/*.html' --startPath '/components/dolphin-platform-polymer'"
   },
   "devDependencies": {
-    "bower": "1.8.2",
+    "bower": "^1.8.2",
     "browser-sync": "2.18.13",
     "polymer-cli": "1.5.7",
     "web-component-tester": "6.3.0"
