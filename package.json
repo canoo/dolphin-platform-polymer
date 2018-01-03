@@ -15,7 +15,7 @@
     "eslint": "./node_modules/.bin/eslint . --ext js,html --ignore-path .gitignore",
     "lint": "./node_modules/.bin/polymer lint",
     "serve": "./node_modules/.bin/polymer serve --port 9090",
-    "test": "./node_modules/.bin/polymer test --local chrome,firefox",
+    "test": "./node_modules/.bin/polymer test --local chrome,firefox --verbose",
     "watch": "./node_modules/.bin/browser-sync start --port 3000 --proxy 'localhost:9090' --no-ui --files '*.html, demo/*.html, test/*.html' --startPath '/components/dolphin-platform-polymer'"
   },
   "devDependencies": {
