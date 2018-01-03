@@ -13,11 +13,7 @@ before_script:
 - sh -e /etc/init.d/xvfb start
 - sleep 3
 - echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
-- npm install --global bower
-- npm install
-- bower install --force-latest
-- npm update
-- bower update --force-latest
+- npm run install-all
 
 script:
 - npm run build
