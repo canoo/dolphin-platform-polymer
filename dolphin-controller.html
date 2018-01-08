@@ -48,7 +48,7 @@ limitations under the License.
            */
           clientContext: {
             type: Object,
-            value: () => window.clientContext
+            value: () => null
           },
 
           /**
@@ -93,6 +93,14 @@ limitations under the License.
           noDestroy: {
             type: Boolean,
             value: false
+          },
+
+          /**
+           * If true, will listen to bean change/slice events from beanManager.
+           */
+          active: {
+            type: Boolean,
+            value: () => true
           }
         }
       }
@@ -178,7 +186,7 @@ limitations under the License.
 
         // `this._controller.model` and `this.model` will refer to the same object.
         this._onRootBeanChanged(this._controller.model)
-        
+
         this.dispatchEvent(new CustomEvent("on-controller-created"))
       }
 
@@ -192,7 +200,7 @@ limitations under the License.
 
         this._controller = null
         this.status = STATUS_NOT_READY
-        
+
         this.dispatchEvent(new CustomEvent("on-controller-destroyed"))
       }
 
@@ -205,6 +213,8 @@ limitations under the License.
         this._beanManager = this.clientContext.beanManager
         this._beanManager.onBeanUpdate(this._onBeanPropertyChanged.bind(this))
         this._beanManager.onArrayUpdate(this._onBeanPropertySpliced.bind(this))
+
+        this.dispatchEvent(new CustomEvent("on-bean-manager-registered"))
       }
 
       /**
@@ -257,6 +267,8 @@ limitations under the License.
        * @param {any} oldValue Old value
        */
       _onBeanPropertyChanged(bean, propertyName, newValue, oldValue) {
+        if (!this.active) { return }
+
         // TODO(hastebrot): Maybe use bean[propertyName] instead of oldValue?
         if (isEqual(newValue, oldValue)) { return }
 
@@ -282,6 +294,8 @@ limitations under the License.
        * @param {any[]} addedItems Array of items that were added at this index
        */
       _onBeanPropertySpliced(bean, propertyName, startIndex, removedCount, addedItems) {
+        if (!this.active) { return }
+
         const items = bean[propertyName]
         const removedItems = items.slice(startIndex, startIndex + removedCount)
         if (isArrayEqual(addedItems, removedItems)) { return }
