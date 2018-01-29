@@ -1,6 +1,6 @@
 {
   "name": "dolphin-platform-polymer",
-  "version": "0.18.0",
+  "version": "1.0.0-dolfix",
   "description": "Polymer Client of the Dolphin Platform",
   "main": "./dist/dolphin-platform-polymer.js",
   "repository": {
