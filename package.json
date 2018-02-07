@@ -1,26 +1,36 @@
 {
   "name": "dolphin-platform-polymer",
-  "version": "0.19.0",
-  "description": "Polymer Client of the Dolphin Platform",
+  "version": "1.0.0-CR.3",
+  "description": "Polymer Remoting Component of the Dolphin Platform",
   "author": "Michael Heinrichs <michael.heinrichs@canoo.com>",
+  "contributors": [
+    "Michael Heinrichs <michael.heinrichs@canoo.com>",
+    "Hendrik Ebbers <hendrik.ebbers@canoo.com>",
+    "Kunal Singh <kunal.singh@canoo.com>",
+    "Timo Brandstätter <timo.brandstaetter@canoo.com>",
+    "Benjamin Gudehus <benjamin.gudehus@canoo.com>",
+    "Simon Skoczylas <simon.skoczylas@canoo.com>"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/canoo/dolphin-platform-polymer.git"
   },
   "license": "Apache-2.0",
   "scripts": {
-    "browser": "npm run serve & npm run watch",
-    "build": "./node_modules/.bin/polymer build",
-    "eslint": "./node_modules/.bin/eslint . --ext js,html --ignore-path .gitignore",
-    "lint": "./node_modules/.bin/polymer lint",
-    "serve": "./node_modules/.bin/polymer serve --port 9090",
-    "test": "./node_modules/.bin/polymer test --local chrome,firefox",
-    "watch": "./node_modules/.bin/browser-sync start --port 3000 --proxy 'localhost:9090' --no-ui --files '*.html, demo/*.html, test/*.html' --startPath '/components/dolphin-platform-polymer'"
+    "clean:all": "node ./node_modules/rimraf/bin.js node_modules/ bower_components/",
+    "install:all": "npm install && node ./node_modules/bower/bin/bower install",
+    "analyze": "node ./node_modules/polymer-cli/bin/polymer.js analyze",
+    "analyze:json": "node ./node_modules/polymer-cli/bin/polymer.js analyze > analysis.json",
+    "serve": "npm run analyze:json && node ./node_modules/polymer-cli/bin/polymer.js serve",
+    "lint": "node ./node_modules/polymer-cli/bin/polymer.js lint",
+    "test": "node ./node_modules/polymer-cli/bin/polymer.js test",
+    "test:firefox": "node ./node_modules/polymer-cli/bin/polymer.js test -l firefox",
+    "test:chrome": "node ./node_modules/polymer-cli/bin/polymer.js test -l chrome",
+    "test:safari": "node ./node_modules/polymer-cli/bin/polymer.js test -l safari"
   },
   "devDependencies": {
     "bower": "1.8.2",
-    "browser-sync": "2.18.13",
     "polymer-cli": "1.5.7",
-    "web-component-tester": "6.3.0"
+    "rimraf": "2.6.2"
   }
 }

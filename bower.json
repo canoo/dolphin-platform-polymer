@@ -11,7 +11,8 @@
     "Hendrik Ebbers <hendrik.ebbers@canoo.com>",
     "Kunal Singh <kunal.singh@canoo.com>",
     "Timo Brandstätter <timo.brandstaetter@canoo.com>",
-    "Benjamin Gudehus <benjamin.gudehus@canoo.com>"
+    "Benjamin Gudehus <benjamin.gudehus@canoo.com>",
+    "Simon Skoczylas <simon.skoczylas@canoo.com>"
   ],
   "licenses": [
     {
@@ -21,29 +22,27 @@
   ],
   "ignore": [
     "**/.*",
-    "declarations",
-    "demo",
+    "node_modules",
+    "bower_components",
     "test",
     "package.json",
     "package-lock.json"
   ],
   "dependencies": {
-    "core.js": "2.5.1",
-    "dolphin-platform-js": "0.19.0",
-    "polymer": "2.2.0"
+    "polymer": "Polymer/polymer#2.1.1"
   },
   "devDependencies": {
-    "lodash": "4.17.4",
-    "iron-component-page": "3.0.1",
-    "web-component-tester": "6.3.0",
-    "webcomponentsjs": "webcomponents/webcomponentsjs#1.0.17",
-    "mocha": "3.5.3",
-    "chai": "4.1.2",
-    "sinon": "4.0.1"
+    "dolphin-platform-js": "master",
+    "iron-component-page": "PolymerElements/iron-component-page#3.0.1",
+    "web-component-tester": "Polymer/web-component-tester#6.5.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#1.1.0",
+    "chai": "3.2.0",
+    "sinon": "4.2.2",
+    "mocha": "3.1.2"
   },
   "resolutions": {
-    "polymer": "2.2.0",
-    "lodash": "4.17.4",
-    "chai": "4.1.2"
+    "polymer": "2.1.1",
+    "chai": "3.2.0",
+    "mocha": "3.1.2"
   }
 }
