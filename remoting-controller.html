@@ -355,6 +355,11 @@
 
                         if (exists(beanPath)) {
                             const currentPath = Polymer.Path.normalize([beanPath, propertyName]);
+
+                            if (Array.isArray(newValue) && newValue.length === 0) {
+                                this.set(currentPath, newValue);
+                            }
+
                             this.notifyPath(currentPath);
                         }
                         
@@ -377,18 +382,19 @@
                         return;
                     }
 
-                    
-
                     if (initialized) {
                         const beanPath = beanToPath.get(bean);
 
                         if (exists(beanPath)) {
                             const currentPath = Polymer.Path.normalize([beanPath, propertyName]);
+                            const currentValue = this.get(currentPath);
 
-                            const result = this.splice(currentPath, index, count, ...newElements);
+                            if (currentValue) {
+                                const result = this.splice(currentPath, index, count, ...newElements);
 
-                            if (result) {
-                                calulateBeanPathForModel(this.model);
+                                if (result) {
+                                    calulateBeanPathForModel(this.model);
+                                }
                             }
                         } else {
                             RemotingController.LOGGER.error(this.name, 'Bean not found in model!', bean, propertyName);
