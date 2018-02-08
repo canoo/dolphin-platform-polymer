@@ -138,7 +138,7 @@
                             notify: true
                         },
 
-                        /** This property allows to disable the self-management of the component. If it is set (`true`) the component must be initialized by hand! */
+                        /** This property allows to disable the self-management of the component. If it is set (`true`) the component must be initialized and destroyed by hand with `create()` and `destroy()`! */
                         notManaged: {
                             type: Boolean,
                             value: false
@@ -146,10 +146,118 @@
                     }
                 }
 
-                static get observers() {
-                    return [
-                        "_modelChanged(model.*)"
-                    ]
+                /**
+                 * Provides an extended implementation of the standard Custom Elements `connectedCallback`.
+                 *
+                 * This method will be called if this element is added to a document.
+                 *
+                 * If this is a managed component, this method will create the internal Platform Controller if there is already a Dolphin Platform client context.
+                 * Hint: For a managed component, the `window.clientContext` MUST be created before the `remoting-controller` is added to a document.
+                 */
+                connectedCallback() {
+                    RemotingController.LOGGER.debug(this.name, 'Conntected to document.');
+                    super.connectedCallback();
+
+                    const managed = !this.get('notManaged');
+                    if (managed) {
+                        this._create();
+                    }
+
+                }
+
+                /**
+                 * Provides an implementation which is called when the element is removed from a document.
+                 *
+                 * If the Remoting Controller is managed, this method will also destroy the internal Platform Controller.
+                 */
+                disconnectedCallback() {
+                    RemotingController.LOGGER.debug(this.name, 'Disconnected from document.');
+                    super.disconnectedCallback();
+
+                    const managed = !this.get('notManaged');
+                    if (managed) {
+                        this._destroy();
+                    }
+                }
+
+                /**
+                 * Creates the internal Platform Controller for a not managed component.
+                 *
+                 * @returns {Promise} Promise which will be resolved after the creation of the internal Platform Controller
+                 */
+                create() {
+                    const notManaged = this.get('notManaged');
+                    if (notManaged) {
+                        const self = this;
+                        return new Promise(function(resolve, reject) {
+                            self.addEventListener('postconstruct', function() {
+                                resolve();
+                            });
+                            self._create();
+                        });
+                    } else {
+                        RemotingController.LOGGER.error(this.name, 'Cannot invoke create() method for a managed Controller');
+                        throw new Error('Cannot invoke create() method for a managed Controller');
+                    }
+                }
+
+                /**
+                 * Destroys the internal Platform Controller for a not managed component.
+                 * 
+                 * @returns {Promise} Promise which will be resolved after the destruction of the internal Platform Controller
+                 */
+                destroy() {
+                    const notManaged = this.get('notManaged');
+                    if (notManaged) {
+                        const self = this;
+                        return new Promise(function(resolve, reject) {
+                            self.addEventListener('postdestroyed', function() {
+                                resolve();
+                            });
+                            self._destroy();
+                        });
+                    } else {
+                        RemotingController.LOGGER.error(this.name, 'Cannot invoke destroy() method for a managed Controller');
+                        throw new Error('Cannot invoke destroy() method for a managed Controller');
+                    }
+                }
+
+                /**
+                 * Invokes an action on the Dolphin Platform Controller with given name and parameters.
+                 *
+                 * @param {string} name Name of the action. MUST match an action name on the server side
+                 * @param {any[]} params Array of parameters for the action
+                 */
+                invoke(name, params) {
+                    RemotingController.LOGGER.debug(this.name, 'Invoke action called with', name, params);
+                    if (exists(controller)) {
+                        return controller.invoke(name, params)
+                    } else {
+                        RemotingController.LOGGER.error('No Dolphin Controller found. Cannot invoke action:', name, 'Parameters:', params);
+                    }
+                }
+
+                /**
+                 * Creates the internal Platform Controller.
+                 */
+                _create() {
+                    internalClientContext = window.clientContext;
+
+                    if (internalClientContext) {
+                        this._createController();
+                    } else {
+                        RemotingController.LOGGER.error('No Dolphin Platform client context found! Cannot create Dolphin Controller.');
+                        throw new Error('No Dolphin Platform client context found! Cannot create Dolphin Controller.');
+                    }
+                }
+
+                /**
+                 * Destroys the internal Platform Controller.
+                 */
+                _destroy() {
+                    if (exists(controller)) {
+                        controller.destroy();
+                    }
                 }
 
                 /**
@@ -157,7 +265,7 @@
                  *
                  * @param {any} changes The changes made to the model
                  */
-                _modelChanged(changes) {
+                 _modelChanged(changes) {
                     
                     if (changes) {
                         const arrayChange = changes.path.indexOf('.splices') >= 0;
@@ -209,57 +317,6 @@
                         }
                     }
 
-                }
-
-                /**
-                 * Provides an extended implementation of the standard Custom Elements `connectedCallback`.
-                 *
-                 * This method will be called if this element is added to a document.
-                 * This method will create the Dolphin Platform Controller if there is already a Dolphin Platform client context.
-                 * Hint: The `window.clientContext` MUST be created before the `remoting-controller` is added to a document.
-                 */
-                connectedCallback() {
-                    RemotingController.LOGGER.debug(this.name, 'Conntected to document.');
-                    super.connectedCallback();
-
-                    internalClientContext = window.clientContext;
-
-                    if (internalClientContext) {
-                        this._createController();
-                    } else {
-                        RemotingController.LOGGER.error('No Dolphin Platform client context found! Cannot create Dolphin Controller.');
-                        throw new Error('No Dolphin Platform client context found! Cannot create Dolphin Controller.')
-                    }
-
-                }
-
-                /**
-                 * Provides an implementation which is called when the element is removed from a document.
-                 *
-                 * This method will destroy the Dolphin Controller.
-                 */
-                disconnectedCallback() {
-                    RemotingController.LOGGER.debug(this.name, 'Disconnected from document.');
-                    super.disconnectedCallback();
-
-                    if (exists(controller)) {
-                        controller.destroy();
-                    }
-                }
-
-                /**
-                 * Invokes an action on the Dolphin Platform Controller with given name and parameters.
-                 *
-                 * @param {string} name Name of the action. MUST match an action name on the server side
-                 * @param {any[]} params Array of parameters for the action
-                 */
-                invoke(name, params) {
-                    RemotingController.LOGGER.debug(this.name, 'Invoke action called with', name, params);
-                    if (exists(controller)) {
-                        return controller.invoke(name, params)
-                    } else {
-                        RemotingController.LOGGER.error('No Dolphin Controller found. Cannot invoke action:', name, 'Parameters:', params);
-                    }
                 }
 
                 _onAdded(bean) {
@@ -373,6 +430,7 @@
                  * Creates a Dolphin controller and registers the listeners for bean updates.
                  */
                 _createController() {
+                    this._createMethodObserver('_modelChanged(model.*)', true);
                     RemotingController.LOGGER.info('Creating Dolphin Platform controller', this.name);
 
                     // Register callbacks for the Dolphin Platform bean manager
