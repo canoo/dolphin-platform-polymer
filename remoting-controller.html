@@ -105,7 +105,7 @@
              *
              * The `remoting-controller` sends events after creation and destruction of the Dolphin Platform Controller.
              * ~~~html
-             * <remoting-controller name="TodoController" model="{{todos}}" on-postconstruct="myMethod" on-postconstruct="myOtherMethod"></remoting-controller>
+             * <remoting-controller name="TodoController" model="{{todos}}" on-postconstruct="myMethod" on-postdestroyed="myOtherMethod"></remoting-controller>
              * ~~~
              *
              * The `remoting-controller` can be used as not managed version. For that case you have to invoke the create() and destroy() methods on your own.
