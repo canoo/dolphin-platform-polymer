@@ -108,6 +108,11 @@
              * <remoting-controller name="TodoController" model="{{todos}}" on-postconstruct="myMethod" on-postconstruct="myOtherMethod"></remoting-controller>
              * ~~~
              *
+             * The `remoting-controller` can be used as not managed version. For that case you have to invoke the create() and destroy() methods on your own.
+             * ~~~html
+             * <remoting-controller name="TodoController" model="{{todos}}" not-managed></remoting-controller>
+             * ~~~
+             *
              * @customElement
              * @polymer
              */
@@ -227,6 +232,8 @@
                  *
                  * @param {string} name Name of the action. MUST match an action name on the server side
                  * @param {any[]} params Array of parameters for the action
+                 *
+                 * @returns {Promise} Promise which will be resolved the action was invoked on the server, or will be rejected on error.
                  */
                 invoke(name, params) {
                     RemotingController.LOGGER.debug(this.name, 'Invoke action called with', name, params);
