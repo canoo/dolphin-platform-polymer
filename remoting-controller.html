@@ -108,6 +108,11 @@
              * <remoting-controller name="TodoController" model="{{todos}}" on-postconstruct="myMethod" on-postdestroyed="myOtherMethod"></remoting-controller>
              * ~~~
              *
+             * The `remoting-controller` sends events after been added to or removed from the document.
+             * ~~~html
+             * <remoting-controller name="TodoController" model="{{todos}}" on-connect="myMethod" on-disconnect="myOtherMethod"></remoting-controller>
+             * ~~~
+             *
              * The `remoting-controller` can be used as not managed version. For that case you have to invoke the create() and destroy() methods on your own.
              * ~~~html
              * <remoting-controller name="TodoController" model="{{todos}}" not-managed></remoting-controller>
