@@ -15,65 +15,96 @@
 
     <test-fixture id="rc">
         <template>
-            <remoting-controller name="TestController"></remoting-controller>
+            <remoting-controller id="controller" name="TestController"></remoting-controller>
         </template>
     </test-fixture>
 
     <script>
 
-        describe('<remoting-controller>', function() {
+        suite('<remoting-controller>', function() {
 
-            beforeEach(function() {
-            });
-
-            context('common tests', function() {
-                
-                it('correct initialization', function() {
-                    
-                    var mockClientContext = {
-                        _controller: {
-                            model: {},
-                            destroy: () => {
-                                if (onDestroyedCallback) {
-                                    onDestroyedCallback()
-                                }
-                            },
-                            onDestroyed: (callback) => {
-                                onDestroyedCallback = callback
-                            },
-                            getId: () => {
-                                return 'id';
-                            },
-                            getModel: () => {
-                                debugger;
-                                console.log(this.model);
-                                return this.model;
+            setup(function() {
+                //console.log('setup');
+                mockClientContext = {
+                    _controller: {
+                        model: {},
+                        destroy: () => {
+                            if (onDestroyedCallback) {
+                                onDestroyedCallback()
                             }
                         },
-                        beanManager: {
-                            onBeanUpdate: () => null,
-                            onArrayUpdate: () => null,
-                            notifyBeanChange: () => null,
-                            notifyArrayChange: () => null,
-                            onAdded: () => null,
-                            onRemoved: () => null,
-                            onBeanUpdate: () => null,
-                            onArrayUpdate: () => null
+                        onDestroyed: (callback) => {
+                            onDestroyedCallback = callback
                         },
-                        createController: (name) => {
-                            return Promise.resolve(clientContext._controller)
+                        getId: () => {
+                            return 'id';
+                        },
+                        getModel: () => {
+                            return this.model;
                         }
-                    };
-                    var createControllerSpy = sinon.spy(mockClientContext, "createController");
-                    window.clientContext = mockClientContext;
+                    },
+                    beanManager: {
+                        onBeanUpdate: () => null,
+                        onArrayUpdate: () => null,
+                        notifyBeanChange: () => null,
+                        notifyArrayChange: () => null,
+                        onAdded: () => null,
+                        onRemoved: () => null,
+                        onBeanUpdate: () => null,
+                        onArrayUpdate: () => null
+                    },
+                    createController: (name) => {
+                        return Promise.resolve(clientContext._controller)
+                    }
+                }
+            });
 
-                    var rc = fixture('rc');
-                    expect(rc.name).to.be.equal('TestController');
-                    sinon.assert.calledOnce(createControllerSpy);
-                    sinon.assert.calledWith(createControllerSpy, 'TestController');
-                });
+            teardown(function() {
+                //console.log('teardown');
+                rc = null;
+                mockClientContext = null;
+                delete window.clientContext;
+            });
+
+            test('correct initialization', function(done) {
+                const createControllerSpy = sinon.spy(mockClientContext, "createController");
+                window.clientContext = mockClientContext;
+
+                rc = fixture('rc');
+                expect(rc.name).to.be.equal('TestController');
+                sinon.assert.calledOnce(createControllerSpy);
+                sinon.assert.calledWith(createControllerSpy, 'TestController');
+
+                done();
+            });
+
+            test('cannot initialize without client context', function(done) {
+                const RemotingController = customElements.get('remoting-controller');
+                const controllerElement = new RemotingController();
+
+                let expectErrorMessage = function(message) {
+                    let errorText = 'Cannot create Dolphin Controller.';
+                    let correctErrorFound = message.indexOf(errorText) >= 0;
+                    expect(correctErrorFound).to.be.equal(true);
+                    done();
+                }
+                
+                window._onerror = window.onerror;
+                window.onerror = function(message) {
+                    // Chrome+Safari
+                    window.onerror = window._onerror;
+                    expectErrorMessage(message);
+                }
+
+                try {
+                    document.body.appendChild(controllerElement);
+                } catch (error) {
+                    // Firefox
+                    expectErrorMessage(error);
+                }
 
             });
+
         });
 
     </script>
