@@ -168,6 +168,9 @@
                         this._create();
                     }
 
+                    const event = new CustomEvent('connected', {detail: this, bubbles: true, composed: true});
+                    this.dispatchEvent(event);
+
                 }
 
                 /**
@@ -183,6 +186,9 @@
                     if (managed) {
                         this._destroy();
                     }
+
+                    const event = new CustomEvent('disconnected', {detail: this, bubbles: true, composed: true});
+                    this.dispatchEvent(event);
                 }
 
                 /**
