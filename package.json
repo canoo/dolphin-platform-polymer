@@ -13,14 +13,14 @@
     "build": "./node_modules/.bin/polymer build",
     "eslint": "./node_modules/.bin/eslint . --ext js,html --ignore-path .gitignore",
     "lint": "./node_modules/.bin/polymer lint",
-    "serve": "./node_modules/.bin/polymer serve --port 9090",
+    "serve": "./node_modules/.bin/polymer serve --port 3100",
     "test": "./node_modules/.bin/polymer test --local chrome,firefox",
-    "watch": "./node_modules/.bin/browser-sync start --port 3000 --proxy 'localhost:9090' --no-ui --files '*.html, demo/*.html, test/*.html' --startPath '/components/dolphin-platform-polymer'"
+    "watch": "./node_modules/.bin/browser-sync start --port 3000 --proxy 'localhost:3100' --no-ui --files '*.html, demo/*.html, test/*.html' --startPath '/components/dolphin-platform-polymer'"
   },
   "devDependencies": {
     "bower": "1.8.2",
-    "browser-sync": "2.18.13",
-    "polymer-cli": "1.5.7",
-    "web-component-tester": "6.3.0"
+    "browser-sync": "2.23.6",
+    "polymer-cli": "1.6.0",
+    "web-component-tester": "6.5.0"
   }
 }
