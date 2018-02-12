@@ -94,14 +94,6 @@ limitations under the License.
             type: Boolean,
             value: false
           },
-
-          /**
-           * If true, will listen to bean change/slice events from beanManager.
-           */
-          active: {
-            type: Boolean,
-            value: () => true
-          }
         }
       }
 
@@ -114,7 +106,6 @@ limitations under the License.
 
       constructor() {
         super()
-        this._initBeanRegistry()
       }
 
       connectedCallback() {
@@ -210,11 +201,12 @@ limitations under the License.
       _onClientContextChanged() {
         if (isNil(this.clientContext)) { return }
 
-        this._beanManager = this.clientContext.beanManager
-        this._beanManager.onBeanUpdate(this._onBeanPropertyChanged.bind(this))
-        this._beanManager.onArrayUpdate(this._onBeanPropertySpliced.bind(this))
-
-        this.dispatchEvent(new CustomEvent("on-bean-manager-registered"))
+        if (window._beanManager !== this.clientContext.beanManager) {
+          this._initBeanRegistry()
+          window._beanManager = this.clientContext.beanManager
+          window._beanManager.onBeanUpdate(this._onBeanPropertyChanged.bind(this))
+          window._beanManager.onArrayUpdate(this._onBeanPropertySpliced.bind(this))
+        }
       }
 
       /**
@@ -226,9 +218,9 @@ limitations under the License.
        * @return {any} Old value
        */
       _notifyBeanPropertyChanged(bean, propertyName, newValue) {
-        if (this.status !== STATUS_READY) { return }
+        if (this.status !== STATUS_READY) { return null }
 
-        return this._beanManager.notifyBeanChange(bean, propertyName, newValue)
+        return window._beanManager.notifyBeanChange(bean, propertyName, newValue)
       }
 
       /**
@@ -243,7 +235,7 @@ limitations under the License.
       _notifyBeanPropertySpliced(bean, propertyName, startIndex, removedItems, addedCount) {
         if (this.status !== STATUS_READY) { return }
 
-        return this._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
+        return window._beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems)
       }
 
       /**
@@ -267,17 +259,16 @@ limitations under the License.
        * @param {any} oldValue Old value
        */
       _onBeanPropertyChanged(bean, propertyName, newValue, oldValue) {
-        if (!this.active) { return }
-
         // TODO(hastebrot): Maybe use bean[propertyName] instead of oldValue?
         if (isEqual(newValue, oldValue)) { return }
 
+        const element = this._queryElement(bean)
         const propertyPaths = this._queryPropertyPaths(bean)
         if (propertyPaths.size > 0) {
           // HERE: is it ok to fire property changes only for the first element?
           const parentPropertyPath = Array.from(propertyPaths)[0]
           const propertyPath = this._buildPropertyPath(parentPropertyPath, propertyName)
-          this.set(propertyPath, newValue)
+          element.set(propertyPath, newValue)
         }
         else {
           bean[propertyName] = newValue
@@ -294,18 +285,17 @@ limitations under the License.
        * @param {any[]} addedItems Array of items that were added at this index
        */
       _onBeanPropertySpliced(bean, propertyName, startIndex, removedCount, addedItems) {
-        if (!this.active) { return }
-
         const items = bean[propertyName]
         const removedItems = items.slice(startIndex, startIndex + removedCount)
         if (isArrayEqual(addedItems, removedItems)) { return }
 
+        const element = this._queryElement(bean)
         const propertyPaths = this._queryPropertyPaths(bean)
         if (propertyPaths.size > 0) {
           // HERE: is it ok to fire property changes only for the first element?
           const parentPropertyPath = Array.from(propertyPaths)[0]
           const propertyPath = this._buildPropertyPath(parentPropertyPath, propertyName)
-          this.splice(propertyPath, startIndex, removedCount, ...addedItems)
+          element.splice(propertyPath, startIndex, removedCount, ...addedItems)
         }
         else {
           bean[propertyName].splice(startIndex, removedCount, ...addedItems)
@@ -448,6 +438,7 @@ limitations under the License.
         if (isNil(bean) || !isObject(bean)) { return }
 
         this._registerPropertyPath(bean, propertyPath)
+        this._registerElement(bean, this)
 
         forEach(bean, (childBean, propertyName) => {
           const childPropertyPath = this._buildPropertyPath(propertyPath, propertyName)
@@ -463,6 +454,7 @@ limitations under the License.
         if (isNil(bean) || !isObject(bean)) { return }
 
         this._unregisterPropertyPath(bean, propertyPath)
+        this._unregisterElement(bean)
 
         forEach(bean, (childBean, propertyName) => {
           const childPropertyPath = this._buildPropertyPath(propertyPath, propertyName)
@@ -474,14 +466,19 @@ limitations under the License.
        * Initialize bean registry.
        */
       _initBeanRegistry() {
-        this._beanRegistry = new Map()
+        window._beanRegistry = new Map()
+        window._elementRegistry = new Map()
       }
 
       /**
        * Query property paths of bean.
        */
       _queryPropertyPaths(bean) {
-        return this._beanRegistry.get(bean) || new Set()
+        return window._beanRegistry.get(bean) || new Set()
+      }
+
+      _queryElement(bean) {
+        return window._elementRegistry.get(bean)
       }
 
       /**
@@ -490,9 +487,13 @@ limitations under the License.
       _registerPropertyPath(bean, propertyPath) {
         const propertyPaths = this._queryPropertyPaths(bean)
         if (propertyPaths.size === 0) {
-          this._beanRegistry.set(bean, propertyPaths)
+          window._beanRegistry.set(bean, propertyPaths)
         }
         propertyPaths.add(propertyPath)
+      }
+
+      _registerElement(bean, element) {
+        window._elementRegistry.set(bean, element)
       }
 
       /**
@@ -502,8 +503,12 @@ limitations under the License.
         const propertyPaths = this._queryPropertyPaths(bean)
         propertyPaths.delete(propertyPath)
         if (propertyPaths.size === 0) {
-          this._beanRegistry.delete(bean)
+          window._beanRegistry.delete(bean)
         }
+      }
+
+      _unregisterElement(bean) {
+        window._elementRegistry.delete(bean)
       }
 
       /**
