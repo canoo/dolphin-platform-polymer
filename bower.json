@@ -29,7 +29,7 @@
   ],
   "dependencies": {
     "core.js": "zloirock/core-js#2.5.1",
-    "dolphin-platform-js": "canoo/dolphin-platform-js#dolfix",
+    "dolphin-platform-js": "canoo/dolphin-platform-js#dolfix2",
     "polymer": "Polymer/polymer#2.5.0"
   },
   "devDependencies": {
