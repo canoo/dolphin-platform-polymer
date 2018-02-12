@@ -290,7 +290,7 @@
                  * @param {any} changes The changes made to the model
                  */
                  _modelChanged(changes) {
-                    
+
                     if (changes) {
                         const arrayChange = changes.path.indexOf('.splices') >= 0;
                         RemotingController.LOGGER.debug(this.name, 'Model changed', 'Changes:', changes, 'Is Array change:', arrayChange);
@@ -448,8 +448,9 @@
                     RemotingController.LOGGER.debug(this.name, 'Dolphin Platform controller created', controllerProxy.getId(), controllerProxy);
                     controllerProxy.onDestroyed(this._handleControllerDestroyed);
                     controller = controllerProxy;
-                    this.set('model', controllerProxy.getModel());
-                    calulateBeanPathForModel(controllerProxy.getModel());
+                    let internalModel = controllerProxy.getModel();
+                    this.set('model', internalModel);
+                    calulateBeanPathForModel(internalModel);
                     initialized = true;
 
                     const event = new CustomEvent('postconstruct', {detail: this, bubbles: true, composed: true});
@@ -467,7 +468,7 @@
                  * Creates a Dolphin controller and registers the listeners for bean updates.
                  */
                 _createController() {
-                    this._createMethodObserver('_modelChanged(model.*)', true);
+                    this._createMethodObserver('_modelChanged(model.*)', false);
                     RemotingController.LOGGER.info('Creating Dolphin Platform controller', this.name);
 
                     // Register callbacks for the Dolphin Platform bean manager
