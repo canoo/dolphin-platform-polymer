@@ -170,7 +170,12 @@
 
                     const managed = !this.get('notManaged');
                     if (managed) {
-                        this._create();
+                        internalClientContext = window.clientContext;
+                        if (exists(internalClientContext)) {
+                            this._createController();
+                        } else {
+                            RemotingController.LOGGER.error('Connected managed Remoting Controller component without internal Controller! Client context not found!');
+                        }
                     }
 
                     const event = new CustomEvent('connected', {detail: this, bubbles: true, composed: true});
@@ -189,7 +194,15 @@
 
                     const managed = !this.get('notManaged');
                     if (managed) {
-                        this._destroy();
+                        if (exists(controller)) {
+                            this._destroyController();
+                        } else {
+                            if (initialized) {
+                                RemotingController.LOGGER.error('Disconnected managed Remoting Controller component! No internal Controller found!');
+                            } else {
+                                RemotingController.LOGGER.warn('Disconnected managed Remoting Controller component! Was not initialized yet.');
+                            }
+                        }
                     }
 
                     const event = new CustomEvent('disconnected', {detail: this, bubbles: true, composed: true});
@@ -202,19 +215,29 @@
                  * @returns {Promise} Promise which will be resolved after the creation of the internal Platform Controller
                  */
                 create() {
+                    const self = this;
                     const notManaged = this.get('notManaged');
-                    if (notManaged) {
-                        const self = this;
-                        return new Promise(function(resolve, reject) {
+
+                    return new Promise(function(resolve, reject) {
+                        if (notManaged) {
+                            internalClientContext = window.clientContext;
                             self.addEventListener('postconstruct', function() {
                                 resolve();
                             });
-                            self._create();
-                        });
-                    } else {
-                        RemotingController.LOGGER.error(this.name, 'Cannot invoke create() method for a managed Controller');
-                        throw new Error('Cannot invoke create() method for a managed Controller');
-                    }
+
+                            if (exists(internalClientContext)) {
+                                self._createController();
+                            } else {
+                                RemotingController.LOGGER.error(this.name, 'Cannot create managed Remoting Controller Component. Client context not found!');
+                                reject('Cannot create managed Remoting Controller Component. Client context not found!');
+                            }
+
+                        } else {
+                            RemotingController.LOGGER.error(this.name, 'Cannot invoke create() method for a managed Controller');
+                            reject('Cannot invoke create() method for a managed Controller');
+                        }
+
+                    });
                 }
 
                 /**
@@ -223,19 +246,25 @@
                  * @returns {Promise} Promise which will be resolved after the destruction of the internal Platform Controller
                  */
                 destroy() {
+                    const self = this;
                     const notManaged = this.get('notManaged');
-                    if (notManaged) {
-                        const self = this;
-                        return new Promise(function(resolve, reject) {
+
+                    return new Promise(function(resolve, reject) {                    
+                        if (notManaged) {
                             self.addEventListener('postdestroyed', function() {
                                 resolve();
                             });
-                            self._destroy();
-                        });
-                    } else {
-                        RemotingController.LOGGER.error(this.name, 'Cannot invoke destroy() method for a managed Controller');
-                        throw new Error('Cannot invoke destroy() method for a managed Controller');
-                    }
+                            if (exists(controller)) {
+                                self._destroyController();
+                            } else {
+                                RemotingController.LOGGER.error(this.name, 'Cannot invoke destroy() method for a managed Controller');
+                                reject('Cannot invoke destroy() method for a managed Controller');
+                            }
+                        } else {
+                            RemotingController.LOGGER.error(this.name, 'Cannot invoke destroy() method for a managed Controller');
+                            reject('Cannot invoke destroy() method for a managed Controller');
+                        }
+                    });
                 }
 
                 /**
@@ -252,29 +281,6 @@
                         return controller.invoke(name, params)
                     } else {
                         RemotingController.LOGGER.error('No Dolphin Controller found. Cannot invoke action:', name, 'Parameters:', params);
-                    }
-                }
-
-                /**
-                 * Creates the internal Platform Controller.
-                 */
-                _create() {
-                    internalClientContext = window.clientContext;
-
-                    if (internalClientContext) {
-                        this._createController();
-                    } else {
-                        RemotingController.LOGGER.error('No Dolphin Platform client context found! Cannot create Dolphin Controller.');
-                        throw new Error('No Dolphin Platform client context found! Cannot create Dolphin Controller.');
-                    }
-                }
-
-                /**
-                 * Destroys the internal Platform Controller.
-                 */
-                _destroy() {
-                    if (exists(controller)) {
-                        controller.destroy();
                     }
                 }
 
@@ -453,6 +459,13 @@
                 /**
                  * Creates a Dolphin controller and registers the listeners for bean updates.
                  */
+                 _destroyController() {
+                    controller.destroy();
+                 }
+
+                /**
+                 * Creates a Dolphin controller and registers the listeners for bean updates.
+                 */
                 _createController() {
                     this._createMethodObserver('_modelChanged(model.*)', true);
                     RemotingController.LOGGER.info('Creating Dolphin Platform controller', this.name);
@@ -462,7 +475,6 @@
                     internalClientContext.beanManager.onRemoved(this._onRemoved);
                     internalClientContext.beanManager.onBeanUpdate(this._onBeanUpdate);
                     internalClientContext.beanManager.onArrayUpdate(this._onArrayUpdate);
-
 
                     internalClientContext.createController(this.name).then(this._handleControllerCreated);
                 }
