@@ -80,7 +80,7 @@
                 
             }
 
-            const calulateBeanPathForModel = function(model) {
+            const calculateBeanPathForModel = function(model) {
                 beanToPath.clear();
                 calculateBeanPath('model', model);
             }
@@ -410,7 +410,7 @@
                                 const result = this.splice(currentPath, index, count, ...newElements);
 
                                 if (result) {
-                                    calulateBeanPathForModel(this.model);
+                                    calculateBeanPathForModel(this.model);
                                 }
                             }
                         } else {
@@ -450,7 +450,7 @@
                     controller = controllerProxy;
                     let internalModel = controllerProxy.getModel();
                     this.set('model', internalModel);
-                    calulateBeanPathForModel(internalModel);
+                    calculateBeanPathForModel(internalModel);
                     initialized = true;
 
                     const event = new CustomEvent('postconstruct', {detail: this, bubbles: true, composed: true});
