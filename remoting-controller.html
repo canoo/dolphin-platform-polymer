@@ -296,19 +296,19 @@
                         RemotingController.LOGGER.debug(this.name, 'Model changed', 'Changes:', changes, 'Is Array change:', arrayChange);
 
                         const { value, base, path } = changes;
-                        const elements = Polymer.Path.split(path);
+                        const pathSegments = Polymer.Path.split(path);
 
                         if (arrayChange) {
                             if (value.indexSplices) {
                                 for (let i = 0; i < value.indexSplices.length; i++) {
-                                    const position = elements.length-2;
+                                    const position = pathSegments.length-2;
                                     const splice = value.indexSplices[i];
                                     const startIndex = splice.index;
                                     const removedItems = splice.removed;
                                     const addedCount = splice.addedCount;
-                                    const propertyName = elements[position];
+                                    const propertyName = pathSegments[position];
 
-                                    const currentPath = Polymer.Path.normalize([...elements].splice(0, position));
+                                    const currentPath = Polymer.Path.normalize([...pathSegments].splice(0, position));
                                     const bean = this.get(currentPath);
                                     RemotingController.LOGGER.trace(this.name, 'Bean:', bean, 'Removed:', removedItems);
                                     internalClientContext.beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems);
@@ -316,11 +316,11 @@
                             }
                             
                         } else {
-                            if (elements.length > 1) {
+                            if (pathSegments.length > 1) {
                                 // subproperty changed
-                                const position = elements.length-1;
-                                const propertyName = elements[position];
-                                const currentPath = Polymer.Path.normalize([...elements].splice(0, position));
+                                const position = pathSegments.length-1;
+                                const propertyName = pathSegments[position];
+                                const currentPath = Polymer.Path.normalize([...pathSegments].splice(0, position));
                                 const bean = this.get(currentPath);
                                 
                                 RemotingController.LOGGER.trace(this.name, 'Bean:', bean, 'Value:', value);
@@ -329,8 +329,8 @@
                                 }
                             } else {
                                 // root property changed
-                                const propertyName = elements[0];
-                                const currentPath = Polymer.Path.normalize(elements);
+                                const propertyName = pathSegments[0];
+                                const currentPath = Polymer.Path.normalize(pathSegments);
                                 const bean = this.get(currentPath);
                                 
                                 RemotingController.LOGGER.trace(this.name, 'Bean:', bean, 'Value:', value);
