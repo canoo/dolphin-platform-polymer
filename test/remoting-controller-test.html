@@ -54,14 +54,20 @@
                         }
                     },
                     beanManager: {
-                        onBeanUpdate: () => null,
-                        onArrayUpdate: () => null,
+                        onBeanUpdate: () => {
+                            return {unsubscribe: () => null}
+                        },
+                        onArrayUpdate: () => {
+                            return {unsubscribe: () => null}
+                        },
+                        onAdded: () => {
+                            return {unsubscribe: () => null}
+                        },
+                        onRemoved: () => {
+                            return {unsubscribe: () => null}
+                        },
                         notifyBeanChange: () => null,
-                        notifyArrayChange: () => null,
-                        onAdded: () => null,
-                        onRemoved: () => null,
-                        onBeanUpdate: () => null,
-                        onArrayUpdate: () => null
+                        notifyArrayChange: () => null
                     },
                     createController(name) {
                         return Promise.resolve(clientContext._controller)
@@ -282,8 +288,8 @@
 
                     expect(modelChangedSpy).to.have.been.calledWith({
                         path: 'model.text',
-                        base: myBean,
-                        value: 'MY VALUE'
+                        base: { text: 'NEW VALUE' },
+                        value: 'NEW VALUE'
                     });
 
                     done();
