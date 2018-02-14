@@ -55,18 +55,24 @@
                 baseArray.splice.apply(baseArray, [startIndex, 0].concat(insertArray));
             };
 
-            const beanToPath = new Map();
 
-            const calculateBeanPath = function(path, bean) {
+            /**
+             * Caluclates a path for a bean and stores it in a map.
+             *
+             * @param {Map} map Map to store the path
+             * @param {string} path current path
+             * @param {any} bean current bean
+             */            
+            const calculateBeanPath = function(map, path, bean) {
                 if (!exists(bean)) {
                     return;
                 }
-                beanToPath.set(bean, path);
+                map.set(bean, path);
                 if (Array.isArray(bean)) {
                     for (let i = 0; i < bean.length; i++) {
                         const currentName = path + '.' + i;
                         const value = bean[i];
-                        calculateBeanPath(currentName, value);
+                        calculateBeanPath(map, currentName, value);
                     }
                 } else if (typeof bean === 'object') {
                     const keys = Object.keys(bean);
@@ -74,27 +80,22 @@
                         const currentName = path + '.' + keys[i];
                         const key = keys[i];
                         const value = bean[key];
-                        calculateBeanPath(currentName, value);
+                        calculateBeanPath(map, currentName, value);
                     }
                 }
                 
             }
 
-            const calculateBeanPathForModel = function(model) {
-                beanToPath.clear();
-                calculateBeanPath('model', model);
+            /**
+             * Clears the given map and calculates the Polymer paths for a given model into the map.
+             *
+             * @param {Map} map Map to store the path
+             * @param {any} model the model
+             */
+            const calculateBeanPathForModel = function(map, model) {
+                map.clear();
+                calculateBeanPath(map, 'model', model);
             }
-
-            // Internal field which are not added to the class
-
-            /** Instance of the Dolphin Controller. */
-            let controller = null;
-
-            /** State of the initialization. */
-            let initialized = false;
-
-            /** Interal version of the Dolphin Platform client context. */
-            let internalClientContext = null;
 
             /**
              * The `remoting-controller` element creates a connection between Polymer and the Dolphin Platform.
@@ -125,10 +126,24 @@
 
                 constructor() {
                     super();
-                    this._onAdded = this._onAdded.bind(this);
-                    this._onRemoved = this._onRemoved.bind(this);
                     this._onBeanUpdate = this._onBeanUpdate.bind(this);
                     this._onArrayUpdate = this._onArrayUpdate.bind(this);
+                    
+                    /** Instance of the Dolphin Controller. */
+                    this._controller = null;
+
+                    /** State of the initialization. */
+                    this._initialized = false;
+
+                    /** Interal version of the Dolphin Platform client context. */
+                    this._internalClientContext = null;
+
+                    /** Internal list of object with unsubscribe method which must be called when destroying the controller. */
+                    this._unsubscribeFromBeanManager = [];
+
+                    /** Bean to Polymer Path mapping. */
+                    this._beanToPath = new Map();
+
                     this._handleControllerCreated = this._handleControllerCreated.bind(this);
                     this._handleControllerDestroyed = this._handleControllerDestroyed.bind(this);
                 }
@@ -156,6 +171,10 @@
                     }
                 }
 
+                get destroyed(){
+                    return destroyed;
+                }
+
                 /**
                  * Provides an extended implementation of the standard Custom Elements `connectedCallback`.
                  *
@@ -170,8 +189,8 @@
 
                     const managed = !this.get('notManaged');
                     if (managed) {
-                        internalClientContext = window.clientContext;
-                        if (exists(internalClientContext)) {
+                        this._internalClientContext = window.clientContext;
+                        if (exists(this._internalClientContext)) {
                             this._createController();
                         } else {
                             RemotingController.LOGGER.error('Connected managed Remoting Controller component without internal Controller! Client context not found!');
@@ -194,10 +213,10 @@
 
                     const managed = !this.get('notManaged');
                     if (managed) {
-                        if (exists(controller)) {
+                        if (exists(this._controller)) {
                             this._destroyController();
                         } else {
-                            if (initialized) {
+                            if (this._initialized) {
                                 RemotingController.LOGGER.error('Disconnected managed Remoting Controller component! No internal Controller found!');
                             } else {
                                 RemotingController.LOGGER.warn('Disconnected managed Remoting Controller component! Was not initialized yet.');
@@ -220,20 +239,20 @@
 
                     return new Promise(function(resolve, reject) {
                         if (notManaged) {
-                            internalClientContext = window.clientContext;
+                            self._internalClientContext = window.clientContext;
                             self.addEventListener('postconstruct', function() {
                                 resolve();
                             });
 
-                            if (exists(internalClientContext)) {
+                            if (exists(self._internalClientContext)) {
                                 self._createController();
                             } else {
-                                RemotingController.LOGGER.error(this.name, 'Cannot create managed Remoting Controller Component. Client context not found!');
+                                RemotingController.LOGGER.error(self.name, 'Cannot create managed Remoting Controller Component. Client context not found!');
                                 reject('Cannot create managed Remoting Controller Component. Client context not found!');
                             }
 
                         } else {
-                            RemotingController.LOGGER.error(this.name, 'Cannot invoke create() method for a managed Controller');
+                            RemotingController.LOGGER.error(self.name, 'Cannot invoke create() method for a managed Controller');
                             reject('Cannot invoke create() method for a managed Controller');
                         }
 
@@ -254,14 +273,14 @@
                             self.addEventListener('postdestroyed', function() {
                                 resolve();
                             });
-                            if (exists(controller)) {
+                            if (exists(self._controller)) {
                                 self._destroyController();
                             } else {
-                                RemotingController.LOGGER.error(this.name, 'Cannot invoke destroy() method for a managed Controller');
+                                RemotingController.LOGGER.error(self.name, 'Cannot invoke destroy() method for a managed Controller');
                                 reject('Cannot invoke destroy() method for a managed Controller');
                             }
                         } else {
-                            RemotingController.LOGGER.error(this.name, 'Cannot invoke destroy() method for a managed Controller');
+                            RemotingController.LOGGER.error(self.name, 'Cannot invoke destroy() method for a managed Controller');
                             reject('Cannot invoke destroy() method for a managed Controller');
                         }
                     });
@@ -277,26 +296,26 @@
                  */
                 invoke(name, params) {
                     RemotingController.LOGGER.debug(this.name, 'Invoke action called with', name, params);
-                    if (exists(controller)) {
-                        return controller.invoke(name, params)
+                    if (exists(this._controller)) {
+                        return this._controller.invoke(name, params)
                     } else {
-                        RemotingController.LOGGER.error('No Dolphin Controller found. Cannot invoke action:', name, 'Parameters:', params);
+                        RemotingController.LOGGER.error(this.name, 'No Dolphin Controller found. Cannot invoke action:', name, 'Parameters:', params);
                     }
                 }
 
                 /**
                  * Handles model changes received from the Polymer observers.
                  *
-                 * @param {any} changes The changes made to the model
+                 * @param {any} changeRecord The changes made to the model
                  */
-                 _modelChanged(changes) {
+                 _modelChanged(changeRecord) {
 
-                    if (changes) {
-                        const arrayChange = changes.path.indexOf('.splices') >= 0;
-                        RemotingController.LOGGER.debug(this.name, 'Model changed', 'Changes:', changes, 'Is Array change:', arrayChange);
-
-                        const { value, base, path } = changes;
+                    if (changeRecord) {
+                        const { value, base, path } = changeRecord;
+                        const arrayChange = changeRecord.path.indexOf('.splices') >= 0;
                         const pathSegments = Polymer.Path.split(path);
+
+                        RemotingController.LOGGER.debug(this.name, 'Model changed', 'Path:', path, 'Value:', JSON.stringify(value), 'Is Array change:', arrayChange);
 
                         if (arrayChange) {
                             if (value.indexSplices) {
@@ -311,7 +330,7 @@
                                     const currentPath = Polymer.Path.normalize([...pathSegments].splice(0, position));
                                     const bean = this.get(currentPath);
                                     RemotingController.LOGGER.trace(this.name, 'Bean:', bean, 'Removed:', removedItems);
-                                    internalClientContext.beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems);
+                                    this._internalClientContext.beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems);
                                 }
                             }
                             
@@ -325,7 +344,7 @@
                                 
                                 RemotingController.LOGGER.trace(this.name, 'Bean:', bean, 'Value:', value);
                                 if (bean) {
-                                    internalClientContext.beanManager.notifyBeanChange(bean, propertyName, value);
+                                    this._internalClientContext.beanManager.notifyBeanChange(bean, propertyName, value);
                                 }
                             } else {
                                 // root property changed
@@ -335,20 +354,12 @@
                                 
                                 RemotingController.LOGGER.trace(this.name, 'Bean:', bean, 'Value:', value);
                                 if (bean) {
-                                    internalClientContext.beanManager.notifyBeanChange(bean, propertyName, value);
+                                    this._internalClientContext.beanManager.notifyBeanChange(bean, propertyName, value);
                                 }
                             }
                         }
                     }
 
-                }
-
-                _onAdded(bean) {
-                    RemotingController.LOGGER.trace(this.name, 'Added', bean);
-                }
-
-                _onRemoved(bean) {
-                    RemotingController.LOGGER.trace(this.name, 'Removed', bean);
                 }
 
                 /**
@@ -360,36 +371,39 @@
                  * @param {any} oldValue the old value of the property
                  */
                 _onBeanUpdate(bean, propertyName, newValue, oldValue) {
-                    RemotingController.LOGGER.trace(this.name, 'Updating bean', bean, 'property name:', propertyName, 'new value:', newValue, 'old value:', oldValue);
+                    RemotingController.LOGGER.trace(this.name, 'Updating bean', JSON.stringify(bean), 'property name:', propertyName, 'new value:', JSON.stringify(newValue), 'old value:', JSON.stringify(oldValue), 'initialized', this._initialized);
 
                     if (oldValue === newValue) {
                         RemotingController.LOGGER.trace(this.name, 'Received bean update for property ', propertyName, ' without any change');
                         return;
                     }
 
-                    if (initialized) {
-                        const beanPath = beanToPath.get(bean);
-
+                    if (this._initialized) {
+                        const beanPath = this._beanToPath.get(bean);
                         if (exists(beanPath)) {
                             const currentPath = Polymer.Path.normalize([beanPath, propertyName]);
+                            
+                            this.set(currentPath, newValue);
+                            if ((Array.isArray(newValue) && newValue.length === 0) || newValue == null) {
 
-                            if (Array.isArray(newValue) && newValue.length === 0) {
-                                this.set(currentPath, newValue);
+                                // Will remove empty arrays or removed beans
+                                calculateBeanPathForModel(this._beanToPath, this.model);
                             }
-
-                            this.notifyPath(currentPath);
+                        } else {
+                            bean[propertyName] = newValue;
                         }
                         
+                    } else {
+                        bean[propertyName] = newValue;
                     }
-                    bean[propertyName] = newValue;
                     
                 }
 
                 /**
                  * Handles array upadates from the Dolphin Platform (e.g. `ObservableList`).
                  */
-                _onArrayUpdate(bean, propertyName, index, count, newElements) {
-                    RemotingController.LOGGER.trace(this.name, 'Updating array bean', bean, 'property name:', propertyName, 'index:', index, 'count:', count, 'newElements:', newElements);
+                _onArrayUpdate(bean, propertyName, index, deletedElements, newElements) {
+                    RemotingController.LOGGER.trace(this.name, 'Updating array bean', JSON.stringify(bean), 'property name:', propertyName, 'index:', index, 'count:', deletedElements, 'newElements:', JSON.stringify(newElements));
                     
                     const array = bean[propertyName];
                     const oldElements = [bean[propertyName][index]];
@@ -399,18 +413,18 @@
                         return;
                     }
 
-                    if (initialized) {
-                        const beanPath = beanToPath.get(bean);
+                    if (this._initialized) {
+                        const beanPath = this._beanToPath.get(bean);
 
                         if (exists(beanPath)) {
                             const currentPath = Polymer.Path.normalize([beanPath, propertyName]);
                             const currentValue = this.get(currentPath);
 
                             if (currentValue) {
-                                const result = this.splice(currentPath, index, count, ...newElements);
+                                const result = this.splice(currentPath, index, deletedElements, ...newElements);
 
                                 if (result) {
-                                    calculateBeanPathForModel(this.model);
+                                    calculateBeanPathForModel(this._beanToPath, this.model);
                                 }
                             }
                         } else {
@@ -431,10 +445,6 @@
                 _handleControllerDestroyed() {
                     RemotingController.LOGGER.debug(this.name, 'Dolphin Platform controller destroyed');
 
-                    this.set('model', {});
-                    controller = null;
-                    initialized = false;
-
                     const event = new CustomEvent('postdestroyed', {detail: this, bubbles: true, composed: true});
                     this.dispatchEvent(event);
                 }
@@ -447,11 +457,11 @@
                 _handleControllerCreated(controllerProxy) {
                     RemotingController.LOGGER.debug(this.name, 'Dolphin Platform controller created', controllerProxy.getId(), controllerProxy);
                     controllerProxy.onDestroyed(this._handleControllerDestroyed);
-                    controller = controllerProxy;
-                    let internalModel = controllerProxy.getModel();
+                    this._controller = controllerProxy;
+                    let internalModel = this._controller.getModel();
                     this.set('model', internalModel);
-                    calculateBeanPathForModel(internalModel);
-                    initialized = true;
+                    calculateBeanPathForModel(this._beanToPath, internalModel);
+                    this._initialized = true;
 
                     const event = new CustomEvent('postconstruct', {detail: this, bubbles: true, composed: true});
                     this.dispatchEvent(event);
@@ -461,7 +471,20 @@
                  * Creates a Dolphin controller and registers the listeners for bean updates.
                  */
                  _destroyController() {
-                    controller.destroy();
+                    RemotingController.LOGGER.debug(this.name, 'Destroy controller');
+                    for (let i = 0; i < this._unsubscribeFromBeanManager.length; i++) {
+                        const handler = this._unsubscribeFromBeanManager[i];
+                        handler.unsubscribe();
+                    }
+                    
+                    this.set('model', {});
+                    this._initialized = false;
+                    this._beanToPath.clear();
+
+                    this._unsubscribeFromBeanManager = [];
+
+                    this._controller.destroy();
+                    this._controller = null;
                  }
 
                 /**
@@ -471,13 +494,14 @@
                     this._createMethodObserver('_modelChanged(model.*)', false);
                     RemotingController.LOGGER.info('Creating Dolphin Platform controller', this.name);
 
-                    // Register callbacks for the Dolphin Platform bean manager
-                    internalClientContext.beanManager.onAdded(this._onAdded);
-                    internalClientContext.beanManager.onRemoved(this._onRemoved);
-                    internalClientContext.beanManager.onBeanUpdate(this._onBeanUpdate);
-                    internalClientContext.beanManager.onArrayUpdate(this._onArrayUpdate);
+                    // Register callbacks for the Dolphin Platform bean manager and store the result for unsubscribe...
+                    const onBeanUpdateHandlerResult = this._internalClientContext.beanManager.onBeanUpdate(this._onBeanUpdate);
+                    this._unsubscribeFromBeanManager.push(onBeanUpdateHandlerResult);
 
-                    internalClientContext.createController(this.name).then(this._handleControllerCreated);
+                    const onArrayUpdatedHandlerResult = this._internalClientContext.beanManager.onArrayUpdate(this._onArrayUpdate);
+                    this._unsubscribeFromBeanManager.push(onArrayUpdatedHandlerResult);
+
+                    this._internalClientContext.createController(this.name).then(this._handleControllerCreated);
                 }
             }
 
