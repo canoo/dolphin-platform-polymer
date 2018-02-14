@@ -311,13 +311,23 @@
 
                     if (changeRecord) {
                         const { value, base, path } = changeRecord;
-                        const arrayChange = changeRecord.path.indexOf('.splices') >= 0;
                         const pathSegments = Polymer.Path.split(path);
 
-                        RemotingController.LOGGER.debug(this.name, 'Model changed', 'Path:', path, 'Value:', JSON.stringify(value), 'Is Array change:', arrayChange);
+                        let arrayChange = false;
+                        const hasSplices = path.indexOf('.splices', path.length - '.splices'.length) !== -1;
+                        const hasLength = path.indexOf('.length', path.length - '.length'.length) !== -1;
+
+                        // Check for real array
+                        if (hasSplices || hasLength) {
+                            const currentPath = Polymer.Path.normalize([...pathSegments].splice(0, pathSegments.length-1));
+                            const val = this.get(currentPath);
+                            arrayChange = Array.isArray(val);
+                        }
+
+                        RemotingController.LOGGER.debug(this.name, 'Model changed', 'Path:', path, 'Value:', value, 'Is Array change:', arrayChange);
 
                         if (arrayChange) {
-                            if (value.indexSplices) {
+                            if (value.indexSplices && !hasLength) {
                                 for (let i = 0; i < value.indexSplices.length; i++) {
                                     const position = pathSegments.length-2;
                                     const splice = value.indexSplices[i];
@@ -332,7 +342,6 @@
                                     this._internalClientContext.beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems);
                                 }
                             }
-                            
                         } else {
                             if (pathSegments.length > 1) {
                                 // subproperty changed
@@ -370,7 +379,7 @@
                  * @param {any} oldValue the old value of the property
                  */
                 _onBeanUpdate(bean, propertyName, newValue, oldValue) {
-                    RemotingController.LOGGER.trace(this.name, 'Updating bean', JSON.stringify(bean), 'property name:', propertyName, 'new value:', JSON.stringify(newValue), 'old value:', JSON.stringify(oldValue), 'initialized', this._initialized);
+                    RemotingController.LOGGER.trace(this.name, 'Updating bean', bean, 'property name:', propertyName, 'new value:', newValue, 'old value:', oldValue, 'initialized', this._initialized);
 
                     if (oldValue === newValue) {
                         RemotingController.LOGGER.trace(this.name, 'Received bean update for property ', propertyName, ' without any change');
@@ -402,7 +411,7 @@
                  * Handles array upadates from the Dolphin Platform (e.g. `ObservableList`).
                  */
                 _onArrayUpdate(bean, propertyName, index, deletedElements, newElements) {
-                    RemotingController.LOGGER.trace(this.name, 'Updating array bean', JSON.stringify(bean), 'property name:', propertyName, 'index:', index, 'count:', deletedElements, 'newElements:', JSON.stringify(newElements));
+                    RemotingController.LOGGER.trace(this.name, 'Updating array bean', bean, 'property name:', propertyName, 'index:', index, 'deletedElements:', deletedElements, 'newElements:', newElements);
                     
                     const array = bean[propertyName];
                     const oldElements = [bean[propertyName][index]];
