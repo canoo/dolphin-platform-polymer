@@ -128,6 +128,8 @@
                     super();
                     this._onBeanUpdate = this._onBeanUpdate.bind(this);
                     this._onArrayUpdate = this._onArrayUpdate.bind(this);
+                    this._handleControllerCreated = this._handleControllerCreated.bind(this);
+                    this._handleControllerDestroyed = this._handleControllerDestroyed.bind(this);
                     
                     /** Instance of the Dolphin Controller. */
                     this._controller = null;
@@ -142,10 +144,7 @@
                     this._unsubscribeFromBeanManager = [];
 
                     /** Bean to Polymer Path mapping. */
-                    this._beanToPath = new Map();
-
-                    this._handleControllerCreated = this._handleControllerCreated.bind(this);
-                    this._handleControllerDestroyed = this._handleControllerDestroyed.bind(this);
+                    this._beanToPath = new Map();       
                 }
 
                 static get is() {
