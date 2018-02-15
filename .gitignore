@@ -7,3 +7,6 @@ node_modules/
 
 # apple macos.
 *.DS_Store
+
+#polymer
+analysis.json

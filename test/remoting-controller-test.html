@@ -1,0 +1,755 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+
+  <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../dolphin-platform-js/dist/dolphin-platform.js"></script>
+  <script src="../../test-fixture/test-fixture-mocha.js"></script>
+
+  <link rel="import" href="../remoting-controller.html">
+  
+
+</head>
+<body>
+
+    <test-fixture id="rc">
+        <template>
+            <remoting-controller id="controller" name="TestController"></remoting-controller>
+        </template>
+    </test-fixture>
+
+    <test-fixture id="rc-lazy">
+            <template>
+                <remoting-controller id="controller" name="TestController" not-managed></remoting-controller>
+            </template>
+        </test-fixture>
+
+    <script>
+
+        suite('<remoting-controller>', function() {
+
+            setup(function() {
+                //console.log('setup');
+                mockClientContext = {
+                    _controller: {
+                        model: {},
+                        destroy: () => {
+                            if (onDestroyedCallback) {
+                                onDestroyedCallback()
+                            }
+                        },
+                        onDestroyed: (callback) => {
+                            onDestroyedCallback = callback
+                        },
+                        getId() {
+                            return 'id';
+                        },
+                        getModel() {
+                            return this.model;
+                        },
+                        invoke(name, params) {
+                            return Promise.resolve('invoked');
+                        }
+                    },
+                    beanManager: {
+                        onBeanUpdate: () => {
+                            return {unsubscribe: () => null}
+                        },
+                        onArrayUpdate: () => {
+                            return {unsubscribe: () => null}
+                        },
+                        onAdded: () => {
+                            return {unsubscribe: () => null}
+                        },
+                        onRemoved: () => {
+                            return {unsubscribe: () => null}
+                        },
+                        notifyBeanChange: () => null,
+                        notifyArrayChange: () => null
+                    },
+                    createController(name) {
+                        return Promise.resolve(clientContext._controller)
+                    }
+                }
+            });
+
+            teardown(function() {
+                //console.log('teardown');
+                currentComponent = null;
+                mockClientContext = null;
+                delete window.clientContext;
+            });
+
+            test('correct initialization', function(done) {
+                // given
+                const createControllerSpy = sinon.spy(mockClientContext, 'createController');
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+
+                // then
+                sinon.assert.calledOnce(createControllerSpy);
+                sinon.assert.calledWith(createControllerSpy, 'TestController');
+
+                done();
+            });
+
+            test('cannot initialize without client context', function(done) {
+                // given
+                const RemotingController = customElements.get('remoting-controller');
+                const controllerElement = new RemotingController();
+
+                let expectErrorMessage = function(message) {
+                    // then
+                    let errorText = 'Client context not found';
+                    let correctErrorFound = message.indexOf(errorText) >= 0;
+                    expect(correctErrorFound).to.be.equal(true);
+                    done();
+                }
+                
+                window._onerror = window.onerror;
+                window.onerror = function(message) {
+                    // Chrome+Safari
+                    window.onerror = window._onerror;
+                    expectErrorMessage(message);
+                }
+
+                try {
+                    // when
+                    document.body.appendChild(controllerElement);
+                } catch (error) {
+                    // Firefox
+                    expectErrorMessage(error);
+                }
+
+            });
+
+            test('lazy initialization, without create()', function(done) {
+                // given
+                const createControllerSpy = sinon.spy(mockClientContext, 'createController');
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc-lazy');
+
+                // then
+                sinon.assert.notCalled(createControllerSpy);
+
+                done();
+            });
+
+            test('lazy initialization, with create() and destroy()', function(done) {
+                // given
+                const createControllerSpy = sinon.spy(mockClientContext, 'createController');
+                const destroySpy = sinon.spy(mockClientContext._controller, 'destroy');
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc-lazy');
+
+                currentComponent.create().then(function() {
+
+                    currentComponent.destroy().then(function() {
+
+                        // then
+                        sinon.assert.calledOnce(createControllerSpy);
+                        sinon.assert.calledOnce(destroySpy);
+
+                        done();
+                    });
+
+                    
+                });
+                            
+            });
+
+            test('lazy initialization, destroy() without create()', function(done) {
+                // given
+                const createControllerSpy = sinon.spy(mockClientContext, 'createController');
+                const destroySpy = sinon.spy(mockClientContext._controller, 'destroy');
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc-lazy');
+
+                try {
+                    currentComponent.destroy().catch(function() {
+                        // then
+                        sinon.assert.notCalled(destroySpy);
+
+                        done();
+                    });
+                } catch (error) {
+                    done();
+                }
+                            
+            });
+
+            test('postconstruct event', function(done) {
+                // given
+                const RemotingController = customElements.get('remoting-controller');
+                const createControllerSpy = sinon.spy(mockClientContext, 'createController');
+                const controllerElement = new RemotingController();
+                window.clientContext = mockClientContext;
+
+                let eventCallback = function() {
+                    // then
+                    sinon.assert.called(createControllerSpy);
+                    done();
+                };
+
+                // when
+                controllerElement.addEventListener('postconstruct', eventCallback);
+                document.body.appendChild(controllerElement);
+
+            });
+
+            test('postdestroyed event', function(done) {
+                // given
+                const RemotingController = customElements.get('remoting-controller');
+                const createControllerSpy = sinon.spy(mockClientContext, 'createController');
+                const destroySpy = sinon.spy(mockClientContext._controller, 'destroy');
+                const controllerElement = new RemotingController();
+                window.clientContext = mockClientContext;
+
+                let addedCallback = function() {
+                    // then (for appendChild)
+                    sinon.assert.called(createControllerSpy);
+
+                    // when
+                    document.body.removeChild(controllerElement);
+                };
+                let eventCallback = function() {
+                    // then (for removeChild)
+                    sinon.assert.called(destroySpy);
+                    done();
+                };
+
+                // when
+                controllerElement.addEventListener('postconstruct', addedCallback);
+                controllerElement.addEventListener('postdestroyed', eventCallback);
+                document.body.appendChild(controllerElement);
+            });
+
+            test('correct name property', function(done) {
+                // given
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+
+                // then
+                flush(function() {
+                    expect(currentComponent.name).to.be.equal('TestController');
+
+                    done();
+                });
+            });
+
+            test('model is equal to simple bean', function(done) {
+                // given
+                const myBean = {
+                    text: 'SIMPLE BEAN'
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                
+                // then
+                flush(function() {
+                    expect(currentComponent.model).to.be.equal(myBean);
+
+                    done();
+                });
+            });
+
+            test('handle changes of simple bean', function(done) {
+                // given
+                const myBean = {
+                    text: 'MY VALUE'
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                const modelChangedSpy = sinon.spy(currentComponent, '_modelChanged');
+
+                // then
+                flush(function() {
+                    
+                    currentComponent._onBeanUpdate(myBean, 'text', 'NEW VALUE', 'MY VALUE');
+                    expect(currentComponent.model.text).to.be.equal('NEW VALUE');
+
+                    expect(modelChangedSpy).to.have.been.calledWith({
+                        path: 'model.text',
+                        base: { text: 'NEW VALUE' },
+                        value: 'NEW VALUE'
+                    });
+
+                    done();
+                });
+                
+            });
+
+            test('notify about changes to simple bean', function(done) {
+                // given
+                const myBean = {
+                    text: 'MY VALUE'
+                };
+                mockClientContext._controller.model = myBean;
+                const notifyBeanChangeSpy = sinon.spy(mockClientContext.beanManager, 'notifyBeanChange');
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                
+                // then
+                flush(function() {
+                    
+                    currentComponent.set('model.text', 'NEW VALUE')
+                    expect(currentComponent.model.text).to.be.equal('NEW VALUE');
+                    expect(notifyBeanChangeSpy).to.have.been.calledWith(myBean, 'text', 'NEW VALUE');
+
+                    done();
+                });
+                
+            });
+
+            test('model is equal to list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 'a', 'b']
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                
+                // then
+                flush(function() {
+                    expect(currentComponent.model).to.be.equal(myBean);
+
+                    done();
+                });
+            });
+
+            test('handle add item changes at the end of list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 'a', 'b']
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                const modelChangedSpy = sinon.spy(currentComponent, '_modelChanged');
+
+                // then
+                flush(function() {
+                    
+                    currentComponent._onArrayUpdate(myBean, 'list', 4, 0, [3, 'c']);
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.splices",
+                        base: myBean,
+                        value: {
+                            indexSplices: [{
+                                index: 4,
+                                addedCount: 2,
+                                removed: [],
+                                object: [1, 2, "a", "b", 3, "c"],
+                                type: "splice"
+                            }]
+                        }
+                    });
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.length",
+                        base: myBean,
+                        value: 6
+                    });
+
+                    done();
+                });
+                
+            });
+
+            test('handle add item changes at the beginning of list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 'a', 'b']
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                const modelChangedSpy = sinon.spy(currentComponent, '_modelChanged');
+
+                // then
+                flush(function() {
+                    
+                    currentComponent._onArrayUpdate(myBean, 'list', 0, 0, [3, 'c']);
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.splices",
+                        base: myBean,
+                        value: {
+                            indexSplices: [{
+                                index: 0,
+                                addedCount: 2,
+                                removed: [],
+                                object: [3, "c", 1, 2, "a", "b"],
+                                type: "splice"
+                            }]
+                        }
+                    });
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.length",
+                        base: myBean,
+                        value: 6
+                    });
+
+                    done();
+                });
+                
+            });
+
+            test('handle add item changes in the middle of list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 'a', 'b']
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                const modelChangedSpy = sinon.spy(currentComponent, '_modelChanged');
+
+                // then
+                flush(function() {
+                    
+                    currentComponent._onArrayUpdate(myBean, 'list', 2, 0, [3, 'c']);
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.splices",
+                        base: myBean,
+                        value: {
+                            indexSplices: [{
+                                index: 2,
+                                addedCount: 2,
+                                removed: [],
+                                object: [1, 2, 3, "c", "a", "b"],
+                                type: "splice"
+                            }]
+                        }
+                    });
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.length",
+                        base: myBean,
+                        value: 6
+                    });
+
+                    done();
+                });
+                
+            });
+
+            test('handle remove item changes at the end of list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 3, 'a', 'b', 'c']
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                const modelChangedSpy = sinon.spy(currentComponent, '_modelChanged');
+
+                // then
+                flush(function() {
+                    
+                    currentComponent._onArrayUpdate(myBean, 'list', 4, 2, []);
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.splices",
+                        base: myBean,
+                        value: {
+                            indexSplices: [{
+                                index: 4,
+                                addedCount: 0,
+                                removed: ['b', 'c'],
+                                object: [1, 2, 3, 'a'],
+                                type: "splice"
+                            }]
+                        }
+                    });
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.length",
+                        base: myBean,
+                        value: 4
+                    });
+
+                    done();
+                });
+                
+            });
+
+            test('handle remove item changes at the beginning of list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 3, 'a', 'b', 'c']
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                const modelChangedSpy = sinon.spy(currentComponent, '_modelChanged');
+
+                // then
+                flush(function() {
+                    
+                    currentComponent._onArrayUpdate(myBean, 'list', 0, 2, []);
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.splices",
+                        base: myBean,
+                        value: {
+                            indexSplices: [{
+                                index: 0,
+                                addedCount: 0,
+                                removed: [1, 2],
+                                object: [3, 'a', 'b', 'c'],
+                                type: "splice"
+                            }]
+                        }
+                    });
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.length",
+                        base: myBean,
+                        value: 4
+                    });
+
+                    done();
+                });
+                
+            });
+
+            test('handle remove all item changes of list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 3, 'a', 'b', 'c']
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                const modelChangedSpy = sinon.spy(currentComponent, '_modelChanged');
+
+                // then
+                flush(function() {
+                    
+                    currentComponent._onArrayUpdate(myBean, 'list', 0, 6, []);
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.splices",
+                        base: myBean,
+                        value: {
+                            indexSplices: [{
+                                index: 0,
+                                addedCount: 0,
+                                removed: [1, 2, 3, 'a', 'b', 'c'],
+                                object: [],
+                                type: "splice"
+                            }]
+                        }
+                    });
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.length",
+                        base: myBean,
+                        value: 0
+                    });
+
+                    done();
+                });
+                
+            });
+
+            test('handle add+remove=replace item changes of list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 3, 'a', 'b', 'c']
+                };
+                mockClientContext._controller.model = myBean;
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                const modelChangedSpy = sinon.spy(currentComponent, '_modelChanged');
+
+                // then
+                flush(function() {
+                    
+                    currentComponent._onArrayUpdate(myBean, 'list', 2, 2, [4, 'd']);
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.splices",
+                        base: myBean,
+                        value: {
+                            indexSplices: [{
+                                index: 2,
+                                addedCount: 2,
+                                removed: [3, 'a'],
+                                object: [1, 2, 4, 'd', 'b', 'c'],
+                                type: "splice"
+                            }]
+                        }
+                    });
+
+                    expect(modelChangedSpy).to.be.calledWith({
+                        path: "model.list.length",
+                        base: myBean,
+                        value: 6
+                    });
+
+                    done();
+                });
+                
+            });
+
+            test('notify about simple changes to list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 3, 'a', 'b', 'c']
+                };
+                mockClientContext._controller.model = myBean;
+                const notifyBeanChangeSpy = sinon.spy(mockClientContext.beanManager, 'notifyBeanChange');
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                
+                // then
+                flush(function() {
+                    
+                    currentComponent.set('model.list.0', 'NEW VALUE')
+                    expect(notifyBeanChangeSpy).to.have.been.calledWith(['NEW VALUE', 2, 3, 'a', 'b', 'c'], '0', 'NEW VALUE');
+
+                    currentComponent.set('model.list.3', 'OTHER VALUE')
+                    expect(notifyBeanChangeSpy).to.have.been.calledWith(['NEW VALUE', 2, 3, 'OTHER VALUE', 'b', 'c'], '3', 'OTHER VALUE');
+
+                    done();
+                });
+                
+            });
+
+            test('notify about array changes to list bean', function(done) {
+                // given
+                const myBean = {
+                    list: [1, 2, 3, 'a', 'b', 'c']
+                };
+                mockClientContext._controller.model = myBean;
+                const notifyArrayChangeSpy = sinon.spy(mockClientContext.beanManager, 'notifyArrayChange');
+                window.clientContext = mockClientContext;
+
+                // when
+                currentComponent = fixture('rc');
+                
+                // then
+                flush(function() {
+                    
+                    currentComponent.push('model.list', 'd');
+                    expect(notifyArrayChangeSpy).to.have.been.calledWith({list: [1, 2, 3, 'a', 'b', 'c', 'd']}, 'list', 6, 1, []);
+
+                    currentComponent.push('model.list', 'e', 'f');
+                    expect(notifyArrayChangeSpy).to.have.been.calledWith({list: [1, 2, 3, 'a', 'b', 'c', 'd', 'e', 'f']}, 'list', 7, 2, []);
+
+                    let lastElement = currentComponent.pop('model.list');
+                    expect(lastElement).to.be.equal('f');
+                    expect(notifyArrayChangeSpy).to.have.been.calledWith({list: [1, 2, 3, 'a', 'b', 'c', 'd', 'e']}, 'list', 8, 0, ['f']);
+
+                    let firstElement = currentComponent.shift('model.list');
+                    expect(firstElement).to.be.equal(1);
+                    expect(notifyArrayChangeSpy).to.have.been.calledWith({list: [2, 3, 'a', 'b', 'c', 'd', 'e']}, 'list', 0, 0, [1]);
+
+                    currentComponent.unshift('model.list', 'ONE');
+                    expect(notifyArrayChangeSpy).to.have.been.calledWith({list: ['ONE', 2, 3, 'a', 'b', 'c', 'd', 'e']}, 'list', 0, 1, []);
+
+                    currentComponent.splice('model.list', 1, 0, 'TWO');
+                    expect(notifyArrayChangeSpy).to.have.been.calledWith({list: ['ONE', 'TWO', 2, 3, 'a', 'b', 'c', 'd', 'e']}, 'list', 1, 1, []);
+
+                    currentComponent.splice('model.list', 2, 2, 'THREE', 'FOUR');
+                    expect(notifyArrayChangeSpy).to.have.been.calledWith({list: ['ONE', 'TWO', 'THREE', 'FOUR', 'a', 'b', 'c', 'd', 'e']}, 'list', 2, 2, [2, 3]);
+
+                    done();
+                });
+                
+            });
+
+            test('invoke action without parameters', function(done) {
+                // given
+                window.clientContext = mockClientContext;
+                const invokeSpy = sinon.spy(mockClientContext._controller, 'invoke');
+
+                // when
+                currentComponent = fixture('rc');
+                
+                // then
+                flush(function() {
+                    
+                    currentComponent.invoke('test').then(result => {
+                        expect(result).to.be.equal('invoked');
+                        expect(invokeSpy).to.have.been.calledWith('test', undefined);
+
+                        done();
+                    });
+                    
+                });
+                
+            });
+
+            test('invoke action with parameters', function(done) {
+                // given
+                window.clientContext = mockClientContext;
+                const invokeSpy = sinon.spy(mockClientContext._controller, 'invoke');
+
+                // then
+                currentComponent = fixture('rc');
+                
+                // when
+                flush(function() {
+                    
+                    currentComponent.invoke('test', 'hallo').then(result => {
+                        expect(result).to.be.equal('invoked');
+                        expect(invokeSpy).to.have.been.calledWith('test', 'hallo');
+
+                        done();
+                    });
+                    
+                });
+                
+            });
+
+        });
+
+    </script>
+
+</body>
+</html>

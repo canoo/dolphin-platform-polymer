@@ -1,0 +1,529 @@
+<link rel="import" href="../polymer/polymer-element.html">
+
+<dom-module id="remoting-controller">
+    <template>
+        <slot></slot>
+    </template>
+    <script>
+        (function() {
+
+            // Internal methods which are not added to the class
+            // TODO: This methos are also in use in the AngularJS version ... they should be moved to the core!
+
+            /**
+             * Checks whether an object exists or not.
+             *
+             * @param {any} object The object which should be checked
+             */
+            const exists = function (object) {
+                return typeof object !== 'undefined' && object !== null;
+            };
+
+            /**
+             * Compares two arrays.
+             *
+             * @param {any[]} array1 Array
+             * @param {any[]} array2 Array
+             */
+            const deepEqual = function (array1, array2) {
+                if (array1 === array2 || (!exists(array1) && !exists(array2))) {
+                    return true;
+                }
+                if (exists(array1) !== exists(array2)) {
+                    return false;
+                }
+                const n = array1.length;
+                if (array2.length !== n) {
+                    return false;
+                }
+                for (let i = 0; i < n; i++) {
+                    if (array1[i] !== array2[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            /**
+             * Injects one array into the other at a given index.
+             *
+             * @param {any[]} baseArray The array to insert the other array to
+             * @param {number} startIndex The index at which the array should be added
+             * @param {any[]} insertArray The array which should be added
+             */
+            const injectArray = function (baseArray, startIndex, insertArray) {
+                baseArray.splice.apply(baseArray, [startIndex, 0].concat(insertArray));
+            };
+
+
+            /**
+             * Caluclates a path for a bean and stores it in a map.
+             *
+             * @param {Map} map Map to store the path
+             * @param {string} path current path
+             * @param {any} bean current bean
+             */            
+            const calculateBeanPath = function(map, path, bean) {
+                if (!exists(bean)) {
+                    return;
+                }
+                map.set(bean, path);
+                if (Array.isArray(bean)) {
+                    for (let i = 0; i < bean.length; i++) {
+                        const currentName = path + '.' + i;
+                        const value = bean[i];
+                        calculateBeanPath(map, currentName, value);
+                    }
+                } else if (typeof bean === 'object') {
+                    const keys = Object.keys(bean);
+                    for (let i = 0; i < keys.length; i++) {
+                        const currentName = path + '.' + keys[i];
+                        const key = keys[i];
+                        const value = bean[key];
+                        calculateBeanPath(map, currentName, value);
+                    }
+                }
+                
+            }
+
+            /**
+             * Clears the given map and calculates the Polymer paths for a given model into the map.
+             *
+             * @param {Map} map Map to store the path
+             * @param {any} model the model
+             */
+            const calculateBeanPathForModel = function(map, model) {
+                map.clear();
+                calculateBeanPath(map, 'model', model);
+            }
+
+            /**
+             * The `remoting-controller` element creates a connection between Polymer and the Dolphin Platform.
+             *
+             * ~~~html
+             * <remoting-controller name="TodoController" model="{{todos}}"></remoting-controller>
+             * ~~~
+             *
+             * The `remoting-controller` sends events after creation and destruction of the Dolphin Platform Controller.
+             * ~~~html
+             * <remoting-controller name="TodoController" model="{{todos}}" on-postconstruct="myMethod" on-postdestroyed="myOtherMethod"></remoting-controller>
+             * ~~~
+             *
+             * The `remoting-controller` sends events after been added to or removed from the document.
+             * ~~~html
+             * <remoting-controller name="TodoController" model="{{todos}}" on-connect="myMethod" on-disconnect="myOtherMethod"></remoting-controller>
+             * ~~~
+             *
+             * The `remoting-controller` can be used as not managed version. For that case you have to invoke the create() and destroy() methods on your own.
+             * ~~~html
+             * <remoting-controller name="TodoController" model="{{todos}}" not-managed></remoting-controller>
+             * ~~~
+             *
+             * @customElement
+             * @polymer
+             */
+            class RemotingController extends Polymer.Element {
+
+                constructor() {
+                    super();
+                    this._onBeanUpdate = this._onBeanUpdate.bind(this);
+                    this._onArrayUpdate = this._onArrayUpdate.bind(this);
+                    this._handleControllerCreated = this._handleControllerCreated.bind(this);
+                    this._handleControllerDestroyed = this._handleControllerDestroyed.bind(this);
+                    
+                    /** Instance of the Dolphin Controller. */
+                    this._controller = null;
+
+                    /** State of the initialization. */
+                    this._initialized = false;
+
+                    /** Interal version of the Dolphin Platform client context. */
+                    this._internalClientContext = null;
+
+                    /** Internal list of object with unsubscribe method which must be called when destroying the controller. */
+                    this._unsubscribeFromBeanManager = [];
+
+                    /** Bean to Polymer Path mapping. */
+                    this._beanToPath = new Map();       
+                }
+
+                static get is() {
+                    return "remoting-controller"
+                }
+
+                static get properties() {
+                    return {
+                        /** The name of the controller which is used for the Dolphin Platform Controller. */
+                        name: String,
+
+                        /** The model of the controller which is conntected to the Dolphin Platform. It will be updated by the Dolphin Platform. */
+                        model: {
+                            type: Object,
+                            notify: true
+                        },
+
+                        /** This property allows to disable the self-management of the component. If it is set (`true`) the component must be initialized and destroyed by hand with `create()` and `destroy()`! */
+                        notManaged: {
+                            type: Boolean,
+                            value: false
+                        }
+                    }
+                }
+
+                get destroyed(){
+                    return destroyed;
+                }
+
+                /**
+                 * Provides an extended implementation of the standard Custom Elements `connectedCallback`.
+                 *
+                 * This method will be called if this element is added to a document.
+                 *
+                 * If this is a managed component, this method will create the internal Platform Controller if there is already a Dolphin Platform client context.
+                 * Hint: For a managed component, the `window.clientContext` MUST be created before the `remoting-controller` is added to a document.
+                 */
+                connectedCallback() {
+                    RemotingController.LOGGER.debug(this.name, 'Conntected to document.');
+                    super.connectedCallback();
+
+                    const managed = !this.get('notManaged');
+                    if (managed) {
+                        this._internalClientContext = window.clientContext;
+                        if (exists(this._internalClientContext)) {
+                            this._createController();
+                        } else {
+                            RemotingController.LOGGER.error('Connected managed Remoting Controller component without internal Controller! Client context not found!');
+                        }
+                    }
+
+                    const event = new CustomEvent('connected', {detail: this, bubbles: true, composed: true});
+                    this.dispatchEvent(event);
+
+                }
+
+                /**
+                 * Provides an implementation which is called when the element is removed from a document.
+                 *
+                 * If the Remoting Controller is managed, this method will also destroy the internal Platform Controller.
+                 */
+                disconnectedCallback() {
+                    RemotingController.LOGGER.debug(this.name, 'Disconnected from document.');
+                    super.disconnectedCallback();
+
+                    const managed = !this.get('notManaged');
+                    if (managed) {
+                        if (exists(this._controller)) {
+                            this._destroyController();
+                        } else {
+                            if (this._initialized) {
+                                RemotingController.LOGGER.error('Disconnected managed Remoting Controller component! No internal Controller found!');
+                            } else {
+                                RemotingController.LOGGER.warn('Disconnected managed Remoting Controller component! Was not initialized yet.');
+                            }
+                        }
+                    }
+
+                    const event = new CustomEvent('disconnected', {detail: this, bubbles: true, composed: true});
+                    this.dispatchEvent(event);
+                }
+
+                /**
+                 * Creates the internal Platform Controller for a not managed component.
+                 *
+                 * @returns {Promise} Promise which will be resolved after the creation of the internal Platform Controller
+                 */
+                create() {
+                    const self = this;
+                    const notManaged = this.get('notManaged');
+
+                    return new Promise(function(resolve, reject) {
+                        if (notManaged) {
+                            self._internalClientContext = window.clientContext;
+                            self.addEventListener('postconstruct', function() {
+                                resolve();
+                            });
+
+                            if (exists(self._internalClientContext)) {
+                                self._createController();
+                            } else {
+                                RemotingController.LOGGER.error(self.name, 'Cannot create managed Remoting Controller Component. Client context not found!');
+                                reject('Cannot create managed Remoting Controller Component. Client context not found!');
+                            }
+
+                        } else {
+                            RemotingController.LOGGER.error(self.name, 'Cannot invoke create() method for a managed Controller');
+                            reject('Cannot invoke create() method for a managed Controller');
+                        }
+
+                    });
+                }
+
+                /**
+                 * Destroys the internal Platform Controller for a not managed component.
+                 * 
+                 * @returns {Promise} Promise which will be resolved after the destruction of the internal Platform Controller
+                 */
+                destroy() {
+                    const self = this;
+                    const notManaged = this.get('notManaged');
+
+                    return new Promise(function(resolve, reject) {                    
+                        if (notManaged) {
+                            self.addEventListener('postdestroyed', function() {
+                                resolve();
+                            });
+                            if (exists(self._controller)) {
+                                self._destroyController();
+                            } else {
+                                RemotingController.LOGGER.error(self.name, 'Cannot invoke destroy() method for a managed Controller');
+                                reject('Cannot invoke destroy() method for a managed Controller');
+                            }
+                        } else {
+                            RemotingController.LOGGER.error(self.name, 'Cannot invoke destroy() method for a managed Controller');
+                            reject('Cannot invoke destroy() method for a managed Controller');
+                        }
+                    });
+                }
+
+                /**
+                 * Invokes an action on the Dolphin Platform Controller with given name and parameters.
+                 *
+                 * @param {string} name Name of the action. MUST match an action name on the server side
+                 * @param {any[]} params Array of parameters for the action
+                 *
+                 * @returns {Promise} Promise which will be resolved the action was invoked on the server, or will be rejected on error.
+                 */
+                invoke(name, params) {
+                    RemotingController.LOGGER.debug(this.name, 'Invoke action called with', name, params);
+                    if (exists(this._controller)) {
+                        return this._controller.invoke(name, params)
+                    } else {
+                        RemotingController.LOGGER.error(this.name, 'No Dolphin Controller found. Cannot invoke action:', name, 'Parameters:', params);
+                    }
+                }
+
+                /**
+                 * Handles model changes received from the Polymer observers.
+                 *
+                 * @param {any} changeRecord The changes made to the model
+                 */
+                 _modelChanged(changeRecord) {
+
+                    if (changeRecord) {
+                        const { value, base, path } = changeRecord;
+                        const pathSegments = Polymer.Path.split(path);
+
+                        let arrayChange = false;
+                        const hasSplices = path.indexOf('.splices', path.length - '.splices'.length) !== -1;
+                        const hasLength = path.indexOf('.length', path.length - '.length'.length) !== -1;
+
+                        // Check for real array
+                        if (hasSplices || hasLength) {
+                            const currentPath = Polymer.Path.normalize([...pathSegments].splice(0, pathSegments.length-1));
+                            const val = this.get(currentPath);
+                            arrayChange = Array.isArray(val);
+                        }
+
+                        RemotingController.LOGGER.debug(this.name, 'Model changed', 'Path:', path, 'Value:', value, 'Is Array change:', arrayChange);
+
+                        if (arrayChange) {
+                            if (value.indexSplices && !hasLength) {
+                                for (let i = 0; i < value.indexSplices.length; i++) {
+                                    const position = pathSegments.length-2;
+                                    const splice = value.indexSplices[i];
+                                    const startIndex = splice.index;
+                                    const removedItems = splice.removed;
+                                    const addedCount = splice.addedCount;
+                                    const propertyName = pathSegments[position];
+
+                                    const currentPath = Polymer.Path.normalize([...pathSegments].splice(0, position));
+                                    const bean = this.get(currentPath);
+                                    RemotingController.LOGGER.trace(this.name, 'Bean:', bean, 'Removed:', removedItems);
+                                    this._internalClientContext.beanManager.notifyArrayChange(bean, propertyName, startIndex, addedCount, removedItems);
+                                }
+                            }
+                        } else {
+                            if (pathSegments.length > 1) {
+                                // subproperty changed
+                                const position = pathSegments.length-1;
+                                const propertyName = pathSegments[position];
+                                const currentPath = Polymer.Path.normalize([...pathSegments].splice(0, position));
+                                const bean = this.get(currentPath);
+                                
+                                RemotingController.LOGGER.trace(this.name, 'Bean:', bean, 'Value:', value);
+                                if (bean) {
+                                    this._internalClientContext.beanManager.notifyBeanChange(bean, propertyName, value);
+                                }
+                            } else {
+                                // root property changed
+                                const propertyName = pathSegments[0];
+                                const currentPath = Polymer.Path.normalize(pathSegments);
+                                const bean = this.get(currentPath);
+                                
+                                RemotingController.LOGGER.trace(this.name, 'Bean:', bean, 'Value:', value);
+                                if (bean) {
+                                    this._internalClientContext.beanManager.notifyBeanChange(bean, propertyName, value);
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                /**
+                 * Handles bean upadates from the Dolphin Platform.
+                 *
+                 * @param {any} bean The bean which was changed
+                 * @param {string} propertyName The name of the property which was changed
+                 * @param {any} newValue The new value of the property
+                 * @param {any} oldValue the old value of the property
+                 */
+                _onBeanUpdate(bean, propertyName, newValue, oldValue) {
+                    RemotingController.LOGGER.trace(this.name, 'Updating bean', bean, 'property name:', propertyName, 'new value:', newValue, 'old value:', oldValue, 'initialized', this._initialized);
+
+                    if (oldValue === newValue) {
+                        RemotingController.LOGGER.trace(this.name, 'Received bean update for property ', propertyName, ' without any change');
+                        return;
+                    }
+
+                    if (this._initialized) {
+                        const beanPath = this._beanToPath.get(bean);
+                        if (exists(beanPath)) {
+                            const currentPath = Polymer.Path.normalize([beanPath, propertyName]);
+                            
+                            this.set(currentPath, newValue);
+                            if ((Array.isArray(newValue) && newValue.length === 0) || newValue == null) {
+
+                                // Will remove empty arrays or removed beans
+                                calculateBeanPathForModel(this._beanToPath, this.model);
+                            }
+                        } else {
+                            bean[propertyName] = newValue;
+                        }
+                        
+                    } else {
+                        bean[propertyName] = newValue;
+                    }
+                    
+                }
+
+                /**
+                 * Handles array upadates from the Dolphin Platform (e.g. `ObservableList`).
+                 */
+                _onArrayUpdate(bean, propertyName, index, deletedElements, newElements) {
+                    RemotingController.LOGGER.trace(this.name, 'Updating array bean', bean, 'property name:', propertyName, 'index:', index, 'deletedElements:', deletedElements, 'newElements:', newElements);
+                    
+                    const array = bean[propertyName];
+                    const oldElements = [bean[propertyName][index]];
+
+                    if (deepEqual(newElements, oldElements)) {
+                        RemotingController.LOGGER.trace(this.name, 'Will not add equal elements');
+                        return;
+                    }
+
+                    if (this._initialized) {
+                        const beanPath = this._beanToPath.get(bean);
+
+                        if (exists(beanPath)) {
+                            const currentPath = Polymer.Path.normalize([beanPath, propertyName]);
+                            const currentValue = this.get(currentPath);
+
+                            if (currentValue) {
+                                const result = this.splice(currentPath, index, deletedElements, ...newElements);
+
+                                if (result) {
+                                    calculateBeanPathForModel(this._beanToPath, this.model);
+                                }
+                            }
+                        } else {
+                            RemotingController.LOGGER.error(this.name, 'Bean not found in model!', bean, propertyName);
+                        }
+  
+                    } else {
+                        injectArray(array, index, newElements);
+                    }
+
+                }
+
+                /**
+                 * Handles the destruction of a Dolphin Controller.
+                 *
+                 * This method resets the model.
+                 */
+                _handleControllerDestroyed() {
+                    RemotingController.LOGGER.debug(this.name, 'Dolphin Platform controller destroyed');
+
+                    const event = new CustomEvent('postdestroyed', {detail: this, bubbles: true, composed: true});
+                    this.dispatchEvent(event);
+                }
+
+                /**
+                 * Handles the creation of a Dolphin Controller.
+                 *
+                 * @param {object} controllerProxy The `ControllerProxy` from the Dolphin Platform.
+                 */
+                _handleControllerCreated(controllerProxy) {
+                    RemotingController.LOGGER.debug(this.name, 'Dolphin Platform controller created', controllerProxy.getId(), controllerProxy);
+                    controllerProxy.onDestroyed(this._handleControllerDestroyed);
+                    this._controller = controllerProxy;
+                    let internalModel = this._controller.getModel();
+                    this.set('model', internalModel);
+                    calculateBeanPathForModel(this._beanToPath, internalModel);
+                    this._initialized = true;
+
+                    const event = new CustomEvent('postconstruct', {detail: this, bubbles: true, composed: true});
+                    this.dispatchEvent(event);
+                }
+
+                /**
+                 * Creates a Dolphin controller and registers the listeners for bean updates.
+                 */
+                 _destroyController() {
+                    RemotingController.LOGGER.debug(this.name, 'Destroy controller');
+                    for (let i = 0; i < this._unsubscribeFromBeanManager.length; i++) {
+                        const handler = this._unsubscribeFromBeanManager[i];
+                        handler.unsubscribe();
+                    }
+                    
+                    this.set('model', {});
+                    this._initialized = false;
+                    this._beanToPath.clear();
+
+                    this._unsubscribeFromBeanManager = [];
+
+                    this._controller.destroy();
+                    this._controller = null;
+                 }
+
+                /**
+                 * Creates a Dolphin controller and registers the listeners for bean updates.
+                 */
+                _createController() {
+                    this._createMethodObserver('_modelChanged(model.*)', false);
+                    RemotingController.LOGGER.info('Creating Dolphin Platform controller', this.name);
+
+                    // Register callbacks for the Dolphin Platform bean manager and store the result for unsubscribe...
+                    const onBeanUpdateHandlerResult = this._internalClientContext.beanManager.onBeanUpdate(this._onBeanUpdate);
+                    this._unsubscribeFromBeanManager.push(onBeanUpdateHandlerResult);
+
+                    const onArrayUpdatedHandlerResult = this._internalClientContext.beanManager.onArrayUpdate(this._onArrayUpdate);
+                    this._unsubscribeFromBeanManager.push(onArrayUpdatedHandlerResult);
+
+                    this._internalClientContext.createController(this.name).then(this._handleControllerCreated);
+                }
+            }
+
+            if (!exists(window.dolphin)) {
+                throw new Error('No Dolphin Platform found in "window" global. Please load Dolphin Platform first.');
+            }
+
+            /** Default logger for the Controller. */
+            RemotingController.LOGGER = window.dolphin.LoggerFactory.getLogger('RemotingController');
+
+            // Register the element
+            customElements.define(RemotingController.is, RemotingController);
+
+        })();
+
+    </script>
+</dom-module>
